@@ -1,0 +1,28 @@
+<div class="w-full">
+  <div class="mb-6 flex items-center justify-between">
+    <h1 class="text-3xl font-bold">Usuarios</h1>
+    <%= link_to "Nuevo usuario", new_user_path, class: "rounded-2xl bg-slate-900 px-5 py-3 text-white" %>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 text-sm text-slate-500">
+        <tr><th class="p-4">Email</th><th class="p-4">Rol</th><th class="p-4"></th></tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr class="border-t border-slate-100">
+            <td class="p-4"><%= user.email %></td>
+            <td class="p-4"><%= user.role.humanize %></td>
+            <td class="p-4 text-right">
+              <%= link_to "Editar", edit_user_path(user), class: "mr-3" %>
+              <% if policy(user).destroy? %>
+                <%= button_to "Eliminar", user_path(user), method: :delete, form: { class: "inline", data: { turbo_confirm: "¿Eliminar usuario?" } } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<%= form_with model: user, class: "space-y-4 max-w-md" do |f| %>
+  <% if user.errors.any? %>
+    <ul class="rounded-2xl bg-red-50 p-4 text-red-700">
+      <% user.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  <% end %>
+
+  <div>
+    <%= f.label :email, class: "block text-sm font-medium" %>
+    <%= f.email_field :email, class: "w-full rounded-2xl border border-slate-200 p-3" %>
+  </div>
+  <div>
+    <%= f.label :role, "Rol", class: "block text-sm font-medium" %>
+    <%= f.select :role, User::ROLES.map { |r| [r.humanize, r] }, { prompt: "Selecciona un rol" }, class: "w-full rounded-2xl border border-slate-200 p-3" %>
+  </div>
+  <div>
+    <%= f.label :password, "Contraseña", class: "block text-sm font-medium" %>
+    <%= f.password_field :password, autocomplete: "new-password", class: "w-full rounded-2xl border border-slate-200 p-3" %>
+    <% if user.persisted? %><p class="text-xs text-slate-500">Déjala en blanco para conservar la actual.</p><% end %>
+  </div>
+  <div>
+    <%= f.label :password_confirmation, "Confirmar contraseña", class: "block text-sm font-medium" %>
+    <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "w-full rounded-2xl border border-slate-200 p-3" %>
+  </div>
+
+  <%= f.submit class: "rounded-2xl bg-slate-900 px-5 py-3 text-white cursor-pointer" %>
+<% end %>
