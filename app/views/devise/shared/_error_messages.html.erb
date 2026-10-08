@@ -1,0 +1,5 @@
+<ul class="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">
+  <% resource.errors.full_messages.each do |message| %>
+    <li><%= message %></li>
+  <% end %>
+</ul>

@@ -1,0 +1,28 @@
+<nav class="sticky top-0 z-10 border-b border-slate-100 bg-white">
+  <div class="container mx-auto flex items-center justify-between px-5 py-3">
+    <div class="flex items-center gap-6">
+      <%= link_to root_path, class: "flex items-center gap-2 text-lg font-bold text-slate-900" do %>
+        <%= material_icon "local_shipping", classes: "text-indigo-600" %>
+        Campos
+      <% end %>
+      <%= link_to root_path, class: "flex items-center gap-1 rounded-2xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-100" do %>
+        <%= material_icon "home" %> Inicio
+      <% end %>
+      <% if policy(User).index? %>
+        <%= link_to users_path, class: "flex items-center gap-1 rounded-2xl px-3 py-2 text-sm text-slate-600 hover:bg-slate-100" do %>
+          <%= material_icon "group" %> Usuarios
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <span class="hidden text-sm text-slate-500 sm:inline">
+        <%= current_user.email %> · <%= current_user.role.humanize %>
+      </span>
+      <%= button_to destroy_user_session_path, method: :delete, title: "Cerrar sesión", aria: { label: "Cerrar sesión" },
+            class: "flex h-10 w-10 cursor-pointer items-center justify-center rounded-2xl text-slate-600 hover:bg-slate-100" do %>
+        <%= material_icon "logout" %>
+      <% end %>
+    </div>
+  </div>
+</nav>
