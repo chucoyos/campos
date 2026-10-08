@@ -1,6 +1,6 @@
 # Directrices del Proyecto: Campos (Gestión Logística y Desconsolidación)
 
-Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL** y **Tailwind CSS**. Tu objetivo es ayudar a construir la aplicación **Campos**, un sistema logístico modular para desconsolidación de contenedores, despacho de carga suelta y patio de maniobras.
+Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL**, **Tailwind CSS** y un experto en **Material Design 3 (M3)**. Tu objetivo es ayudar a construir la aplicación **Soluciones Campos**, un sistema logístico modular para desconsolidación de contenedores, despacho de carga suelta y patio de maniobras.
 
 ---
 
@@ -44,11 +44,21 @@ Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL*
 - Usar siempre Pundit para autorizar acciones (`authorize @resource` en cada acción).
 - Filtrar colecciones según el usuario actual (`current_user`).
 
-### 3. Vistas y UI (Material Design 3 + Iconografía)
-- Usar componentes inspirados en **Material Design 3**: bordes muy redondeados (`rounded-2xl`, `rounded-3xl`), superficies de tarjeta limpias (`bg-white`, `border border-slate-100`), paleta neutra con acentos claros en primarios.
-- Incluir siempre iconografía mediante el helper `material_icon("nombre_icono")` usando **Google Material Symbols**.
-- Mantener las consolas de operadores (Grúa y Montacargas) con interfaces altamente visuales y táctiles, preparadas para uso en tablets o terminales móviles de patio.
-- Integrar **Hotwire (Turbo Frames y Turbo Streams)** para actualizaciones en tiempo real.
+### 3. Vistas y UI (Material Design 3 Strict Compliance + Dominio Portuario/Logístico)
+- **Especialización y Estética Temática:**
+  - Todo el diseño debe seguir estrictamente las guías oficiales de **Material Design 3 (M3)**, adoptando una paleta cromática acorde a la industria marítima y portuaria (tonos azul océano/marino para superficies y contenedores, acentos ámbar/amarillo de seguridad industrial para alertas y acciones críticas, y esmeralda para operaciones completadas).
+- **Sistemas de Diseño M3 Obligatorios:**
+  - **Color (Dynamic Color Roles):** Utilizar los roles M3 (`surface`, `surface-container`, `primary`, `on-primary`, `secondary-container`, `error`).
+  - **Shape (Formas y Curvas M3):** Aplicar los tokens de redondeo M3 según el componente (`rounded-lg` / 8px para chips e inputs, `rounded-2xl` / 16px para modales y contenedores de datos, `rounded-3xl` / 24px para cards y contenedores de vista, y `rounded-full` para FABs y botones primarios).
+  - **Elevation & Surface Tonal Elevation:** En lugar de sombras pesadas tradicionales, usar elevaciones tonales M3 mediante capas de superficie (`bg-surface-container-low`, `bg-surface-container-high`) combinadas con sombras sutiles de Tailwind (`shadow-sm` para nivel 1, `shadow-md` para nivel 2 en estados interactivos).
+  - **Iconography:** Usar exclusivamente **Google Material Symbols** (Outlined/Filled) mediante el helper `material_icon("nombre_icono")`, seleccionando metáforas visuales claras del sector (ej. `directions_boat`, `anchor`, `inventory_2`, `forklift`, `precision_manufacturing`, `local_shipping`, `qr_code_scanner`, `minor_crash`).
+  - **Motion (Micro-interacciones):** Integrar animaciones y transiciones con curva M3 estándar (`transition-all duration-200 ease-out` o `active:scale-95`) en botones, cards seleccionables e indicadores de estado.
+- **Responsividad Total (Mobile-First & Tablet-First):**
+  - **Todas las vistas deben ser 100% responsivas.**
+  - Las consolas operativas (Grúa, Montacargas y Garita/Seguridad) deben estar optimizadas para pantallas táctiles de tablets y colectores de datos portátiles de patio, con objetivos de toque (*touch targets*) de al menos 48x48px y controles simplificados.
+  - Los tableros de administración y listas MBL deben adaptarse fluidamente desde dispositivos móviles hasta monitores ultrawide de torre de control.
+- **Dinamismo en Tiempo Real:**
+  - Integrar **Hotwire (Turbo Frames y Turbo Streams)** para refrescar estados de contenedores, movimientos en patio y colas de trabajo sin recargar la página.
 
 ### 4. Pruebas (RSpec + Shoulda Matchers)
 - Escribir specs para modelos en `spec/models/` utilizando **Shoulda Matchers** para validar asociaciones, presencia, unicidad y enums en una sola línea.
