@@ -84,12 +84,16 @@ test:
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
-production:
+production: &production
   primary: &primary_production
     <<: *default
     database: campos_production
     username: campos
     password: <%= ENV["CAMPOS_DATABASE_PASSWORD"] %>
+    <% if ENV["DATABASE_URL"] %>
+    # Heroku has a single Postgres; all Solid* databases share it.
+    url: <%= ENV["DATABASE_URL"] %>
+    <% end %>
   cache:
     <<: *primary_production
     database: campos_production_cache
@@ -102,3 +106,6 @@ production:
     <<: *primary_production
     database: campos_production_cable
     migrations_paths: db/cable_migrate
+
+# Staging mirrors production (Heroku provides DATABASE_URL).
+staging: *production
