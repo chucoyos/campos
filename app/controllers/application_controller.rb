@@ -4,7 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
 
   rescue_from Pundit::NotAuthorizedError do
-    redirect_back_or_to root_path, alert: "No tienes permiso para realizar esta acción."
+    redirect_back_or_to root_path, alert: t("flash.application.not_authorized")
   end
 
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.

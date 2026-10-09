@@ -14,35 +14,35 @@
   <% end %>
 
   <div>
-    <%= f.label :email, "Correo electrónico", class: label %>
+    <%= f.label :email, class: label %>
     <%= f.email_field :email, autocomplete: "off", class: input %>
   </div>
 
   <div>
-    <%= f.label :role, "Rol", class: label %>
-    <%= f.select :role, User::ROLES.map { |r| [r.humanize, r] }, { prompt: "Selecciona un rol" }, class: input %>
+    <%= f.label :role, class: label %>
+    <%= f.select :role, User::ROLES.map { |r| [t("users.roles.#{r}"), r] }, { prompt: t(".role_prompt") }, class: input %>
   </div>
 
   <div class="grid gap-5 sm:grid-cols-2">
     <div>
-      <%= f.label :password, "Contraseña", class: label %>
+      <%= f.label :password, class: label %>
       <%= f.password_field :password, autocomplete: "new-password", class: input %>
     </div>
     <div>
-      <%= f.label :password_confirmation, "Confirmar contraseña", class: label %>
+      <%= f.label :password_confirmation, class: label %>
       <%= f.password_field :password_confirmation, autocomplete: "new-password", class: input %>
     </div>
   </div>
   <% if user.persisted? %>
-    <p class="-mt-3 text-xs text-slate-500">Déjala en blanco para conservar la contraseña actual.</p>
+    <p class="-mt-3 text-xs text-slate-500"><%= t(".keep_password") %></p>
   <% end %>
 
   <div class="flex flex-wrap items-center gap-3 pt-2">
     <%= f.button class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
-      <%= material_icon "save" %> <%= user.persisted? ? "Guardar cambios" : "Crear usuario" %>
+      <%= material_icon "save" %> <%= user.persisted? ? t(".save") : t(".create") %>
     <% end %>
     <%= link_to users_path, class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 transition-colors hover:bg-slate-100" do %>
-      <%= material_icon "close" %> Cancelar
+      <%= material_icon "close" %> <%= t("users.cancel") %>
     <% end %>
   </div>
 <% end %>

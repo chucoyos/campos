@@ -1,8 +1,8 @@
-<% links = [["Inicio", root_path, "home", current_page?(root_path)]] %>
-<% links << ["Usuarios", users_path, "group", controller_name == "users"] if policy(User).index? %>
+<% links = [[t(".home"), root_path, "home", current_page?(root_path)]] %>
+<% links << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
 
 <header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">
-  <nav class="container mx-auto rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="Navegación principal">
+  <nav class="container mx-auto rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="<%= t(".main_navigation") %>">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <%= link_to root_path, class: "mr-1 flex min-h-12 items-center gap-2 rounded-2xl px-3 text-lg font-bold text-slate-900 md:mr-3" do %>
@@ -32,13 +32,13 @@
           </div>
         </div>
 
-        <button type="button" data-navbar-target="button" data-action="navbar#toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú"
+        <button type="button" data-navbar-target="button" data-action="navbar#toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="<%= t(".open_menu") %>"
                 class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-slate-100 md:hidden">
           <span data-navbar-target="openIcon"><%= material_icon "menu" %></span>
           <span data-navbar-target="closeIcon" class="hidden"><%= material_icon "close" %></span>
         </button>
 
-        <%= button_to destroy_user_session_path, method: :delete, title: "Cerrar sesión", aria: { label: "Cerrar sesión" },
+        <%= button_to destroy_user_session_path, method: :delete, title: t(".sign_out"), aria: { label: t(".sign_out") },
               form_class: "hidden md:block",
               class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600" do %>
           <%= material_icon "logout" %>
@@ -63,7 +63,7 @@
       </div>
       <%= button_to destroy_user_session_path, method: :delete, form_class: "w-full",
             class: "flex min-h-12 w-full cursor-pointer items-center gap-2 rounded-2xl px-4 text-sm font-medium text-red-600 transition-colors hover:bg-red-50" do %>
-        <%= material_icon "logout" %> Cerrar sesión
+        <%= material_icon "logout" %> <%= t(".sign_out") %>
       <% end %>
     </div>
   </nav>

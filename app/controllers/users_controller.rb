@@ -19,7 +19,7 @@ class UsersController < ApplicationController
     authorize @user
 
     if @user.save
-      redirect_to users_path, notice: "Usuario creado."
+      redirect_to users_path, notice: t("flash.users.create")
     else
       render :new, status: :unprocessable_entity
     end
@@ -33,7 +33,7 @@ class UsersController < ApplicationController
     attrs = attrs.except(:password, :password_confirmation) if attrs[:password].blank?
 
     if @user.update(attrs)
-      redirect_to users_path, notice: "Usuario actualizado."
+      redirect_to users_path, notice: t("flash.users.update")
     else
       render :edit, status: :unprocessable_entity
     end
@@ -41,7 +41,7 @@ class UsersController < ApplicationController
 
   def destroy
     @user.destroy
-    redirect_to users_path, notice: "Usuario eliminado."
+    redirect_to users_path, notice: t("flash.users.destroy")
   end
 
   private

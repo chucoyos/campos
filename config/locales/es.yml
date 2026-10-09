@@ -1,0 +1,81 @@
+es:
+  flash:
+    application:
+      not_authorized: "No tienes permiso para realizar esta acción."
+    users:
+      create: "Usuario creado."
+      update: "Usuario actualizado."
+      destroy: "Usuario eliminado."
+  shared:
+    navbar:
+      home: "Inicio"
+      users: "Usuarios"
+      main_navigation: "Navegación principal"
+      open_menu: "Abrir menú"
+      sign_out: "Cerrar sesión"
+    flash:
+      close: "Cerrar notificación"
+  users:
+    back: "Volver a usuarios"
+    cancel: "Cancelar"
+    roles:
+      admin: "Administrador"
+      cliente: "Cliente"
+      transporte: "Transporte"
+      seguridad: "Seguridad"
+      grua: "Grúa"
+      montacargas: "Montacargas"
+    actions:
+      show: "Ver"
+      edit: "Editar"
+      destroy: "Eliminar"
+      show_user: "Ver %{email}"
+      edit_user: "Editar %{email}"
+      destroy_user: "Eliminar %{email}"
+      confirm_destroy: "¿Eliminar a %{email}? Esta acción no se puede deshacer."
+      cannot_destroy_self: "No puedes eliminar tu propio usuario"
+    index:
+      new_user: "Nuevo usuario"
+      actions: "Acciones"
+    new:
+      title: "Nuevo usuario"
+      subtitle: "Crea una cuenta y asigna su rol."
+    edit:
+      title: "Editar usuario"
+      destroy_warning: "Eliminar este usuario es permanente."
+    form:
+      role_prompt: "Selecciona un rol"
+      keep_password: "Déjala en blanco para conservar la contraseña actual."
+      save: "Guardar cambios"
+      create: "Crear usuario"
+  devise:
+    sessions:
+      new:
+        subtitle: "Inicia sesión para continuar"
+        submit: "Iniciar sesión"
+        forgot_password: "¿Olvidaste tu contraseña?"
+    passwords:
+      new:
+        title: "Recuperar contraseña"
+        subtitle: "Te enviaremos instrucciones por correo."
+        submit: "Enviar instrucciones"
+        back_to_login: "Volver a iniciar sesión"
+      edit:
+        title: "Nueva contraseña"
+        new_password: "Nueva contraseña"
+        submit: "Cambiar contraseña"
+  activerecord:
+    models:
+      user:
+        one: "Usuario"
+        other: "Usuarios"
+    attributes:
+      user:
+        email: "Correo electrónico"
+        password: "Contraseña"
+        password_confirmation: "Confirmar contraseña"
+        role: "Rol"
+        current_password: "Contraseña actual"
+        remember_me: "Recordarme"
+        created_at: "Creado"
+        updated_at: "Última actualización"

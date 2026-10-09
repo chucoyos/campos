@@ -9,6 +9,6 @@ module UsersHelper
   }.freeze
 
   def role_badge(role)
-    tag.span(role.humanize, class: "inline-flex rounded-full px-3 py-1 text-xs font-medium #{ROLE_BADGES.fetch(role, 'bg-slate-100 text-slate-700')}")
+    tag.span(t("users.roles.#{role}"), class: "inline-flex rounded-full px-3 py-1 text-xs font-medium #{ROLE_BADGES.fetch(role, 'bg-slate-100 text-slate-700')}")
   end
 end

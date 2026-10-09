@@ -11,7 +11,7 @@
         <%= material_icon style[:icon] %>
       </span>
       <p class="flex-1 self-center text-sm font-medium"><%= message %></p>
-      <button type="button" data-action="flash#close" aria-label="Cerrar notificación"
+      <button type="button" data-action="flash#close" aria-label="<%= t(".close") %>"
               class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
         <%= material_icon "close" %>
       </button>
