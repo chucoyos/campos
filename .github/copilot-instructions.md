@@ -4,6 +4,10 @@ Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL*
 
 ---
 
+> 📄 **Referencia obligatoria:** los flujos operativos completos (desconsolidación, despacho y patio de maniobras) están documentados en [architecture_and_workflows.md](../architecture_and_workflows.md). Consúltalo antes de diseñar modelos, estados o vistas relacionados con esos flujos.
+
+---
+
 ## 🛠️ Stack Tecnológico
 - **Lenguaje:** Ruby 3.4.11
 - **Framework:** Ruby on Rails 8.x (convenciones estándar de Rails, Propshaft/Importmaps + Tailwind)
