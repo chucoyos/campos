@@ -29,4 +29,6 @@ Rails.application.routes.draw do
     root "master_bls#index", as: :admin_root
   end
   root "home#index"
+
+  match "/:code", to: "errors#show", via: :all, constraints: { code: /400|404|422|500/ }, as: :error
 end

@@ -101,6 +101,20 @@ es:
       empty: "El archivo no tiene contenedores."
       too_many: "El archivo supera el máximo de %{max} contenedores."
       row: "Fila %{row}: %{messages}"
+  errors:
+    back_home: "Ir al inicio"
+    "400":
+      title: "Solicitud incorrecta"
+      message: "No pudimos procesar la solicitud."
+    "404":
+      title: "Página no encontrada"
+      message: "La página que buscas no existe o fue movida."
+    "422":
+      title: "Cambio rechazado"
+      message: "La solicitud no pudo procesarse. Recarga la página e inténtalo de nuevo."
+    "500":
+      title: "Algo salió mal"
+      message: "Ocurrió un error inesperado. Ya fue registrado; inténtalo de nuevo en unos minutos."
   home:
     index:
       title: "Bienvenido"

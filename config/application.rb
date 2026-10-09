@@ -21,6 +21,9 @@ module Campos
     config.i18n.fallbacks = [ :en ]
     config.time_zone = "America/Mexico_City"
 
+    # Las excepciones (404, 422, 500) se renderizan con ErrorsController en lugar de public/*.html.
+    config.exceptions_app = routes
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
