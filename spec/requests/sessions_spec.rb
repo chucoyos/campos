@@ -12,6 +12,12 @@ RSpec.describe "Sessions", type: :request do
     expect(response.body).to include("logout")
   end
 
+  it "renders the hamburger menu button" do
+    sign_in create(:user)
+    get root_path
+    expect(response.body).to include("navbar#toggle", "Abrir menú")
+  end
+
   it "signs out" do
     sign_in create(:user)
     delete destroy_user_session_path

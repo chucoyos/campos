@@ -1,41 +1,65 @@
-<header class="sticky top-0 z-10 px-3 pt-3 sm:px-5">
-  <nav class="container mx-auto flex items-center justify-between gap-3 rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="Navegación principal">
-    <div class="flex items-center gap-1 sm:gap-2">
-      <%= link_to root_path, class: "mr-1 flex min-h-12 items-center gap-2 rounded-2xl px-3 text-lg font-bold text-slate-900 sm:mr-3" do %>
-        <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-          <%= material_icon "local_shipping" %>
-        </span>
-        <span class="hidden sm:inline">Soluciones Campos</span>
-      <% end %>
+<% links = [["Inicio", root_path, "home", current_page?(root_path)]] %>
+<% links << ["Usuarios", users_path, "group", controller_name == "users"] if policy(User).index? %>
 
-      <%= link_to root_path, class: nav_link_classes(current_page?(root_path)), aria: { current: (current_page?(root_path) ? "page" : nil) } do %>
-        <%= material_icon "home" %>
-        <span class="hidden md:inline">Inicio</span>
-      <% end %>
-
-      <% if policy(User).index? %>
-        <%= link_to users_path, class: nav_link_classes(controller_name == "users"), aria: { current: (controller_name == "users" ? "page" : nil) } do %>
-          <%= material_icon "group" %>
-          <span class="hidden md:inline">Usuarios</span>
+<header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">
+  <nav class="container mx-auto rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="Navegación principal">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <%= link_to root_path, class: "mr-1 flex min-h-12 items-center gap-2 rounded-2xl px-3 text-lg font-bold text-slate-900 md:mr-3" do %>
+          <span class="flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+            <%= material_icon "local_shipping" %>
+          </span>
+          Campos
         <% end %>
-      <% end %>
-    </div>
 
-    <div class="flex items-center gap-2">
-      <div class="hidden items-center gap-3 rounded-2xl bg-white/60 py-1.5 pl-2 pr-4 lg:flex">
-        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
-          <%= material_icon "person" %>
-        </span>
-        <div class="leading-tight">
-          <p class="text-sm font-medium text-slate-800"><%= current_user.email %></p>
-          <p class="text-xs text-slate-500"><%= current_user.role.humanize %></p>
+        <div class="hidden items-center gap-2 md:flex">
+          <% links.each do |label, path, icon, active| %>
+            <%= link_to path, class: nav_link_classes(active), aria: { current: (active ? "page" : nil) } do %>
+              <%= material_icon icon %> <%= label %>
+            <% end %>
+          <% end %>
         </div>
       </div>
 
-      <%= button_to destroy_user_session_path, method: :delete, title: "Cerrar sesión", aria: { label: "Cerrar sesión" },
-            class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600" do %>
-        <%= material_icon "logout" %>
+      <div class="flex items-center gap-2">
+        <div class="hidden items-center gap-3 rounded-2xl bg-white/60 py-1.5 pl-2 pr-4 lg:flex">
+          <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+            <%= material_icon "person" %>
+          </span>
+          <div class="leading-tight">
+            <p class="text-sm font-medium text-slate-800"><%= current_user.email %></p>
+            <p class="text-xs text-slate-500"><%= current_user.role.humanize %></p>
+          </div>
+        </div>
+
+        <button type="button" data-navbar-target="button" data-action="navbar#toggle" aria-expanded="false" aria-controls="mobile-menu" aria-label="Abrir menú"
+                class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-slate-100 md:hidden">
+          <span data-navbar-target="openIcon"><%= material_icon "menu" %></span>
+          <span data-navbar-target="closeIcon" class="hidden"><%= material_icon "close" %></span>
+        </button>
+
+        <%= button_to destroy_user_session_path, method: :delete, title: "Cerrar sesión", aria: { label: "Cerrar sesión" },
+              class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600" do %>
+          <%= material_icon "logout" %>
+        <% end %>
+      </div>
+    </div>
+
+    <div id="mobile-menu" data-navbar-target="menu" class="hidden space-y-1 border-t border-slate-200/60 pt-2 mt-2 md:hidden">
+      <% links.each do |label, path, icon, active| %>
+        <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+          <%= material_icon icon %> <%= label %>
+        <% end %>
       <% end %>
+      <div class="flex items-center gap-3 rounded-2xl bg-white/60 p-3">
+        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+          <%= material_icon "person" %>
+        </span>
+        <div class="min-w-0 leading-tight">
+          <p class="truncate text-sm font-medium text-slate-800"><%= current_user.email %></p>
+          <p class="text-xs text-slate-500"><%= current_user.role.humanize %></p>
+        </div>
+      </div>
     </div>
   </nav>
 </header>
