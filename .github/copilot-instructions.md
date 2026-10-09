@@ -82,3 +82,4 @@ Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL*
 - **NO** omitir índices en claves foráneas o campos de búsqueda frecuente (ej. `qr_token`).
 - **NO** mezclar vistas de notificaciones entre operadores de Grúa y Montacargas.
 - **NO** acoplar los modelos de Patio de Maniobras a un `MasterBl` obligatorio.
+- **NO** ejecutar migraciones (`db:migrate`, `db:rollback`, `db:schema:load`, `db:prepare`, `db:reset`, etc.) sin pedir permiso explícito al usuario. Generar la migración, mostrar lo que hace y esperar autorización.
