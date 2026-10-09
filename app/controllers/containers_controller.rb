@@ -10,7 +10,7 @@ class ContainersController < ApplicationController
   end
 
   def new
-    @container = Container.new
+    @container = Container.new(params.fetch(:container, {}).permit(:master_bl_id))
     authorize @container
   end
 
@@ -19,7 +19,7 @@ class ContainersController < ApplicationController
     authorize @container
 
     if @container.save
-      redirect_to containers_path, notice: t("flash.containers.create")
+      redirect_to (@container.master_bl || containers_path), notice: t("flash.containers.create")
     else
       render :new, status: :unprocessable_entity
     end

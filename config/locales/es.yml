@@ -132,6 +132,7 @@ es:
     form:
       client_prompt: "Selecciona un cliente"
     show:
+      new_container: "Nuevo contenedor"
       download_template: "Descargar plantilla Excel"
       upload_label: "Archivo Excel con contenedores"
       upload: "Cargar contenedores"

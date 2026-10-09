@@ -46,9 +46,14 @@
         </span>
         <span><%= Container.model_name.human(count: 2) %> <span class="text-sm font-normal text-slate-500">(<%= @containers.size %>)</span></span>
       </h2>
+      <div class="flex flex-wrap gap-2">
+      <%= link_to new_container_path(container: { master_bl_id: @master_bl.id }), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+        <%= material_icon "add" %> <%= t(".new_container") %>
+      <% end %>
       <%= link_to template_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
         <%= material_icon "download" %> <%= t(".download_template") %>
       <% end %>
+      </div>
     </div>
 
     <%= form_with url: import_master_bl_path(@master_bl), multipart: true, class: "mb-4 flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>

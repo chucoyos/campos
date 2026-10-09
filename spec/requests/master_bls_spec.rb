@@ -53,6 +53,18 @@ RSpec.describe "MasterBls", type: :request do
       expect(response.body).not_to include(other.number)
     end
 
+    it "offers creating a container preselecting the MBL and returns to it" do
+      get master_bl_path(record)
+      expect(response.body).to include(new_container_path(container: { master_bl_id: record.id }).gsub("&", "&amp;"))
+
+      get new_container_path(container: { master_bl_id: record.id })
+      expect(response.body).to match(/<option selected="selected" value="#{record.id}"/)
+
+      post containers_path, params: { container: { number: "MSKU1234567", size: 20, container_type: "standard", master_bl_id: record.id } }
+      expect(response).to redirect_to(master_bl_path(record))
+      expect(record.containers.last).to be_activo
+    end
+
     it "downloads the Excel template" do
       get template_master_bl_path(record)
       expect(response.media_type).to eq(ContainerSpreadsheet::CONTENT_TYPE)

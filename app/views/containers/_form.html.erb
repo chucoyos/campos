@@ -48,7 +48,7 @@
     <%= f.button class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
       <%= material_icon "save" %> <%= container.persisted? ? t("shared.actions.save") : t("shared.actions.create") %>
     <% end %>
-    <%= link_to containers_path, class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 transition-colors hover:bg-slate-100" do %>
+    <%= link_to (container.master_bl || containers_path), class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 transition-colors hover:bg-slate-100" do %>
       <%= material_icon "close" %> <%= t("shared.actions.cancel") %>
     <% end %>
   </div>
