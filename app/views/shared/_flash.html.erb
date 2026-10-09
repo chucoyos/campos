@@ -1,0 +1,20 @@
+<% styles = {
+     "notice" => { icon: "check_circle", classes: "border-emerald-100 text-emerald-800", icon_classes: "bg-emerald-50 text-emerald-600" },
+     "alert" => { icon: "error", classes: "border-red-100 text-red-800", icon_classes: "bg-red-50 text-red-600" }
+   } %>
+<div class="pointer-events-none fixed right-3 top-24 z-20 flex w-[calc(100%-1.5rem)] max-w-sm flex-col gap-3 sm:right-5" aria-live="polite">
+  <% flash.each do |type, message| %>
+    <% style = styles.fetch(type.to_s, styles["notice"]) %>
+    <div data-controller="flash" role="status"
+         class="pointer-events-auto flex translate-x-full items-start gap-3 rounded-2xl border bg-white/90 p-4 opacity-0 shadow-lg backdrop-blur-md transition duration-500 ease-out motion-reduce:transition-none <%= style[:classes] %>">
+      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full <%= style[:icon_classes] %>">
+        <%= material_icon style[:icon] %>
+      </span>
+      <p class="flex-1 self-center text-sm font-medium"><%= message %></p>
+      <button type="button" data-action="flash#close" aria-label="Cerrar notificación"
+              class="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
+        <%= material_icon "close" %>
+      </button>
+    </div>
+  <% end %>
+</div>

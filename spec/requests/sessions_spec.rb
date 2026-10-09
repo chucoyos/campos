@@ -18,6 +18,13 @@ RSpec.describe "Sessions", type: :request do
     expect(response.body).to include("navbar#toggle", "Abrir menú")
   end
 
+  it "renders flash messages as dismissible toasts" do
+    sign_in create(:user, :cliente)
+    get users_path
+    follow_redirect!
+    expect(response.body).to include('data-controller="flash"', "Cerrar notificación")
+  end
+
   it "signs out" do
     sign_in create(:user)
     delete destroy_user_session_path
