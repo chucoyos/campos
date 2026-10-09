@@ -1,0 +1,19 @@
+<%= link_to user_path(user), title: "Ver", aria: { label: "Ver #{user.email}" },
+      class: "flex h-12 w-12 items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-600" do %>
+  <%= material_icon "visibility" %>
+<% end %>
+<%= link_to edit_user_path(user), title: "Editar", aria: { label: "Editar #{user.email}" },
+      class: "flex h-12 w-12 items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600" do %>
+  <%= material_icon "edit" %>
+<% end %>
+<% if policy(user).destroy? %>
+  <%= button_to user_path(user), method: :delete, title: "Eliminar", aria: { label: "Eliminar #{user.email}" },
+        form: { data: { turbo_confirm: "¿Eliminar a #{user.email}? Esta acción no se puede deshacer." } },
+        class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600" do %>
+    <%= material_icon "delete" %>
+  <% end %>
+<% else %>
+  <span title="No puedes eliminar tu propio usuario" class="flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-2xl text-slate-300">
+    <%= material_icon "delete" %>
+  </span>
+<% end %>
