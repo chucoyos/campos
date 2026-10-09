@@ -1,4 +1,5 @@
 <% links = [[t(".home"), root_path, "home", current_page?(root_path)]] %>
+<% links << [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls"] if policy(MasterBl).index? %>
 <% links << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
 <% links << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
 <% links << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>

@@ -2,6 +2,10 @@ es:
   flash:
     application:
       not_authorized: "No tienes permiso para realizar esta acción."
+    master_bls:
+      create: "MBL creado."
+      update: "MBL actualizado."
+      destroy: "MBL eliminado."
     clients:
       create: "Cliente creado."
       update: "Cliente actualizado."
@@ -18,6 +22,7 @@ es:
     navbar:
       home: "Inicio"
       users: "Usuarios"
+      master_bls: "MBL"
       clients: "Clientes"
       carriers: "Transportistas"
       main_navigation: "Navegación principal"
@@ -38,6 +43,16 @@ es:
       back: "Volver al listado"
     flash:
       close: "Cerrar notificación"
+  master_bls:
+    index:
+      new: "Nuevo MBL"
+    new:
+      title: "Nuevo MBL"
+      subtitle: "Registra un Conocimiento de Embarque Master."
+    edit:
+      title: "Editar MBL"
+    form:
+      client_prompt: "Selecciona un cliente"
   clients:
     index:
       new: "Nuevo cliente"
@@ -105,6 +120,9 @@ es:
         submit: "Cambiar contraseña"
   activerecord:
     models:
+      master_bl:
+        one: "MBL"
+        other: "MBL"
       client:
         one: "Cliente"
         other: "Clientes"
@@ -115,6 +133,12 @@ es:
         one: "Usuario"
         other: "Usuarios"
     attributes:
+      master_bl:
+        number: "Número de MBL"
+        client: "Cliente"
+        client_id: "Cliente"
+        created_at: "Creado"
+        updated_at: "Última actualización"
       client: &named
         name: "Nombre"
         created_at: "Creado"
