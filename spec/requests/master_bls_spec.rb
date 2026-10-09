@@ -37,6 +37,14 @@ RSpec.describe "MasterBls", type: :request do
       expect { delete master_bl_path(record) }.to change(MasterBl, :count).by(-1)
     end
 
+    it "does not delete an MBL that has containers" do
+      create(:container, :with_master_bl, master_bl: record)
+      expect { delete master_bl_path(record) }.not_to change(MasterBl, :count)
+      expect(response).to redirect_to(master_bl_path(record))
+      expect(flash[:alert]).to eq(I18n.t("flash.master_bls.destroy_restricted"))
+      expect(flash[:notice]).to be_nil
+    end
+
     it "lists the containers of the MBL on the detail page" do
       container = create(:container, :with_master_bl, master_bl: record)
       other = create(:container, :with_master_bl)

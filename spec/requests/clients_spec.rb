@@ -31,6 +31,13 @@ RSpec.describe "Clients", type: :request do
       expect(record.reload.name).to eq("Renombrado")
     end
 
+    it "does not delete a client that has MBLs" do
+      create(:master_bl, client: record)
+      expect { delete client_path(record) }.not_to change(Client, :count)
+      expect(response).to redirect_to(client_path(record))
+      expect(flash[:alert]).to eq(I18n.t("flash.clients.destroy_restricted"))
+    end
+
     it "deletes a record" do
       expect { delete client_path(record) }.to change(Client, :count).by(-1)
     end

@@ -37,8 +37,11 @@ class ClientsController < ApplicationController
   end
 
   def destroy
-    @client.destroy
-    redirect_to clients_path, notice: t("flash.clients.destroy")
+    if @client.destroy
+      redirect_to clients_path, notice: t("flash.clients.destroy")
+    else
+      redirect_to @client, alert: t("flash.clients.destroy_restricted")
+    end
   end
 
   private

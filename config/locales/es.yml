@@ -12,6 +12,7 @@ es:
       create: "MBL creado."
       update: "MBL actualizado."
       destroy: "MBL eliminado."
+      destroy_restricted: "No se puede eliminar el MBL porque tiene contenedores. Elimina o reasigna sus contenedores primero."
       import:
         one: "Se cargó 1 contenedor."
         other: "Se cargaron %{count} contenedores."
@@ -19,6 +20,7 @@ es:
       create: "Cliente creado."
       update: "Cliente actualizado."
       destroy: "Cliente eliminado."
+      destroy_restricted: "No se puede eliminar el cliente porque tiene MBL asociados."
     carriers:
       create: "Transportista creado."
       update: "Transportista actualizado."

@@ -38,8 +38,11 @@ class MasterBlsController < ApplicationController
   end
 
   def destroy
-    @master_bl.destroy
-    redirect_to master_bls_path, notice: t("flash.master_bls.destroy")
+    if @master_bl.destroy
+      redirect_to master_bls_path, notice: t("flash.master_bls.destroy")
+    else
+      redirect_to @master_bl, alert: t("flash.master_bls.destroy_restricted")
+    end
   end
 
   def template
