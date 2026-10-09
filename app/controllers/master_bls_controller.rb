@@ -43,7 +43,7 @@ class MasterBlsController < ApplicationController
   end
 
   def template
-    send_data ContainerSpreadsheet.template, filename: "contenedores.xlsx", type: ContainerSpreadsheet::CONTENT_TYPE, disposition: "attachment"
+    send_data ContainerSpreadsheet.template, filename: "#{@master_bl.number.parameterize(preserve_case: true)}.xlsx", type: ContainerSpreadsheet::CONTENT_TYPE, disposition: "attachment"
   end
 
   def import

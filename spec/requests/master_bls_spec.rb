@@ -48,7 +48,7 @@ RSpec.describe "MasterBls", type: :request do
     it "downloads the Excel template" do
       get template_master_bl_path(record)
       expect(response.media_type).to eq(ContainerSpreadsheet::CONTENT_TYPE)
-      expect(response.headers["Content-Disposition"]).to include("contenedores.xlsx")
+      expect(response.headers["Content-Disposition"]).to include("#{record.number}.xlsx")
     end
 
     it "imports containers from an Excel file" do
