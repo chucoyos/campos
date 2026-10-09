@@ -66,6 +66,15 @@ Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL*
 - Escribir specs para políticas de Pundit en `spec/policies/`.
 - Usar `FactoryBot` en lugar de fixtures.
 
+## 🌐 Reglas de Internacionalización (i18n)
+- **Idioma global obligatorio:** El idioma por defecto de la aplicación es español (`config.i18n.default_locale = :es`).
+- **Gemas de soporte:** Utilizar `rails-i18n` para las traducciones base de Rails y `devise-i18n` para las alertas, correos y formularios de autenticación.
+- **Uso de YAML para traducciones (`config/locales/es.yml`):**
+  - Utilizar el helper de traducción `t("clave_traduccion")` o `I18n.t(...)`.
+  - Definir las traducciones de modelos y atributos de Active Record en la sección `activerecord.models` y `activerecord.attributes` de los archivos YAML para que métodos como `Model.human_attribute_name(:campo)` devuelvan el nombre en español.
+  - Definir los mensajes de notificación flash en `config/locales/es.yml` bajo la clave `flash.modulo.accion`.
+- **Formato de Fechas y Moneda:** Formatear fechas y horas UTC-6 con las convenciones locales en español y valores monetarios con los locales de moneda correspondientes.
+
 ---
 
 ## 🚫 Prácticas Prohibidas
