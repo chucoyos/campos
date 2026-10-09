@@ -1,5 +1,5 @@
 class MasterBlsController < ApplicationController
-  before_action :set_master_bl, only: %i[show edit update destroy]
+  before_action :set_master_bl, only: %i[show edit update destroy template import]
 
   def index
     authorize MasterBl
@@ -7,6 +7,7 @@ class MasterBlsController < ApplicationController
   end
 
   def show
+    load_containers
   end
 
   def new
@@ -41,7 +42,27 @@ class MasterBlsController < ApplicationController
     redirect_to master_bls_path, notice: t("flash.master_bls.destroy")
   end
 
+  def template
+    send_data ContainerSpreadsheet.template, filename: "contenedores.xlsx", type: ContainerSpreadsheet::CONTENT_TYPE, disposition: "attachment"
+  end
+
+  def import
+    result = ContainerImporter.new(@master_bl, params[:file]).call
+
+    if result.success?
+      redirect_to @master_bl, notice: t("flash.master_bls.import", count: result.created)
+    else
+      @import_errors = result.errors
+      load_containers
+      render :show, status: :unprocessable_entity
+    end
+  end
+
   private
+
+  def load_containers
+    @containers = @master_bl.containers.order(:number)
+  end
 
   def set_master_bl
     @master_bl = MasterBl.find(params[:id])

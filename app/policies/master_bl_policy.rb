@@ -4,6 +4,8 @@ class MasterBlPolicy < ApplicationPolicy
   def create? = user&.admin?
   def update? = user&.admin?
   def destroy? = user&.admin?
+  def template? = user&.admin?
+  def import? = user&.admin?
 
   class Scope < Scope
     def resolve

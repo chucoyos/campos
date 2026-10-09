@@ -3,7 +3,12 @@ Rails.application.routes.draw do
   resources :users
   resources :clients
   resources :carriers
-  resources :master_bls
+  resources :master_bls do
+    member do
+      get :template
+      post :import
+    end
+  end
   resources :containers do
     member { patch :transition }
   end

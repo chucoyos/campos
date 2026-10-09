@@ -12,6 +12,9 @@ es:
       create: "MBL creado."
       update: "MBL actualizado."
       destroy: "MBL eliminado."
+      import:
+        one: "Se cargó 1 contenedor."
+        other: "Se cargaron %{count} contenedores."
     clients:
       create: "Cliente creado."
       update: "Cliente actualizado."
@@ -82,6 +85,22 @@ es:
       llenar: "Marcar como lleno"
       vaciar: "Marcar como vacío"
       entregar: "Marcar como entregado"
+  container_import:
+    sheet: "Contenedores"
+    instructions_sheet: "Instrucciones"
+    instructions:
+      - "Llena una fila por contenedor en la hoja Contenedores, empezando en la fila 2."
+      - "Número: 4 letras y 7 números, por ejemplo MSKU1234567. No puede repetirse."
+      - "Tamaño: 20 o 40."
+      - "Tipo: Estándar o HQ."
+      - "Los contenedores se crean con estado Activo y quedan asociados al MBL desde donde se carga el archivo."
+      - "Si alguna fila tiene errores no se carga ninguna."
+    errors:
+      no_file: "Selecciona un archivo Excel."
+      invalid_file: "El archivo debe ser un Excel (.xlsx) válido de máximo 2 MB."
+      empty: "El archivo no tiene contenedores."
+      too_many: "El archivo supera el máximo de %{max} contenedores."
+      row: "Fila %{row}: %{messages}"
   master_bls:
     index:
       new: "Nuevo MBL"
@@ -92,6 +111,12 @@ es:
       title: "Editar MBL"
     form:
       client_prompt: "Selecciona un cliente"
+    show:
+      download_template: "Descargar plantilla Excel"
+      upload_label: "Archivo Excel con contenedores"
+      upload: "Cargar contenedores"
+      import_failed: "No se cargó ningún contenedor. Corrige estos errores y vuelve a intentarlo:"
+      no_containers: "Este MBL aún no tiene contenedores."
   clients:
     index:
       new: "Nuevo cliente"
