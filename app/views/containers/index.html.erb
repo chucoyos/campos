@@ -1,0 +1,67 @@
+<div class="w-full">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <%= material_icon "inventory_2" %>
+      </span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= Container.model_name.human(count: 2) %></h1>
+        <p class="text-sm text-slate-500"><%= "#{@containers.size} #{Container.model_name.human(count: @containers.size).downcase}" %></p>
+      </div>
+    </div>
+    <%= link_to new_container_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
+      <%= material_icon "add" %> <%= t(".new") %>
+    <% end %>
+  </div>
+
+  <%# Cards on small screens %>
+  <ul class="space-y-3 md:hidden">
+    <% @containers.each do |container| %>
+      <li class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+        <div class="flex items-start justify-between gap-2">
+          <p class="truncate font-medium text-slate-800"><%= container.number %></p>
+          <%= render "status", container: container %>
+        </div>
+        <p class="text-sm text-slate-500">
+          <%= t("containers.sizes.#{container.size}") %> · <%= t("containers.types.#{container.container_type}") %>
+        </p>
+        <p class="truncate text-sm text-slate-500"><%= container.master_bl&.number || t("containers.show.no_master_bl") %></p>
+        <div class="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-3">
+          <%= render "actions", container: container %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+
+  <%# Table from medium screens %>
+  <div class="hidden overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm md:block">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="p-4"><%= Container.human_attribute_name(:number) %></th>
+          <th class="p-4"><%= Container.human_attribute_name(:size) %></th>
+          <th class="p-4"><%= Container.human_attribute_name(:container_type) %></th>
+          <th class="p-4"><%= Container.human_attribute_name(:status) %></th>
+          <th class="p-4"><%= Container.human_attribute_name(:master_bl) %></th>
+          <th class="p-4 text-right"><%= t("shared.actions.title") %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @containers.each do |container| %>
+          <tr class="transition-colors hover:bg-slate-50">
+            <td class="p-4 font-medium text-slate-800"><%= container.number %></td>
+            <td class="p-4 text-slate-600"><%= t("containers.sizes.#{container.size}") %></td>
+            <td class="p-4 text-slate-600"><%= t("containers.types.#{container.container_type}") %></td>
+            <td class="p-4"><%= render "status", container: container %></td>
+            <td class="p-4 text-slate-600"><%= container.master_bl&.number || t("containers.show.no_master_bl") %></td>
+            <td class="p-4">
+              <div class="flex items-center justify-end gap-1">
+                <%= render "actions", container: container %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

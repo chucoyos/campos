@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   resources :clients
   resources :carriers
   resources :master_bls
+  resources :containers do
+    member { patch :transition }
+  end
   get "home/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

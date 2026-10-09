@@ -1,0 +1,4 @@
+<% colors = { "activo" => "bg-sky-50 text-sky-700", "lleno" => "bg-amber-50 text-amber-700", "vacio" => "bg-slate-100 text-slate-700", "entregado" => "bg-emerald-50 text-emerald-700" } %>
+<span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium <%= colors[container.status] %>">
+  <%= t("containers.statuses.#{container.status}") %>
+</span>

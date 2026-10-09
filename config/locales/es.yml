@@ -2,6 +2,12 @@ es:
   flash:
     application:
       not_authorized: "No tienes permiso para realizar esta acción."
+    containers:
+      create: "Contenedor creado."
+      update: "Contenedor actualizado."
+      destroy: "Contenedor eliminado."
+      transition: "Estado del contenedor actualizado."
+      invalid_transition: "El cambio de estado no es válido para este contenedor."
     master_bls:
       create: "MBL creado."
       update: "MBL actualizado."
@@ -23,6 +29,7 @@ es:
       home: "Inicio"
       users: "Usuarios"
       master_bls: "MBL"
+      containers: "Contenedores"
       clients: "Clientes"
       carriers: "Transportistas"
       main_navigation: "Navegación principal"
@@ -43,6 +50,38 @@ es:
       back: "Volver al listado"
     flash:
       close: "Cerrar notificación"
+  containers:
+    index:
+      new: "Nuevo contenedor"
+    new:
+      title: "Nuevo contenedor"
+      subtitle: "Registra un contenedor."
+    edit:
+      title: "Editar contenedor"
+    form:
+      master_bl_prompt: "Sin MBL (solo resguardo)"
+      status_prompt: "Selecciona un estado"
+      status_hint: "Solo aplica sin MBL. Con MBL el contenedor inicia como Activo y avanza en orden: Activo, Lleno, Vacío, Entregado."
+      number_hint: "4 letras y 7 números, por ejemplo MSKU1234567."
+      number_title: "Debe tener 4 letras seguidas de 7 números (ej. MSKU1234567)."
+    show:
+      change_status: "Cambiar estado"
+      no_master_bl: "Sin MBL"
+    sizes:
+      "20": "20 pies"
+      "40": "40 pies"
+    types:
+      standard: "Estándar"
+      hq: "HQ"
+    statuses:
+      activo: "Activo"
+      lleno: "Lleno"
+      vacio: "Vacío"
+      entregado: "Entregado"
+    events:
+      llenar: "Marcar como lleno"
+      vaciar: "Marcar como vacío"
+      entregar: "Marcar como entregado"
   master_bls:
     index:
       new: "Nuevo MBL"
@@ -120,6 +159,9 @@ es:
         submit: "Cambiar contraseña"
   activerecord:
     models:
+      container:
+        one: "Contenedor"
+        other: "Contenedores"
       master_bl:
         one: "MBL"
         other: "MBL"
@@ -132,7 +174,22 @@ es:
       user:
         one: "Usuario"
         other: "Usuarios"
+    errors:
+      models:
+        container:
+          attributes:
+            master_bl_id:
+              unchangeable: "no se puede asignar ni quitar después de crear el contenedor"
     attributes:
+      container:
+        number: "Número"
+        size: "Tamaño"
+        container_type: "Tipo"
+        status: "Estado"
+        master_bl: "MBL"
+        master_bl_id: "MBL"
+        created_at: "Creado"
+        updated_at: "Última actualización"
       master_bl:
         number: "Número de MBL"
         client: "Cliente"

@@ -4,6 +4,7 @@ RSpec.describe MasterBl, type: :model do
   subject { build(:master_bl) }
 
   it { is_expected.to belong_to(:client) }
+  it { is_expected.to have_many(:containers).dependent(:restrict_with_error) }
   it { is_expected.to validate_presence_of(:number) }
   it { is_expected.to validate_uniqueness_of(:number).ignoring_case_sensitivity }
 

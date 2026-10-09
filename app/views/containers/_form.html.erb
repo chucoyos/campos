@@ -1,0 +1,55 @@
+<%= form_with model: container, class: "space-y-5" do |f| %>
+  <% if container.errors.any? %>
+    <div class="flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <%= material_icon "error" %>
+      <ul>
+        <% container.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :number, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <%= f.text_field :number, autofocus: true, required: true, maxlength: 11, minlength: 11,
+          pattern: Container::NUMBER_PATTERN, title: t(".number_title"), placeholder: "MSKU1234567",
+          autocapitalize: "characters", autocomplete: "off",
+          class: "w-full rounded-2xl border border-slate-200 bg-white p-3 uppercase focus:border-indigo-500 focus:outline-none" %>
+    <p class="mt-1 text-xs text-slate-500"><%= t(".number_hint") %></p>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <%= f.label :size, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.select :size, Container::SIZES.map { |size| [ t("containers.sizes.#{size}"), size ] }, {}, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= f.label :container_type, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.select :container_type, Container.container_types.keys.map { |type| [ t("containers.types.#{type}"), type ] }, {}, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :master_bl_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <%= f.collection_select :master_bl_id, MasterBl.order(:number), :id, :number, { include_blank: t(".master_bl_prompt") }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+  </div>
+
+  <% if container.new_record? %>
+    <div>
+      <%= f.label :status, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.select :status, Container::STANDALONE_STATUSES.map { |status| [ t("containers.statuses.#{status}"), status ] }, { selected: container.status.presence_in(Container::STANDALONE_STATUSES), prompt: t(".status_prompt") }, required: true, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+      <p class="mt-1 text-xs text-slate-500"><%= t(".status_hint") %></p>
+    </div>
+  <% end %>
+
+  <div class="flex flex-wrap items-center gap-3 pt-2">
+    <%= f.button class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
+      <%= material_icon "save" %> <%= container.persisted? ? t("shared.actions.save") : t("shared.actions.create") %>
+    <% end %>
+    <%= link_to containers_path, class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 transition-colors hover:bg-slate-100" do %>
+      <%= material_icon "close" %> <%= t("shared.actions.cancel") %>
+    <% end %>
+  </div>
+<% end %>

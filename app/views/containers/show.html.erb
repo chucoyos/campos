@@ -1,0 +1,72 @@
+<div class="mx-auto w-full max-w-2xl">
+  <%= link_to containers_path, class: "mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800" do %>
+    <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+  <% end %>
+
+  <div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+    <div class="mb-6 flex items-center gap-4">
+      <span class="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <%= material_icon "inventory_2", classes: "!text-3xl" %>
+      </span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900"><%= @container.number %></h1>
+        <%= render "status", container: @container %>
+      </div>
+    </div>
+
+    <dl class="grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
+      <div>
+        <dt class="text-slate-500"><%= Container.human_attribute_name(:size) %></dt>
+        <dd class="font-medium text-slate-800"><%= t("containers.sizes.#{@container.size}") %></dd>
+      </div>
+      <div>
+        <dt class="text-slate-500"><%= Container.human_attribute_name(:container_type) %></dt>
+        <dd class="font-medium text-slate-800"><%= t("containers.types.#{@container.container_type}") %></dd>
+      </div>
+      <div>
+        <dt class="text-slate-500"><%= Container.human_attribute_name(:master_bl) %></dt>
+        <dd class="font-medium text-slate-800">
+          <% if @container.master_bl %>
+            <%= link_to @container.master_bl.number, master_bl_path(@container.master_bl), class: "text-indigo-600 hover:underline" %>
+          <% else %>
+            <%= t(".no_master_bl") %>
+          <% end %>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-slate-500"><%= Container.human_attribute_name(:created_at) %></dt>
+        <dd class="font-medium text-slate-800"><%= l(@container.created_at, format: :long) %></dd>
+      </div>
+      <div>
+        <dt class="text-slate-500"><%= Container.human_attribute_name(:updated_at) %></dt>
+        <dd class="font-medium text-slate-800"><%= l(@container.updated_at, format: :long) %></dd>
+      </div>
+    </dl>
+
+    <% events = %w[llenar vaciar entregar].select { |event| @container.public_send(:"may_#{event}?") } %>
+    <% if events.any? %>
+      <div class="mt-6">
+        <h2 class="mb-2 text-sm font-medium text-slate-500"><%= t(".change_status") %></h2>
+        <div class="flex flex-wrap gap-3">
+          <% events.each do |event| %>
+            <%= button_to transition_container_path(@container, event: event), method: :patch,
+                  class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
+              <%= material_icon "swap_horiz" %> <%= t("containers.events.#{event}") %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <%= link_to edit_container_path(@container), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
+        <%= material_icon "edit" %> <%= t("shared.actions.edit") %>
+      <% end %>
+      <%= button_to container_path(@container), method: :delete,
+            form: { data: { turbo_confirm: t("shared.actions.confirm_destroy", name: @container.number) } },
+            class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-red-600 transition-colors hover:bg-red-50" do %>
+        <%= material_icon "delete" %> <%= t("shared.actions.destroy") %>
+      <% end %>
+    </div>
+  </div>
+</div>

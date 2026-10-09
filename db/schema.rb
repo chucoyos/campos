@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_09_062400) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_09_070000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,6 +30,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_062400) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_clients_on_name"
     t.index ["user_id"], name: "index_clients_on_user_id"
+  end
+
+  create_table "containers", force: :cascade do |t|
+    t.string "number", null: false
+    t.integer "size", null: false
+    t.string "container_type", null: false
+    t.string "status", null: false
+    t.bigint "master_bl_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["master_bl_id"], name: "index_containers_on_master_bl_id"
+    t.index ["number"], name: "index_containers_on_number"
+    t.index ["status"], name: "index_containers_on_status"
   end
 
   create_table "master_bls", force: :cascade do |t|
@@ -57,5 +70,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_09_062400) do
 
   add_foreign_key "carriers", "users"
   add_foreign_key "clients", "users"
+  add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
 end
