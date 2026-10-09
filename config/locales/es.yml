@@ -2,6 +2,14 @@ es:
   flash:
     application:
       not_authorized: "No tienes permiso para realizar esta acción."
+    clients:
+      create: "Cliente creado."
+      update: "Cliente actualizado."
+      destroy: "Cliente eliminado."
+    carriers:
+      create: "Transportista creado."
+      update: "Transportista actualizado."
+      destroy: "Transportista eliminado."
     users:
       create: "Usuario creado."
       update: "Usuario actualizado."
@@ -10,11 +18,42 @@ es:
     navbar:
       home: "Inicio"
       users: "Usuarios"
+      clients: "Clientes"
+      carriers: "Transportistas"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
+    actions:
+      title: "Acciones"
+      show: "Ver"
+      edit: "Editar"
+      destroy: "Eliminar"
+      show_named: "Ver %{name}"
+      edit_named: "Editar %{name}"
+      destroy_named: "Eliminar %{name}"
+      confirm_destroy: "¿Eliminar %{name}? Esta acción no se puede deshacer."
+      save: "Guardar cambios"
+      create: "Crear"
+      cancel: "Cancelar"
+      back: "Volver al listado"
     flash:
       close: "Cerrar notificación"
+  clients:
+    index:
+      new: "Nuevo cliente"
+    new:
+      title: "Nuevo cliente"
+      subtitle: "Registra un cliente."
+    edit:
+      title: "Editar cliente"
+  carriers:
+    index:
+      new: "Nuevo transportista"
+    new:
+      title: "Nuevo transportista"
+      subtitle: "Registra un transportista."
+    edit:
+      title: "Editar transportista"
   users:
     back: "Volver a usuarios"
     cancel: "Cancelar"
@@ -66,10 +105,21 @@ es:
         submit: "Cambiar contraseña"
   activerecord:
     models:
+      client:
+        one: "Cliente"
+        other: "Clientes"
+      carrier:
+        one: "Transportista"
+        other: "Transportistas"
       user:
         one: "Usuario"
         other: "Usuarios"
     attributes:
+      client: &named
+        name: "Nombre"
+        created_at: "Creado"
+        updated_at: "Última actualización"
+      carrier: *named
       user:
         email: "Correo electrónico"
         password: "Contraseña"

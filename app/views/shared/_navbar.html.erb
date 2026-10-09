@@ -1,4 +1,6 @@
 <% links = [[t(".home"), root_path, "home", current_page?(root_path)]] %>
+<% links << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
+<% links << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
 <% links << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
 
 <header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">
