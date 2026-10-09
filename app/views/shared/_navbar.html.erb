@@ -1,9 +1,11 @@
-<% links = [[t(".home"), root_path, "home", current_page?(root_path)]] %>
+<% links = [] %>
 <% links << [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls"] if policy(MasterBl).index? %>
 <% links << [t(".containers"), containers_path, "inventory_2", controller_name == "containers"] if policy(Container).index? %>
-<% links << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
-<% links << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
-<% links << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
+<% catalogs = [] %>
+<% catalogs << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
+<% catalogs << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
+<% catalogs << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
+<% catalogs_active = catalogs.any? { |*, active| active } %>
 
 <header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">
   <nav class="container mx-auto rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="<%= t(".main_navigation") %>">
@@ -21,6 +23,22 @@
             <%= link_to path, class: nav_link_classes(active), aria: { current: (active ? "page" : nil) } do %>
               <%= material_icon icon %> <%= label %>
             <% end %>
+          <% end %>
+
+          <% if catalogs.any? %>
+            <div class="relative" data-controller="dropdown">
+              <button type="button" data-dropdown-target="button" data-action="dropdown#toggle" aria-expanded="false" aria-haspopup="true"
+                      class="<%= nav_link_classes(catalogs_active) %> cursor-pointer">
+                <%= material_icon "folder_open" %> <%= t(".catalogs") %> <%= material_icon "expand_more" %>
+              </button>
+              <div data-dropdown-target="menu" class="absolute left-0 top-full z-20 mt-2 hidden w-56 space-y-1 rounded-2xl border border-slate-200/60 bg-white p-2 shadow-md">
+                <% catalogs.each do |label, path, icon, active| %>
+                  <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+                    <%= material_icon icon %> <%= label %>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
           <% end %>
         </div>
       </div>
@@ -55,6 +73,21 @@
         <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
           <%= material_icon icon %> <%= label %>
         <% end %>
+      <% end %>
+      <% if catalogs.any? %>
+        <details class="group" <%= "open" if catalogs_active %>>
+          <summary class="<%= nav_link_classes(catalogs_active) %> w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+            <%= material_icon "folder_open" %> <%= t(".catalogs") %>
+            <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
+          </summary>
+          <div class="mt-1 space-y-1 pl-4">
+            <% catalogs.each do |label, path, icon, active| %>
+              <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+                <%= material_icon icon %> <%= label %>
+              <% end %>
+            <% end %>
+          </div>
+        </details>
       <% end %>
       <div class="flex items-center gap-3 rounded-2xl bg-white/60 p-3">
         <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">

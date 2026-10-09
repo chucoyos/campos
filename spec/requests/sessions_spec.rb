@@ -12,6 +12,19 @@ RSpec.describe "Sessions", type: :request do
     expect(response.body).to include("logout")
   end
 
+  it "groups clients, carriers and users under a Catálogos dropdown for admins" do
+    sign_in create(:user, :admin)
+    get root_path
+    expect(response.body).to include('data-controller="dropdown"', "Catálogos", clients_path, carriers_path, users_path)
+    expect(response.body).not_to include("Inicio")
+  end
+
+  it "hides the Catálogos dropdown from non-admins" do
+    sign_in create(:user, :cliente)
+    get root_path
+    expect(response.body).not_to include("Catálogos")
+  end
+
   it "renders the hamburger menu button" do
     sign_in create(:user)
     get root_path

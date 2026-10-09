@@ -29,7 +29,7 @@ es:
       destroy: "Usuario eliminado."
   shared:
     navbar:
-      home: "Inicio"
+      catalogs: "Catálogos"
       users: "Usuarios"
       master_bls: "MBL"
       containers: "Contenedores"
@@ -101,6 +101,10 @@ es:
       empty: "El archivo no tiene contenedores."
       too_many: "El archivo supera el máximo de %{max} contenedores."
       row: "Fila %{row}: %{messages}"
+  home:
+    index:
+      title: "Bienvenido"
+      subtitle: "Tu cuenta aún no tiene módulos disponibles."
   master_bls:
     index:
       new: "Nuevo MBL"

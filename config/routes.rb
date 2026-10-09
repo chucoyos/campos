@@ -24,5 +24,9 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
+  # Los administradores aterrizan en MBL; el resto en la página de inicio.
+  authenticated :user, ->(user) { user.admin? } do
+    root "master_bls#index", as: :admin_root
+  end
   root "home#index"
 end
