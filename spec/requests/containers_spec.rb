@@ -37,6 +37,11 @@ RSpec.describe "Containers", type: :request do
       expect { post containers_path, params: { container: { number: "MSKU3333333", size: 20, container_type: "standard", status: "" } } }.not_to change(Container, :count)
     end
 
+    it "wires the form to hide the status when an MBL is selected" do
+      get new_container_path
+      expect(response.body).to include('data-controller="container-form"', 'data-container-form-target="statusField"')
+    end
+
     it "rejects an invalid status without MBL" do
       expect { post containers_path, params: { container: { number: "MSKU1111111", size: 20, container_type: "standard", status: "entregado" } } }.not_to change(Container, :count)
     end

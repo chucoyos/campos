@@ -1,4 +1,4 @@
-<%= form_with model: container, class: "space-y-5" do |f| %>
+<%= form_with model: container, class: "space-y-5", data: { controller: "container-form" } do |f| %>
   <% if container.errors.any? %>
     <div class="flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
       <%= material_icon "error" %>
@@ -33,13 +33,13 @@
 
   <div>
     <%= f.label :master_bl_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
-    <%= f.collection_select :master_bl_id, MasterBl.order(:number), :id, :number, { include_blank: t(".master_bl_prompt") }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+    <%= f.collection_select :master_bl_id, MasterBl.order(:number), :id, :number, { include_blank: t(".master_bl_prompt") }, data: { container_form_target: "masterBl", action: "change->container-form#toggle" }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
   </div>
 
   <% if container.new_record? %>
-    <div>
+    <div data-container-form-target="statusField" <%= "hidden" if container.master_bl_id.present? %>>
       <%= f.label :status, class: "mb-1 block text-sm font-medium text-slate-700" %>
-      <%= f.select :status, Container::STANDALONE_STATUSES.map { |status| [ t("containers.statuses.#{status}"), status ] }, { selected: container.status.presence_in(Container::STANDALONE_STATUSES), prompt: t(".status_prompt") }, required: true, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+      <%= f.select :status, Container::STANDALONE_STATUSES.map { |status| [ t("containers.statuses.#{status}"), status ] }, { selected: container.status.presence_in(Container::STANDALONE_STATUSES), prompt: t(".status_prompt") }, required: true, disabled: container.master_bl_id.present?, data: { container_form_target: "status" }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
       <p class="mt-1 text-xs text-slate-500"><%= t(".status_hint") %></p>
     </div>
   <% end %>

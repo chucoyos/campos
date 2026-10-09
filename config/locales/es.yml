@@ -61,7 +61,7 @@ es:
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
       status_prompt: "Selecciona un estado"
-      status_hint: "Solo aplica sin MBL. Con MBL el contenedor inicia como Activo y avanza en orden: Activo, Lleno, Vacío, Entregado."
+      status_hint: "Solo aplica sin MBL. Con MBL el contenedor inicia como Activo y avanza en orden."
       number_hint: "4 letras y 7 números, por ejemplo MSKU1234567."
       number_title: "Debe tener 4 letras seguidas de 7 números (ej. MSKU1234567)."
     show:
