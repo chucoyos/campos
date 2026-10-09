@@ -1,9 +1,12 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: %i[edit update destroy]
+  before_action :set_user, only: %i[show edit update destroy]
 
   def index
     authorize User
     @users = policy_scope(User).order(:email)
+  end
+
+  def show
   end
 
   def new
