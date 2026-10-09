@@ -26,77 +26,6 @@
       </div>
     </dl>
 
-    <section class="mt-8">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-lg font-bold text-slate-900"><%= Container.model_name.human(count: 2) %> <span class="text-sm font-normal text-slate-500">(<%= @containers.size %>)</span></h2>
-        <%= link_to template_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
-          <%= material_icon "download" %> <%= t(".download_template") %>
-        <% end %>
-      </div>
-
-      <%= form_with url: import_master_bl_path(@master_bl), multipart: true, class: "mb-4 flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>
-        <%= f.label :file, t(".upload_label"), class: "sr-only" %>
-        <%= f.file_field :file, accept: ".xlsx", required: true,
-              class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100" %>
-        <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
-          <%= material_icon "upload_file" %> <%= t(".upload") %>
-        <% end %>
-      <% end %>
-
-      <% if @import_errors.present? %>
-        <div class="mb-4 flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
-          <%= material_icon "error" %>
-          <div>
-            <p class="font-medium"><%= t(".import_failed") %></p>
-            <ul class="mt-1 list-disc pl-5">
-              <% @import_errors.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        </div>
-      <% end %>
-
-      <% if @containers.empty? %>
-        <p class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500"><%= t(".no_containers") %></p>
-      <% else %>
-        <ul class="space-y-2 md:hidden">
-          <% @containers.each do |container| %>
-            <li class="flex items-center justify-between gap-2 rounded-2xl border border-slate-100 p-3">
-              <div class="min-w-0">
-                <%= link_to container.number, container_path(container), class: "block truncate font-medium text-indigo-600 hover:underline" %>
-                <p class="text-xs text-slate-500"><%= t("containers.sizes.#{container.size}") %> · <%= t("containers.types.#{container.container_type}") %></p>
-              </div>
-              <%= render "containers/status", container: container %>
-            </li>
-          <% end %>
-        </ul>
-
-        <div class="hidden overflow-hidden rounded-2xl border border-slate-100 md:block">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th class="p-3"><%= Container.human_attribute_name(:number) %></th>
-                <th class="p-3"><%= Container.human_attribute_name(:size) %></th>
-                <th class="p-3"><%= Container.human_attribute_name(:container_type) %></th>
-                <th class="p-3"><%= Container.human_attribute_name(:status) %></th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-              <% @containers.each do |container| %>
-                <tr class="transition-colors hover:bg-slate-50">
-                  <td class="p-3 font-medium"><%= link_to container.number, container_path(container), class: "text-indigo-600 hover:underline" %></td>
-                  <td class="p-3 text-slate-600"><%= t("containers.sizes.#{container.size}") %></td>
-                  <td class="p-3 text-slate-600"><%= t("containers.types.#{container.container_type}") %></td>
-                  <td class="p-3"><%= render "containers/status", container: container %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% end %>
-    </section>
-
     <div class="mt-6 flex flex-wrap items-center gap-3">
       <%= link_to edit_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
         <%= material_icon "edit" %> <%= t("shared.actions.edit") %>
@@ -108,4 +37,75 @@
       <% end %>
     </div>
   </div>
+
+  <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-lg font-bold text-slate-900"><%= Container.model_name.human(count: 2) %> <span class="text-sm font-normal text-slate-500">(<%= @containers.size %>)</span></h2>
+      <%= link_to template_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
+        <%= material_icon "download" %> <%= t(".download_template") %>
+      <% end %>
+    </div>
+
+    <%= form_with url: import_master_bl_path(@master_bl), multipart: true, class: "mb-4 flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>
+      <%= f.label :file, t(".upload_label"), class: "sr-only" %>
+      <%= f.file_field :file, accept: ".xlsx", required: true,
+            class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100" %>
+      <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+        <%= material_icon "upload_file" %> <%= t(".upload") %>
+      <% end %>
+    <% end %>
+
+    <% if @import_errors.present? %>
+      <div class="mb-4 flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <%= material_icon "error" %>
+        <div>
+          <p class="font-medium"><%= t(".import_failed") %></p>
+          <ul class="mt-1 list-disc pl-5">
+            <% @import_errors.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @containers.empty? %>
+      <p class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500"><%= t(".no_containers") %></p>
+    <% else %>
+      <ul class="space-y-3 md:hidden">
+        <% @containers.each do |container| %>
+          <li class="flex items-center justify-between gap-2 rounded-2xl border border-slate-100 p-3">
+            <div class="min-w-0">
+              <%= link_to container.number, container_path(container), class: "block truncate font-medium text-indigo-600 hover:underline" %>
+              <p class="text-xs text-slate-500"><%= t("containers.sizes.#{container.size}") %> · <%= t("containers.types.#{container.container_type}") %></p>
+            </div>
+            <%= render "containers/status", container: container %>
+          </li>
+        <% end %>
+      </ul>
+
+      <div class="hidden overflow-hidden rounded-2xl border border-slate-100 md:block">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr>
+              <th class="p-3"><%= Container.human_attribute_name(:number) %></th>
+              <th class="p-3"><%= Container.human_attribute_name(:size) %></th>
+              <th class="p-3"><%= Container.human_attribute_name(:container_type) %></th>
+              <th class="p-3"><%= Container.human_attribute_name(:status) %></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% @containers.each do |container| %>
+              <tr class="transition-colors hover:bg-slate-50">
+                <td class="p-3 font-medium"><%= link_to container.number, container_path(container), class: "text-indigo-600 hover:underline" %></td>
+                <td class="p-3 text-slate-600"><%= t("containers.sizes.#{container.size}") %></td>
+                <td class="p-3 text-slate-600"><%= t("containers.types.#{container.container_type}") %></td>
+                <td class="p-3"><%= render "containers/status", container: container %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
 </div>
