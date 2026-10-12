@@ -25,6 +25,15 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
+  # Detecta consultas N+1 y eager loading innecesario.
+  config.after_initialize do
+    Bullet.enable = true
+    Bullet.bullet_logger = true
+    Bullet.rails_logger = true
+    Bullet.add_footer = true
+    Bullet.console = true
+  end
+
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 

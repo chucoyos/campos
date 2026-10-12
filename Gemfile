@@ -68,6 +68,9 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Detects N+1 queries and unused eager loading
+  gem "bullet"
 end
 
 group :test do
@@ -75,6 +78,7 @@ group :test do
   gem "capybara"
   gem "selenium-webdriver"
   gem "shoulda-matchers"
+  gem "bullet"
 end
 
 gem "pundit-matchers", "~> 4.0", group: :test
