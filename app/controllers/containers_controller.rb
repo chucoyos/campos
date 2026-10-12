@@ -10,7 +10,7 @@ class ContainersController < ApplicationController
   end
 
   def show
-    @photo_counts = ActiveStorage::Attachment.where(record: @container).group(:name).count
+    @photo_counts = policy(@container).photos? ? ActiveStorage::Attachment.where(record: @container).group(:name).count : {}
   end
 
   def new
@@ -130,12 +130,13 @@ class ContainersController < ApplicationController
   TRANSITION_EVENTS = %w[llenar vaciar entregar].freeze
 
   def set_container
-    @container = Container.find(params[:id])
+    @container = policy_scope(Container).find(params[:id])
     authorize @container
   end
 
   def container_params
-    permitted = %i[number size container_type master_bl_id]
+    permitted = %i[number size container_type]
+    permitted << :master_bl_id if action_name == "create" || current_user.admin?
     permitted << :status if action_name == "create"
     params.expect(container: permitted)
   end

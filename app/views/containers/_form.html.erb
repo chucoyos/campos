@@ -33,7 +33,7 @@
 
   <div>
     <%= f.label :master_bl_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
-    <%= f.collection_select :master_bl_id, MasterBl.order(:number), :id, :number, { include_blank: t(".master_bl_prompt") }, data: { container_form_target: "masterBl", action: "change->container-form#toggle" }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+    <%= f.collection_select :master_bl_id, policy_scope(MasterBl).order(:number), :id, :number, (current_user.cliente? ? {} : { include_blank: t(".master_bl_prompt") }), data: { container_form_target: "masterBl", action: "change->container-form#toggle" }, class: "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
   </div>
 
   <% if container.new_record? %>

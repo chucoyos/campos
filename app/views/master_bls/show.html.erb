@@ -14,7 +14,7 @@
     <dl class="grid gap-4 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
       <div>
         <dt class="text-slate-500"><%= MasterBl.human_attribute_name(:client) %></dt>
-        <dd class="font-medium text-slate-800"><%= link_to @master_bl.client.name, client_path(@master_bl.client), class: "text-indigo-600 hover:underline" %></dd>
+        <dd class="font-medium text-slate-800"><% if policy(@master_bl.client).show? %><%= link_to @master_bl.client.name, client_path(@master_bl.client), class: "text-indigo-600 hover:underline" %><% else %><%= @master_bl.client.name %><% end %></dd>
       </div>
       <div>
         <dt class="text-slate-500"><%= MasterBl.human_attribute_name(:created_at) %></dt>
@@ -26,16 +26,22 @@
       </div>
     </dl>
 
+    <% if policy(@master_bl).update? || policy(@master_bl).destroy? %>
     <div class="mt-6 flex flex-wrap items-center gap-3">
+      <% if policy(@master_bl).update? %>
       <%= link_to edit_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
         <%= material_icon "edit" %> <%= t("shared.actions.edit") %>
       <% end %>
+      <% end %>
+      <% if policy(@master_bl).destroy? %>
       <%= button_to master_bl_path(@master_bl), method: :delete,
             form: { data: { turbo_confirm: t("shared.actions.confirm_destroy", name: @master_bl.number) } },
             class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-red-600 transition-colors hover:bg-red-50" do %>
         <%= material_icon "delete" %> <%= t("shared.actions.destroy") %>
       <% end %>
+      <% end %>
     </div>
+    <% end %>
   </div>
 
   <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -63,10 +69,12 @@
           <%= link_to document_master_bl_path(@master_bl), target: "_blank", rel: "noopener", class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
             <%= material_icon "open_in_new" %> <%= t(".document_open") %>
           <% end %>
+          <% if policy(@master_bl).remove_document? %>
           <%= button_to remove_document_master_bl_path(@master_bl), method: :delete,
                 form: { data: { turbo_confirm: t(".document_confirm_remove") } },
                 class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-red-600 transition-colors hover:bg-red-50" do %>
             <%= material_icon "delete" %> <%= t(".document_remove") %>
+          <% end %>
           <% end %>
         </div>
       </div>
@@ -74,6 +82,7 @@
       <p class="mb-4 text-sm text-slate-500"><%= t(".no_document") %> <%= t(".document_hint") %></p>
     <% end %>
 
+    <% if policy(@master_bl).upload_document? %>
     <%= form_with url: upload_document_master_bl_path(@master_bl), method: :patch, multipart: true,
           data: { controller: "direct-upload", direct_upload_max_size_value: MasterBl::DOCUMENT_MAX_SIZE,
                   direct_upload_too_large_value: t(".document_too_large"), direct_upload_failed_value: t(".document_upload_failed") },
@@ -92,6 +101,7 @@
       </div>
       <p class="hidden w-full text-sm text-red-700" role="alert" data-direct-upload-target="error"></p>
     <% end %>
+    <% end %>
   </section>
 
   <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
@@ -103,8 +113,10 @@
         <span><%= Container.model_name.human(count: 2) %> <span class="text-sm font-normal text-slate-500">(<%= @containers.size %>)</span></span>
       </h2>
       <div class="flex flex-wrap gap-2">
+      <% if policy(@master_bl).update? %>
       <%= link_to new_container_path(container: { master_bl_id: @master_bl.id }), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
         <%= material_icon "add" %> <%= t(".new_container") %>
+      <% end %>
       <% end %>
       <%= link_to template_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
         <%= material_icon "download" %> <%= t(".download_template") %>
@@ -112,6 +124,7 @@
       </div>
     </div>
 
+    <% if policy(@master_bl).import? %>
     <%= form_with url: import_master_bl_path(@master_bl), multipart: true, class: "mb-4 flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>
       <%= f.label :file, t(".upload_label"), class: "sr-only" %>
       <%= f.file_field :file, accept: ".xlsx", required: true,
@@ -119,6 +132,7 @@
       <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
         <%= material_icon "upload_file" %> <%= t(".upload") %>
       <% end %>
+    <% end %>
     <% end %>
 
     <% if @import_errors.present? %>

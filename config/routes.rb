@@ -48,6 +48,9 @@ Rails.application.routes.draw do
   authenticated :user, ->(user) { user.admin? } do
     root "master_bls#index", as: :admin_root
   end
+  authenticated :user, ->(user) { user.cliente? && user.client_id.present? } do
+    root "master_bls#index", as: :client_root
+  end
   root "home#index"
 
   match "/:code", to: "errors#show", via: :all, constraints: { code: /400|404|422|500/ }, as: :error

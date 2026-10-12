@@ -9,8 +9,10 @@
         <p class="text-sm text-slate-500"><%= "#{@pagy.count} #{MasterBl.model_name.human(count: @pagy.count).downcase}" %></p>
       </div>
     </div>
+    <% if policy(MasterBl).create? %>
     <%= link_to new_master_bl_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
       <%= material_icon "add" %> <%= t(".new") %>
+    <% end %>
     <% end %>
   </div>
 

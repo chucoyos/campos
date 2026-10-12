@@ -11,6 +11,11 @@ class MasterBl < ApplicationRecord
   validates :number, presence: true, uniqueness: true
   validate :document_is_valid_pdf
 
+  # El cliente solo puede modificar su MBL mientras ningún contenedor haya avanzado de "activo".
+  def open_for_client?
+    !containers.where.not(status: "activo").exists?
+  end
+
   private
 
   def document_is_valid_pdf

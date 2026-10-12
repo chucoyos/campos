@@ -19,6 +19,7 @@ class MasterBlsController < ApplicationController
 
   def create
     @master_bl = MasterBl.new(master_bl_params)
+    @master_bl.client_id = current_user.client_id if current_user.cliente?
     authorize @master_bl
 
     if @master_bl.save
@@ -92,13 +93,15 @@ class MasterBlsController < ApplicationController
   private
 
   def filter_fields
-    [
+    fields = [
       { name: "q", type: :text, label: t("filters.number"),
-        apply: ->(scope, value) { scope.where("master_bls.number ILIKE ?", like(value)) } },
-      { name: "client_id", type: :select, label: MasterBl.human_attribute_name(:client),
-        options: Client.order(:name).pluck(:name, :id),
-        apply: ->(scope, value) { scope.where(client_id: value) } }
+        apply: ->(scope, value) { scope.where("master_bls.number ILIKE ?", like(value)) } }
     ]
+    return fields unless current_user.admin?
+
+    fields << { name: "client_id", type: :select, label: MasterBl.human_attribute_name(:client),
+                options: Client.order(:name).pluck(:name, :id),
+                apply: ->(scope, value) { scope.where(client_id: value) } }
   end
 
   def load_containers
@@ -106,11 +109,13 @@ class MasterBlsController < ApplicationController
   end
 
   def set_master_bl
-    @master_bl = MasterBl.find(params[:id])
+    @master_bl = policy_scope(MasterBl).find(params[:id])
     authorize @master_bl
   end
 
   def master_bl_params
-    params.expect(master_bl: %i[number client_id])
+    permitted = %i[number]
+    permitted << :client_id if current_user.admin?
+    params.expect(master_bl: permitted)
   end
 end
