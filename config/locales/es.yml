@@ -164,7 +164,7 @@ es:
       document_label: "Archivo PDF del MBL"
       document_upload: "Subir documento"
       document_replace: "Reemplazar documento"
-      document_download: "Descargar"
+      document_open: "Abrir documento"
       document_remove: "Eliminar documento"
       document_confirm_remove: "¿Eliminar el documento de este MBL?"
       no_document: "Este MBL aún no tiene documento."

@@ -81,7 +81,7 @@ class MasterBlsController < ApplicationController
   def document
     return redirect_to @master_bl, alert: t("flash.master_bls.document_not_found") unless @master_bl.document.attached?
 
-    redirect_to @master_bl.document.url(expires_in: 5.minutes, disposition: :attachment), allow_other_host: true
+    redirect_to @master_bl.document.url(expires_in: 5.minutes, disposition: :inline), allow_other_host: true
   end
 
   def remove_document

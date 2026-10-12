@@ -3,20 +3,20 @@
     {
       "warning_type": "Redirect",
       "warning_code": 18,
-      "fingerprint": "a6798587243edffe8160121884e679ccffcc670c83a7ab0749f0216670154f5c",
+      "fingerprint": "266bf021580e2a362f4c959b93e176df064474b3cecfe11dcb28a779c7d9d349",
       "check_name": "Redirect",
       "message": "Possible unprotected redirect",
       "file": "app/controllers/master_bls_controller.rb",
       "line": 84,
       "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
-      "code": "redirect_to(MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :attachment), :allow_other_host => true)",
+      "code": "redirect_to(MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :inline), :allow_other_host => true)",
       "render_path": null,
       "location": {
         "type": "method",
         "class": "MasterBlsController",
         "method": "document"
       },
-      "user_input": "MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :attachment)",
+      "user_input": "MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :inline)",
       "confidence": "Weak",
       "cwe_id": [
         601
