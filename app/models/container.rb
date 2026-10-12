@@ -7,7 +7,16 @@ class Container < ApplicationRecord
   # Sin MBL (solo resguardo) el contenedor nace lleno o vacío y su estado no cambia.
   STANDALONE_STATUSES = %w[lleno vacio].freeze
 
+  PHOTO_SECTIONS = %w[opening deconsolidation empty].freeze
+  PHOTO_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
+  PHOTO_MAX_SIZE = 10.megabytes
+  MAX_PHOTOS_PER_UPLOAD = 30
+
   belongs_to :master_bl, optional: true
+
+  has_many_attached :opening_photos
+  has_many_attached :deconsolidation_photos
+  has_many_attached :empty_photos
 
   enum :container_type, { standard: "standard", hq: "hq" }, validate: true
 
@@ -17,6 +26,7 @@ class Container < ApplicationRecord
   validates :size, inclusion: { in: SIZES }
   validates :status, inclusion: { in: STANDALONE_STATUSES }, unless: :with_master_bl?
   validate :master_bl_presence_unchanged, on: :update
+  validate :photos_are_valid_images
 
   before_validation :start_at_activo, on: :create, if: :with_master_bl?
 
@@ -44,6 +54,16 @@ class Container < ApplicationRecord
   end
 
   private
+
+  def photos_are_valid_images
+    PHOTO_SECTIONS.each do |section|
+      attribute = :"#{section}_photos"
+      public_send(attribute).each do |photo|
+        errors.add(attribute, :invalid_type, filename: photo.filename) unless PHOTO_CONTENT_TYPES.include?(photo.blob.content_type)
+        errors.add(attribute, :too_large, filename: photo.filename, max: PHOTO_MAX_SIZE / 1.megabyte) if photo.blob.byte_size > PHOTO_MAX_SIZE
+      end
+    end
+  end
 
   def start_at_activo
     self.status = "activo"

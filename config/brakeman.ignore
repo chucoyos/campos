@@ -22,6 +22,40 @@
         601
       ],
       "note": "La URL firmada (5 min) la genera Active Storage para el documento adjunto; no depende de par\u00e1metros del usuario. Acci\u00f3n restringida a administradores."
+    },
+    {
+      "warning_type": "Cross-Site Scripting",
+      "warning_code": 4,
+      "fingerprint": "f9588c82a91136b2349610aa92b834484f1bbc71edccfcc3a1670a333737ac2f",
+      "check_name": "LinkToHref",
+      "message": "Potentially unsafe model attribute in `link_to` href",
+      "file": "app/views/containers/photos.html.erb",
+      "line": 9,
+      "link": "https://brakemanscanner.org/docs/warning_types/link_to_href",
+      "code": "link_to((Unresolved Model).new.url(:expires_in => 1.hour), :target => \"_top\", :rel => \"noopener\", :aria => ({ :label => t(\"containers.photos.open_photo\") }), :data => ({ :turbo => false }), :class => \"block h-full w-full\")",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "ContainersController",
+          "method": "photos",
+          "line": 61,
+          "file": "app/controllers/containers_controller.rb",
+          "rendered": {
+            "name": "containers/photos",
+            "file": "app/views/containers/photos.html.erb"
+          }
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "containers/photos"
+      },
+      "user_input": "(Unresolved Model).new.url(:expires_in => 1.hour)",
+      "confidence": "Weak",
+      "cwe_id": [
+        79
+      ],
+      "note": "La URL firmada de S3 la genera Active Storage para una foto adjunta; no depende de par\u00e1metros del usuario. Vista restringida a administradores."
     }
   ],
   "brakeman_version": "8.1.0"

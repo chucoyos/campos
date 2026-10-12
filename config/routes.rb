@@ -13,7 +13,12 @@ Rails.application.routes.draw do
     end
   end
   resources :containers do
-    member { patch :transition }
+    member do
+      patch :transition
+      get :photos
+      post :upload_photos
+      delete "photos/:photo_id", action: :remove_photo, as: :remove_photo
+    end
   end
   get "home/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

@@ -1,0 +1,36 @@
+<%# Sección desplegable: las fotos se piden al abrirla (turbo-frame lazy dentro de <details>). %>
+<% label = t("containers.photos.#{section}") %>
+<details class="group rounded-2xl border border-slate-200 bg-slate-50" <%= "open" if open %>>
+  <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-2 font-medium text-slate-800 transition-colors hover:bg-slate-100">
+    <span class="flex items-center gap-2">
+      <%= material_icon "photo_library", classes: "text-indigo-600" %> <%= label %>
+      <span class="rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"><%= t("containers.photos.count", count: count) %></span>
+    </span>
+    <%= material_icon "expand_more", classes: "transition-transform duration-200 ease-out group-open:rotate-180" %>
+  </summary>
+
+  <div class="space-y-4 p-4">
+    <%= form_with url: upload_photos_container_path(container, section: section), method: :post, multipart: true,
+          data: { controller: "photo-upload", photo_upload_max_value: Container::MAX_PHOTOS_PER_UPLOAD,
+                  photo_upload_too_many_value: t("containers.photos.too_many", max: Container::MAX_PHOTOS_PER_UPLOAD),
+                  photo_upload_failed_value: t("containers.photos.failed") },
+          class: "flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-white p-3" do |f| %>
+      <%= f.label :photos, t("containers.photos.input_label", section: label.downcase), class: "sr-only" %>
+      <%= f.file_field :photos, multiple: true, accept: Container::PHOTO_CONTENT_TYPES.join(","), required: true, direct_upload: true,
+            data: { photo_upload_target: "input", action: "change->photo-upload#prepare" },
+            class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 sm:w-auto" %>
+      <%= f.button data: { photo_upload_target: "submit" },
+            class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50" do %>
+        <%= material_icon "upload" %> <%= t("containers.photos.upload") %>
+      <% end %>
+      <div class="hidden h-2 w-full overflow-hidden rounded-full bg-slate-200" data-photo-upload-target="progress" role="progressbar" aria-label="<%= t("containers.photos.uploading") %>">
+        <div class="h-full w-0 rounded-full bg-indigo-600 transition-all duration-200 ease-out" data-photo-upload-target="bar"></div>
+      </div>
+      <p class="hidden w-full text-sm text-red-700" data-photo-upload-target="error" role="alert"></p>
+    <% end %>
+
+    <%= turbo_frame_tag "photos_#{section}", src: photos_container_path(container, section: section), loading: :lazy do %>
+      <p class="flex items-center gap-2 text-sm text-slate-500"><%= material_icon "hourglass_top" %> <%= t("containers.photos.loading") %></p>
+    <% end %>
+  </div>
+</details>

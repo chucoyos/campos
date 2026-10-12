@@ -1,5 +1,8 @@
 class ContainersController < ApplicationController
-  before_action :set_container, only: %i[show edit update destroy transition]
+  include ActiveStorage::SetCurrent
+
+  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo]
+  before_action :set_photo_section, only: %i[photos upload_photos]
 
   def index
     authorize Container
@@ -7,6 +10,7 @@ class ContainersController < ApplicationController
   end
 
   def show
+    @photo_counts = ActiveStorage::Attachment.where(record: @container).group(:name).count
   end
 
   def new
@@ -52,7 +56,38 @@ class ContainersController < ApplicationController
     end
   end
 
+  def photos
+    @photos = @container.public_send(:"#{@section}_photos_attachments").includes(:blob).order(:id)
+  end
+
+  def upload_photos
+    files = Array(params[:photos]).compact_blank.first(Container::MAX_PHOTOS_PER_UPLOAD)
+    return redirect_to container_path(@container, open: @section), alert: t("flash.containers.photos_missing") if files.empty?
+
+    @container.public_send(:"#{@section}_photos").attach(files)
+    if @container.errors.none?
+      redirect_to container_path(@container, open: @section), notice: t("flash.containers.photos_uploaded", count: files.size)
+    else
+      redirect_to container_path(@container, open: @section), alert: @container.errors.full_messages.to_sentence
+    end
+  rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+    redirect_to container_path(@container, open: @section), alert: t("flash.containers.photos_invalid")
+  end
+
+  def remove_photo
+    names = Container::PHOTO_SECTIONS.map { |section| "#{section}_photos" }
+    photo = ActiveStorage::Attachment.where(record: @container, name: names).find(params[:photo_id])
+    section = photo.name.delete_suffix("_photos")
+    photo.purge_later
+    redirect_to container_path(@container, open: section), notice: t("flash.containers.photo_removed")
+  end
+
   private
+
+  def set_photo_section
+    @section = params[:section].to_s
+    head :not_found unless Container::PHOTO_SECTIONS.include?(@section)
+  end
 
   def filter_fields
     [

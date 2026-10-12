@@ -8,6 +8,12 @@ es:
       destroy: "Contenedor eliminado."
       transition: "Estado del contenedor actualizado."
       invalid_transition: "El cambio de estado no es válido para este contenedor."
+      photos_uploaded:
+        one: "Se cargó 1 fotografía."
+        other: "Se cargaron %{count} fotografías."
+      photos_missing: "Selecciona al menos una fotografía."
+      photos_invalid: "No se pudieron adjuntar las fotografías. Inténtalo de nuevo."
+      photo_removed: "Fotografía eliminada."
     master_bls:
       create: "MBL creado."
       update: "MBL actualizado."
@@ -84,6 +90,24 @@ es:
       subtitle: "Registra un contenedor."
     edit:
       title: "Editar contenedor"
+    photos:
+      opening: "Apertura"
+      deconsolidation: "Desconsolidación"
+      empty: "Contenedor vacío"
+      count:
+        one: "1 foto"
+        other: "%{count} fotos"
+      empty_section: "Aún no hay fotografías en esta etapa."
+      loading: "Cargando fotografías…"
+      add: "Agregar fotografías"
+      upload: "Subir"
+      input_label: "Fotografías de %{section}"
+      uploading: "Subiendo fotografías"
+      failed: "No se pudieron subir las fotografías. Inténtalo de nuevo."
+      too_many: "Máximo %{max} fotografías por carga."
+      remove: "Eliminar fotografía"
+      confirm_remove: "¿Eliminar esta fotografía?"
+      open_photo: "Abrir fotografía en una pestaña nueva"
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
       status_prompt: "Selecciona un estado"
@@ -91,6 +115,8 @@ es:
       number_hint: "4 letras y 7 números, por ejemplo MSKU1234567."
       number_title: "Debe tener 4 letras seguidas de 7 números (ej. MSKU1234567)."
     show:
+      photos_title: "Fotografías"
+      photos_hint: "Evidencia fotográfica por etapa. Se cargan al abrir cada sección."
       change_status: "Cambiar estado"
       no_master_bl: "Sin MBL"
     sizes:
@@ -255,17 +281,25 @@ es:
         other: "Usuarios"
     errors:
       models:
+        container:
+          attributes:
+            master_bl_id:
+              unchangeable: "no se puede asignar ni quitar después de crear el contenedor"
+            opening_photos: &photo_errors
+              invalid_type: "%{filename} debe ser una imagen JPG, PNG o WebP"
+              too_large: "%{filename} no puede pesar más de %{max} MB"
+            deconsolidation_photos: *photo_errors
+            empty_photos: *photo_errors
         master_bl:
           attributes:
             document:
               invalid_type: "debe ser un archivo PDF"
               too_large: "no puede pesar más de %{max} MB"
-        container:
-          attributes:
-            master_bl_id:
-              unchangeable: "no se puede asignar ni quitar después de crear el contenedor"
     attributes:
       container:
+        opening_photos: "Fotos de apertura"
+        deconsolidation_photos: "Fotos de desconsolidación"
+        empty_photos: "Fotos de contenedor vacío"
         number: "Número"
         size: "Tamaño"
         container_type: "Tipo"
