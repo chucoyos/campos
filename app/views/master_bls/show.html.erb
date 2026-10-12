@@ -74,13 +74,23 @@
       <p class="mb-4 text-sm text-slate-500"><%= t(".no_document") %> <%= t(".document_hint") %></p>
     <% end %>
 
-    <%= form_with url: upload_document_master_bl_path(@master_bl), method: :patch, multipart: true, class: "flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>
+    <%= form_with url: upload_document_master_bl_path(@master_bl), method: :patch, multipart: true,
+          data: { controller: "direct-upload", direct_upload_max_size_value: MasterBl::DOCUMENT_MAX_SIZE,
+                  direct_upload_too_large_value: t(".document_too_large"), direct_upload_failed_value: t(".document_upload_failed") },
+          class: "flex flex-wrap items-center gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4" do |f| %>
       <%= f.label :document, t(".document_label"), class: "sr-only" %>
-      <%= f.file_field :document, accept: "application/pdf", required: true,
-            class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100" %>
-      <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+      <%= f.file_field :document, accept: "application/pdf", required: true, direct_upload: true,
+            data: { direct_upload_target: "input", action: "change->direct-upload#validate" },
+            class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 sm:w-auto" %>
+      <%= f.button data: { direct_upload_target: "submit" }, class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
         <%= material_icon "upload_file" %> <%= @master_bl.document.attached? ? t(".document_replace") : t(".document_upload") %>
       <% end %>
+      <div class="hidden w-full" data-direct-upload-target="progress" role="progressbar" aria-label="<%= t(".document_uploading") %>">
+        <div class="h-2 overflow-hidden rounded-full bg-slate-200">
+          <div class="h-full w-0 rounded-full bg-indigo-600 transition-all duration-200 ease-out" data-direct-upload-target="bar"></div>
+        </div>
+      </div>
+      <p class="hidden w-full text-sm text-red-700" role="alert" data-direct-upload-target="error"></p>
     <% end %>
   </section>
 

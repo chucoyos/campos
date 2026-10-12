@@ -168,6 +168,9 @@ es:
       document_remove: "Eliminar documento"
       document_confirm_remove: "¿Eliminar el documento de este MBL?"
       no_document: "Este MBL aún no tiene documento."
+      document_too_large: "El archivo supera los 10 MB."
+      document_upload_failed: "No se pudo subir el archivo. Inténtalo de nuevo."
+      document_uploading: "Subiendo documento"
   clients:
     index:
       new: "Nuevo cliente"
