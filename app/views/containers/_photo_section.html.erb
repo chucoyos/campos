@@ -10,6 +10,7 @@
   </summary>
 
   <div class="space-y-4 p-4">
+    <% if policy(container).upload_photos? %>
     <%= form_with url: upload_photos_container_path(container, section: section), method: :post, multipart: true,
           data: { controller: "photo-upload", photo_upload_max_value: Container::MAX_PHOTOS_PER_UPLOAD,
                   photo_upload_too_many_value: t("containers.photos.too_many", max: Container::MAX_PHOTOS_PER_UPLOAD),
@@ -27,6 +28,7 @@
         <div class="h-full w-0 rounded-full bg-indigo-600 transition-all duration-200 ease-out" data-photo-upload-target="bar"></div>
       </div>
       <p class="hidden w-full text-sm text-red-700" data-photo-upload-target="error" role="alert"></p>
+    <% end %>
     <% end %>
 
     <% if count.positive? %>

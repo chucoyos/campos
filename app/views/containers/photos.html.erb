@@ -3,10 +3,12 @@
     <p class="text-sm text-slate-500"><%= t("containers.photos.empty_section") %></p>
   <% else %>
     <div class="mb-3 flex flex-wrap items-center gap-2">
+      <% if policy(@container).remove_photos? %>
       <%= button_to remove_photos_container_path(@container, section: @section), method: :delete,
             form: { data: { turbo_frame: "_top", turbo_confirm: t("containers.photos.confirm_remove_all") } },
             class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-red-50 px-4 font-medium text-red-700 transition-all duration-200 ease-out hover:bg-red-100 active:scale-95" do %>
         <%= material_icon "delete_sweep" %> <%= t("containers.photos.remove_all") %>
+      <% end %>
       <% end %>
     </div>
     <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
@@ -17,10 +19,12 @@
             <img src="<%= photo.url(expires_in: 1.hour) %>" alt="<%= photo.filename %>" loading="lazy" decoding="async"
                  class="h-full w-full object-cover transition-transform duration-200 ease-out group-hover/photo:scale-105">
           <% end %>
+          <% if policy(@container).remove_photo? %>
           <%= button_to remove_photo_container_path(@container, photo_id: photo.id), method: :delete, form: { data: { turbo_frame: "_top", turbo_confirm: t("containers.photos.confirm_remove") } },
                 title: t("containers.photos.remove"), aria: { label: t("containers.photos.remove") },
                 class: "absolute right-2 top-2 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full bg-white/90 text-red-600 shadow-sm transition-all duration-200 ease-out hover:bg-red-50 active:scale-95" do %>
             <%= material_icon "delete" %>
+          <% end %>
           <% end %>
         </li>
       <% end %>

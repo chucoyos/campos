@@ -93,6 +93,7 @@ RSpec.describe "Acceso del cliente", type: :request do
       expect(response.body).to include(photos_container_path(own))
       get photos_container_path(own, section: "opening")
       expect(response).to have_http_status(:ok)
+      expect(response.body).not_to include("remove_photo", "upload_photos")
       post zip_photos_container_path(own), params: { section: "opening" }
       expect(response).not_to have_http_status(:not_found)
       get photos_container_path(create(:container, :with_master_bl, master_bl: other_bl), section: "opening")
