@@ -104,3 +104,36 @@ RSpec.describe "Containers", type: :request do
     expect(response).to redirect_to(new_user_session_path)
   end
 end
+
+RSpec.describe "Contenedores como Seguridad", type: :request do
+  before { sign_in create(:user, :seguridad) }
+
+  it "ve el navbar, lista, crea, edita y elimina contenedores sin acceder a MBL" do
+    container = create(:container, :with_master_bl)
+
+    get containers_path
+    expect(response.body).to include(container.number, "Contenedores")
+    expect(response.body).not_to include(%(href="/master_bls"))
+
+    get container_path(container)
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(container.master_bl.number)
+
+    post containers_path, params: { container: { number: "ABCD1234567", size: 20, container_type: "standard", status: "lleno" } }
+    expect(Container.find_by(number: "ABCD1234567")).to be_present
+
+    patch container_path(container), params: { container: { size: 40 } }
+    expect(container.reload.size).to eq(40)
+
+    expect { delete container_path(container) }.to change(Container, :count).by(-1)
+  end
+
+  it "no puede cambiar el estado ni entrar a MBL" do
+    container = create(:container, :with_master_bl)
+    patch transition_container_path(container, event: "llenar")
+    expect(container.reload.status).to eq("activo")
+
+    get master_bls_path
+    expect(response).not_to have_http_status(:ok)
+  end
+end

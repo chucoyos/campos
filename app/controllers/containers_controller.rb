@@ -62,16 +62,16 @@ class ContainersController < ApplicationController
 
   def upload_photos
     files = Array(params[:photos]).compact_blank.first(Container::MAX_PHOTOS_PER_UPLOAD)
-    return redirect_to container_path(@container, open: @section), alert: t("flash.containers.photos_missing") if files.empty?
+    return redirect_to container_path(@container), alert: t("flash.containers.photos_missing") if files.empty?
 
     @container.public_send(:"#{@section}_photos").attach(files)
     if @container.errors.none?
-      redirect_to container_path(@container, open: @section), notice: t("flash.containers.photos_uploaded", count: files.size)
+      redirect_to container_path(@container), notice: t("flash.containers.photos_uploaded", count: files.size)
     else
-      redirect_to container_path(@container, open: @section), alert: @container.errors.full_messages.to_sentence
+      redirect_to container_path(@container), alert: @container.errors.full_messages.to_sentence
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
-    redirect_to container_path(@container, open: @section), alert: t("flash.containers.photos_invalid")
+    redirect_to container_path(@container), alert: t("flash.containers.photos_invalid")
   end
 
   def remove_photo
@@ -79,7 +79,7 @@ class ContainersController < ApplicationController
     photo = ActiveStorage::Attachment.where(record: @container, name: names).find(params[:photo_id])
     section = photo.name.delete_suffix("_photos")
     photo.purge_later
-    redirect_to container_path(@container, open: section), notice: t("flash.containers.photo_removed")
+    redirect_to container_path(@container), notice: t("flash.containers.photo_removed")
   end
 
   private

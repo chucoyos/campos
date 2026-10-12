@@ -93,7 +93,7 @@ es:
     photos:
       opening: "Apertura"
       deconsolidation: "Desconsolidación"
-      empty: "Contenedor vacío"
+      empty: "Vacío"
       count:
         one: "1 foto"
         other: "%{count} fotos"
@@ -299,7 +299,7 @@ es:
       container:
         opening_photos: "Fotos de apertura"
         deconsolidation_photos: "Fotos de desconsolidación"
-        empty_photos: "Fotos de contenedor vacío"
+        empty_photos: "Fotos de vacío"
         number: "Número"
         size: "Tamaño"
         container_type: "Tipo"

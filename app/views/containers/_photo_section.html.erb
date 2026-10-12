@@ -1,6 +1,6 @@
-<%# Sección desplegable: las fotos se piden al abrirla (turbo-frame lazy dentro de <details>). %>
+<%# Sección desplegable siempre cerrada al cargar: las fotos se piden solo al abrirla (turbo-frame lazy dentro de <details>). %>
 <% label = t("containers.photos.#{section}") %>
-<details class="group rounded-2xl border border-slate-200 bg-slate-50" <%= "open" if open %>>
+<details class="group rounded-2xl border border-slate-200 bg-slate-50">
   <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-2 font-medium text-slate-800 transition-colors hover:bg-slate-100">
     <span class="flex items-center gap-2">
       <%= material_icon "photo_library", classes: "text-indigo-600" %> <%= label %>

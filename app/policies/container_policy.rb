@@ -1,17 +1,22 @@
 class ContainerPolicy < ApplicationPolicy
-  def index? = user&.admin?
-  def show? = user&.admin?
-  def create? = user&.admin?
-  def update? = user&.admin?
-  def destroy? = user&.admin?
+  def index? = manager?
+  def show? = manager?
+  def create? = manager?
+  def update? = manager?
+  def destroy? = manager?
+  def photos? = manager?
+  def upload_photos? = manager?
+  def remove_photo? = manager?
+  # Los cambios de estado del flujo con MBL son solo del administrador.
   def transition? = user&.admin?
-  def photos? = user&.admin?
-  def upload_photos? = user&.admin?
-  def remove_photo? = user&.admin?
 
   class Scope < Scope
     def resolve
-      user&.admin? ? scope.all : scope.none
+      user&.admin? || user&.seguridad? ? scope.all : scope.none
     end
   end
+
+  private
+
+  def manager? = user&.admin? || user&.seguridad?
 end
