@@ -77,6 +77,25 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     expect(response.body).to include("zip_opening").and include("turbo-stream")
   end
 
+  it "muestra el enlace del ZIP vigente al volver a la vista" do
+    container.opening_photos.attach(blob)
+    ContainerPhotosZipJob.perform_now(container.id, "opening", user.id)
+
+    get container_path(container)
+
+    expect(response.body).to include(I18n.t("containers.photos.zip.ready"))
+  end
+
+  it "no muestra el ZIP si se agregaron fotos después de generarlo" do
+    container.opening_photos.attach(blob)
+    ContainerPhotosZipJob.perform_now(container.id, "opening", user.id)
+    ActiveStorage::Attachment.where(record: container).update_all(created_at: 1.minute.from_now)
+
+    get container_path(container)
+
+    expect(response.body).not_to include(I18n.t("containers.photos.zip.ready"))
+  end
+
   it "redirige si la sección no tiene fotos para el ZIP" do
     post zip_photos_container_path(container, section: "opening")
     expect(response).to redirect_to(container_path(container))

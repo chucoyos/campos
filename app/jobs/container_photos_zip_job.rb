@@ -46,7 +46,7 @@ class ContainerPhotosZipJob < ApplicationJob
       end
     end
 
-    name = "#{@container.number}_#{I18n.t("containers.photos.#{@section}").parameterize}.zip"
+    name = @container.photos_zip_name(@section)
     zip.rewind
     ActiveStorage::Blob.create_and_upload!(io: zip, filename: name, content_type: "application/zip")
   ensure

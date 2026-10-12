@@ -31,7 +31,8 @@
 
     <% if count.positive? %>
       <%= turbo_stream_from "container_zip", container.id, current_user.id, section %>
-      <%= render "containers/zip_status", container: container, section: section, state: :idle %>
+      <%= render "containers/zip_status", container: container, section: section, state: (zip = container.ready_photos_zip(section)) ? :ready : :idle,
+                                                      url: zip&.url(expires_in: 30.minutes, disposition: :attachment, filename: zip.filename) %>
     <% end %>
 
     <%= turbo_frame_tag "photos_#{section}", src: photos_container_path(container, section: section), loading: :lazy do %>

@@ -49,6 +49,20 @@ class Container < ApplicationRecord
     end
   end
 
+  def photos_zip_name(section)
+    "#{number}_#{I18n.t("containers.photos.#{section}").parameterize}.zip"
+  end
+
+  # ZIP vigente (menos de 1 hora y sin fotos nuevas posteriores), para reconstruir el enlace al volver a la vista.
+  def ready_photos_zip(section, ttl: 1.hour)
+    blob = ActiveStorage::Blob.where(filename: photos_zip_name(section), content_type: "application/zip")
+                              .where(created_at: ttl.ago..).order(created_at: :desc).first
+    return unless blob
+
+    newest_photo = public_send(:"#{section}_photos_attachments").maximum(:created_at)
+    blob if newest_photo && newest_photo <= blob.created_at
+  end
+
   def with_master_bl?
     master_bl_id.present?
   end
