@@ -267,6 +267,7 @@ es:
       cannot_destroy_self: "No puedes eliminar tu propio usuario"
     index:
       new_user: "Nuevo usuario"
+      entity: "Entidad"
       actions: "Acciones"
     new:
       title: "Nuevo usuario"

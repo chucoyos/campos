@@ -31,6 +31,15 @@ RSpec.describe "Usuarios relacionados", type: :request do
     expect(response.body).to include(user.email)
   end
 
+  it "muestra la entidad de cada usuario en el listado" do
+    create(:user, :cliente, client: create(:client, name: "Acme SA"))
+    create(:user, :transporte, carrier: create(:carrier, name: "Fletes MX"))
+
+    get users_path
+
+    expect(response.body).to include("Acme SA").and include("Fletes MX")
+  end
+
   it "vincula y desvincula usuarios de un transportista" do
     user = create(:user, :transporte)
 

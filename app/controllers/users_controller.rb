@@ -3,7 +3,7 @@ class UsersController < ApplicationController
 
   def index
     authorize User
-    @pagy, @users = paginate(apply_filters(policy_scope(User)).order(:email))
+    @pagy, @users = paginate(apply_filters(policy_scope(User)).includes(:client, :carrier).order(:email))
   end
 
   def show

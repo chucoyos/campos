@@ -14,6 +14,11 @@ class User < ApplicationRecord
 
   validates :role, presence: true
 
+  # Cliente o transportista al que pertenece el usuario (nil para roles internos).
+  def entity
+    client || carrier
+  end
+
   private
 
   # Solo los usuarios cliente se vinculan a un Client y solo los de transporte a un Carrier.

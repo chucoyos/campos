@@ -27,6 +27,11 @@
           <div class="min-w-0">
             <p class="truncate font-medium text-slate-800"><%= user.email %></p>
             <%= role_badge(user.role) %>
+            <% if user.entity %>
+              <p class="mt-1 flex items-center gap-1 truncate text-sm text-slate-600">
+                <%= material_icon user.client ? "person_search" : "local_shipping", classes: "!text-base" %> <%= user.entity.name %>
+              </p>
+            <% end %>
           </div>
         </div>
         <div class="mt-3 flex items-center justify-end gap-1 border-t border-slate-100 pt-3">
@@ -43,6 +48,7 @@
         <tr>
           <th class="p-4"><%= User.model_name.human %></th>
           <th class="p-4"><%= User.human_attribute_name(:role) %></th>
+          <th class="p-4"><%= t(".entity") %></th>
           <th class="p-4 text-right"><%= t(".actions") %></th>
         </tr>
       </thead>
@@ -58,6 +64,15 @@
               </div>
             </td>
             <td class="p-4"><%= role_badge(user.role) %></td>
+            <td class="p-4 text-slate-700">
+              <% if user.entity %>
+                <%= link_to user.entity, class: "inline-flex items-center gap-1 text-indigo-600 hover:underline" do %>
+                  <%= material_icon user.client ? "person_search" : "local_shipping", classes: "!text-base" %> <%= user.entity.name %>
+                <% end %>
+              <% else %>
+                <span class="text-slate-400">—</span>
+              <% end %>
+            </td>
             <td class="p-4">
               <div class="flex items-center justify-end gap-1">
                 <%= render "actions", user: user %>
