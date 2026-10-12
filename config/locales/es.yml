@@ -32,8 +32,6 @@ es:
   filters:
     number: "Número"
     master_bl: "MBL"
-    with_master_bl: "Con MBL"
-    without_master_bl: "Sin MBL"
   shared:
     navbar:
       catalogs: "Catálogos"

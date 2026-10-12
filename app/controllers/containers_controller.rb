@@ -67,9 +67,8 @@ class ContainersController < ApplicationController
       { name: "container_type", type: :select, label: Container.human_attribute_name(:container_type),
         options: Container.container_types.keys.map { |type| [ t("containers.types.#{type}"), type ] },
         apply: ->(scope, value) { scope.where(container_type: value) } },
-      { name: "master_bl", type: :select, label: t("filters.master_bl"),
-        options: [ [ t("filters.with_master_bl"), "with" ], [ t("filters.without_master_bl"), "without" ] ],
-        apply: ->(scope, value) { value == "with" ? scope.where.not(master_bl_id: nil) : scope.where(master_bl_id: nil) } }
+      { name: "master_bl", type: :text, label: t("filters.master_bl"),
+        apply: ->(scope, value) { scope.joins(:master_bl).where("master_bls.number ILIKE ?", like(value)) } }
     ]
   end
 

@@ -20,9 +20,9 @@ RSpec.describe "Filtros de listados", type: :request do
     create(:container, :with_master_bl, number: "ABCD1234567", size: 40)
     create(:container, number: "WXYZ7654321", status: "lleno", size: 20)
 
-    get containers_path(master_bl: "without")
-    expect(response.body).to include("WXYZ7654321")
-    expect(response.body).not_to include("ABCD1234567")
+    get containers_path(master_bl: MasterBl.first.number.downcase)
+    expect(response.body).to include("ABCD1234567")
+    expect(response.body).not_to include("WXYZ7654321")
 
     get containers_path(status: "activo", size: "40")
     expect(response.body).to include("ABCD1234567")
