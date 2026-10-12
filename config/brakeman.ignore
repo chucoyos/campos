@@ -1,0 +1,28 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Redirect",
+      "warning_code": 18,
+      "fingerprint": "a6798587243edffe8160121884e679ccffcc670c83a7ab0749f0216670154f5c",
+      "check_name": "Redirect",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/master_bls_controller.rb",
+      "line": 84,
+      "link": "https://brakemanscanner.org/docs/warning_types/redirect/",
+      "code": "redirect_to(MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :attachment), :allow_other_host => true)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "MasterBlsController",
+        "method": "document"
+      },
+      "user_input": "MasterBl.find(params[:id]).document.url(:expires_in => 5.minutes, :disposition => :attachment)",
+      "confidence": "Weak",
+      "cwe_id": [
+        601
+      ],
+      "note": "La URL firmada (5 min) la genera Active Storage para el documento adjunto; no depende de par\u00e1metros del usuario. Acci\u00f3n restringida a administradores."
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}

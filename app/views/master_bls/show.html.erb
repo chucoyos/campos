@@ -39,6 +39,52 @@
   </div>
 
   <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+    <h2 class="mb-3 flex items-center gap-3 text-lg font-bold text-slate-900">
+      <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <%= material_icon "picture_as_pdf" %>
+      </span>
+      <%= t(".document_title") %>
+    </h2>
+
+    <% if @document_errors.present? %>
+      <div class="mb-4 flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+        <%= material_icon "error" %>
+        <ul><% @document_errors.each do |message| %><li><%= message %></li><% end %></ul>
+      </div>
+    <% end %>
+
+    <% if @master_bl.document.attached? %>
+      <div class="mb-4 flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+          <p class="truncate font-medium text-slate-800"><%= @master_bl.document.filename %></p>
+          <p class="text-sm text-slate-500"><%= number_to_human_size(@master_bl.document.byte_size) %></p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to document_master_bl_path(@master_bl), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
+            <%= material_icon "download" %> <%= t(".document_download") %>
+          <% end %>
+          <%= button_to remove_document_master_bl_path(@master_bl), method: :delete,
+                form: { data: { turbo_confirm: t(".document_confirm_remove") } },
+                class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-red-600 transition-colors hover:bg-red-50" do %>
+            <%= material_icon "delete" %> <%= t(".document_remove") %>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <p class="mb-4 text-sm text-slate-500"><%= t(".no_document") %> <%= t(".document_hint") %></p>
+    <% end %>
+
+    <%= form_with url: upload_document_master_bl_path(@master_bl), method: :patch, multipart: true, class: "flex flex-col gap-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 sm:flex-row sm:items-center" do |f| %>
+      <%= f.label :document, t(".document_label"), class: "sr-only" %>
+      <%= f.file_field :document, accept: "application/pdf", required: true,
+            class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100" %>
+      <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+        <%= material_icon "upload_file" %> <%= @master_bl.document.attached? ? t(".document_replace") : t(".document_upload") %>
+      <% end %>
+    <% end %>
+  </section>
+
+  <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
     <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
       <h2 class="flex items-center gap-3 text-lg font-bold text-slate-900">
         <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">

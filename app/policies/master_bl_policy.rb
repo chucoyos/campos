@@ -6,6 +6,9 @@ class MasterBlPolicy < ApplicationPolicy
   def destroy? = user&.admin?
   def template? = user&.admin?
   def import? = user&.admin?
+  def upload_document? = user&.admin?
+  def document? = user&.admin?
+  def remove_document? = user&.admin?
 
   class Scope < Scope
     def resolve

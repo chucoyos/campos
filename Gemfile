@@ -43,6 +43,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# Amazon S3 para Active Storage en staging y producción
+gem "aws-sdk-s3", require: false
+
 # Authentication, authorization and state machines
 gem "devise"
 gem "pundit"

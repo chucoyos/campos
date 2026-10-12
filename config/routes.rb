@@ -7,6 +7,9 @@ Rails.application.routes.draw do
     member do
       get :template
       post :import
+      patch :upload_document
+      get :document
+      delete :remove_document
     end
   end
   resources :containers do

@@ -13,6 +13,10 @@ es:
       update: "MBL actualizado."
       destroy: "MBL eliminado."
       destroy_restricted: "No se puede eliminar el MBL porque tiene contenedores. Elimina o reasigna sus contenedores primero."
+      document_uploaded: "Documento MBL cargado."
+      document_removed: "Documento MBL eliminado."
+      document_missing: "Selecciona un archivo PDF."
+      document_not_found: "Este MBL no tiene documento."
       import:
         one: "Se cargó 1 contenedor."
         other: "Se cargaron %{count} contenedores."
@@ -155,6 +159,15 @@ es:
       upload: "Cargar contenedores"
       import_failed: "No se cargó ningún contenedor. Corrige estos errores y vuelve a intentarlo:"
       no_containers: "Este MBL aún no tiene contenedores."
+      document_title: "Documento MBL"
+      document_hint: "Sube el documento MBL en PDF (máximo 10 MB)."
+      document_label: "Archivo PDF del MBL"
+      document_upload: "Subir documento"
+      document_replace: "Reemplazar documento"
+      document_download: "Descargar"
+      document_remove: "Eliminar documento"
+      document_confirm_remove: "¿Eliminar el documento de este MBL?"
+      no_document: "Este MBL aún no tiene documento."
   clients:
     index:
       new: "Nuevo cliente"
@@ -239,6 +252,11 @@ es:
         other: "Usuarios"
     errors:
       models:
+        master_bl:
+          attributes:
+            document:
+              invalid_type: "debe ser un archivo PDF"
+              too_large: "no puede pesar más de %{max} MB"
         container:
           attributes:
             master_bl_id:
@@ -255,6 +273,7 @@ es:
         updated_at: "Última actualización"
       master_bl:
         number: "Número de MBL"
+        document: "Documento"
         client: "Cliente"
         client_id: "Cliente"
         created_at: "Creado"

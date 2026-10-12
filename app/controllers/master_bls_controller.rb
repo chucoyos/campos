@@ -1,5 +1,7 @@
 class MasterBlsController < ApplicationController
-  before_action :set_master_bl, only: %i[show edit update destroy template import]
+  include ActiveStorage::SetCurrent
+
+  before_action :set_master_bl, only: %i[show edit update destroy template import upload_document document remove_document]
 
   def index
     authorize MasterBl
@@ -59,6 +61,32 @@ class MasterBlsController < ApplicationController
       load_containers
       render :show, status: :unprocessable_entity
     end
+  end
+
+  def upload_document
+    file = params[:document]
+
+    if file.blank?
+      redirect_to @master_bl, alert: t("flash.master_bls.document_missing")
+    elsif @master_bl.update(document: file)
+      redirect_to @master_bl, notice: t("flash.master_bls.document_uploaded")
+    else
+      @document_errors = @master_bl.errors.full_messages_for(:document)
+      @master_bl.reload
+      load_containers
+      render :show, status: :unprocessable_entity
+    end
+  end
+
+  def document
+    return redirect_to @master_bl, alert: t("flash.master_bls.document_not_found") unless @master_bl.document.attached?
+
+    redirect_to @master_bl.document.url(expires_in: 5.minutes, disposition: :attachment), allow_other_host: true
+  end
+
+  def remove_document
+    @master_bl.document.purge_later
+    redirect_to @master_bl, notice: t("flash.master_bls.document_removed")
   end
 
   private
