@@ -3,7 +3,7 @@ class CarriersController < ApplicationController
 
   def index
     authorize Carrier
-    @pagy, @carriers = paginate(policy_scope(Carrier).order(:name))
+    @pagy, @carriers = paginate(apply_filters(policy_scope(Carrier)).order(:name))
   end
 
   def show
@@ -42,6 +42,13 @@ class CarriersController < ApplicationController
   end
 
   private
+
+  def filter_fields
+    [
+      { name: "q", type: :text, label: Carrier.human_attribute_name(:name),
+        apply: ->(scope, value) { scope.where("carriers.name ILIKE ?", like(value)) } }
+    ]
+  end
 
   def set_carrier
     @carrier = Carrier.find(params[:id])

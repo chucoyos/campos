@@ -3,7 +3,7 @@ class ContainersController < ApplicationController
 
   def index
     authorize Container
-    @pagy, @containers = paginate(policy_scope(Container).includes(:master_bl).order(:number))
+    @pagy, @containers = paginate(apply_filters(policy_scope(Container).includes(:master_bl)).order(:number))
   end
 
   def show
@@ -53,6 +53,25 @@ class ContainersController < ApplicationController
   end
 
   private
+
+  def filter_fields
+    [
+      { name: "q", type: :text, label: t("filters.number"),
+        apply: ->(scope, value) { scope.where("containers.number ILIKE ?", like(value)) } },
+      { name: "status", type: :select, label: Container.human_attribute_name(:status),
+        options: Container.aasm.states.map { |state| [ t("containers.statuses.#{state.name}"), state.name.to_s ] },
+        apply: ->(scope, value) { scope.where(status: value) } },
+      { name: "size", type: :select, label: Container.human_attribute_name(:size),
+        options: Container::SIZES.map { |size| [ t("containers.sizes.#{size}"), size.to_s ] },
+        apply: ->(scope, value) { scope.where(size: value) } },
+      { name: "container_type", type: :select, label: Container.human_attribute_name(:container_type),
+        options: Container.container_types.keys.map { |type| [ t("containers.types.#{type}"), type ] },
+        apply: ->(scope, value) { scope.where(container_type: value) } },
+      { name: "master_bl", type: :select, label: t("filters.master_bl"),
+        options: [ [ t("filters.with_master_bl"), "with" ], [ t("filters.without_master_bl"), "without" ] ],
+        apply: ->(scope, value) { value == "with" ? scope.where.not(master_bl_id: nil) : scope.where(master_bl_id: nil) } }
+    ]
+  end
 
   TRANSITION_EVENTS = %w[llenar vaciar entregar].freeze
 

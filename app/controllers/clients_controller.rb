@@ -3,7 +3,7 @@ class ClientsController < ApplicationController
 
   def index
     authorize Client
-    @pagy, @clients = paginate(policy_scope(Client).order(:name))
+    @pagy, @clients = paginate(apply_filters(policy_scope(Client)).order(:name))
   end
 
   def show
@@ -45,6 +45,13 @@ class ClientsController < ApplicationController
   end
 
   private
+
+  def filter_fields
+    [
+      { name: "q", type: :text, label: Client.human_attribute_name(:name),
+        apply: ->(scope, value) { scope.where("clients.name ILIKE ?", like(value)) } }
+    ]
+  end
 
   def set_client
     @client = Client.find(params[:id])

@@ -5,7 +5,7 @@ class ApplicationController < ActionController::Base
   PER_PAGE_OPTIONS = [ 10, 25, 50, 100 ].freeze
 
   before_action :authenticate_user!
-  helper_method :per_page_options, :per_page
+  helper_method :per_page_options, :per_page, :filter_fields, :active_filters
 
   rescue_from Pundit::NotAuthorizedError do
     redirect_back_or_to root_path, alert: t("flash.application.not_authorized")
@@ -29,6 +29,36 @@ class ApplicationController < ActionController::Base
   def per_page
     PER_PAGE_OPTIONS.find { |option| option == params[:per_page].to_i } || PER_PAGE_OPTIONS.first
   end
+
+  # Cada campo: name, type (:text | :select), label, options ([[etiqueta, valor]]) y apply (->(scope, valor)).
+  def filter_fields = []
+
+  def filter_value(field)
+    value = params[field[:name]].to_s.strip
+    return if value.blank?
+    return if field[:type] == :select && field[:options].none? { |_label, option| option.to_s == value }
+
+    value
+  end
+
+  def active_filters
+    filter_fields.filter_map do |field|
+      value = filter_value(field)
+      next unless value
+
+      display = field[:type] == :select ? field[:options].find { |_label, option| option.to_s == value }.first : value
+      { name: field[:name], label: field[:label], value: display }
+    end
+  end
+
+  def apply_filters(scope)
+    filter_fields.reduce(scope) do |current, field|
+      value = filter_value(field)
+      value ? field[:apply].call(current, value) : current
+    end
+  end
+
+  def like(value) = "%#{ActiveRecord::Base.sanitize_sql_like(value)}%"
 
   def paginate(scope)
     pagy(scope, limit: per_page, raise_range_error: true)

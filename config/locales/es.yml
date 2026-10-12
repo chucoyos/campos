@@ -29,6 +29,11 @@ es:
       create: "Usuario creado."
       update: "Usuario actualizado."
       destroy: "Usuario eliminado."
+  filters:
+    number: "Número"
+    master_bl: "MBL"
+    with_master_bl: "Con MBL"
+    without_master_bl: "Sin MBL"
   shared:
     navbar:
       catalogs: "Catálogos"
@@ -40,6 +45,14 @@ es:
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
+    filters:
+      title: "Filtros"
+      apply: "Filtrar"
+      clear: "Limpiar filtros"
+      applied: "Filtros aplicados"
+      remove: "Quitar filtro %{label}"
+      all: "Todos"
+      no_results: "No se encontraron resultados con los filtros aplicados."
     pagination:
       label: "Paginación"
       previous: "Página anterior"

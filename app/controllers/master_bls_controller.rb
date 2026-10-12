@@ -3,7 +3,7 @@ class MasterBlsController < ApplicationController
 
   def index
     authorize MasterBl
-    @pagy, @master_bls = paginate(policy_scope(MasterBl).includes(:client).order(:number))
+    @pagy, @master_bls = paginate(apply_filters(policy_scope(MasterBl).includes(:client)).order(:number))
   end
 
   def show
@@ -62,6 +62,16 @@ class MasterBlsController < ApplicationController
   end
 
   private
+
+  def filter_fields
+    [
+      { name: "q", type: :text, label: t("filters.number"),
+        apply: ->(scope, value) { scope.where("master_bls.number ILIKE ?", like(value)) } },
+      { name: "client_id", type: :select, label: MasterBl.human_attribute_name(:client),
+        options: Client.order(:name).pluck(:name, :id),
+        apply: ->(scope, value) { scope.where(client_id: value) } }
+    ]
+  end
 
   def load_containers
     @containers = @master_bl.containers.order(:number)

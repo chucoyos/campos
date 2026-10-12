@@ -3,7 +3,7 @@ class UsersController < ApplicationController
 
   def index
     authorize User
-    @pagy, @users = paginate(policy_scope(User).order(:email))
+    @pagy, @users = paginate(apply_filters(policy_scope(User)).order(:email))
   end
 
   def show
@@ -45,6 +45,16 @@ class UsersController < ApplicationController
   end
 
   private
+
+  def filter_fields
+    [
+      { name: "q", type: :text, label: User.human_attribute_name(:email),
+        apply: ->(scope, value) { scope.where("users.email ILIKE ?", like(value)) } },
+      { name: "role", type: :select, label: User.human_attribute_name(:role),
+        options: User::ROLES.map { |role| [ t("users.roles.#{role}"), role ] },
+        apply: ->(scope, value) { scope.where(role: value) } }
+    ]
+  end
 
   def set_user
     @user = User.find(params[:id])

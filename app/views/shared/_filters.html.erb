@@ -1,0 +1,47 @@
+<% active = active_filters %>
+<section class="mb-6 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm" aria-label="<%= t("shared.filters.title") %>">
+  <%= form_with url: request.path, method: :get, class: "flex flex-col gap-3 lg:flex-row lg:items-end" do |f| %>
+    <% input = "h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm focus:border-indigo-500 focus:outline-none" %>
+    <%= hidden_field_tag :per_page, per_page, id: nil if params[:per_page].present? %>
+    <div class="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-<%= [ filter_fields.size, 4 ].min %>">
+      <% filter_fields.each do |field| %>
+        <div>
+          <%= label_tag field[:name], field[:label], class: "mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" %>
+          <% if field[:type] == :select %>
+            <%= select_tag field[:name], options_for_select(field[:options], params[field[:name]]), include_blank: t("shared.filters.all"), class: input %>
+          <% else %>
+            <div class="relative">
+              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><%= material_icon "search" %></span>
+              <%= search_field_tag field[:name], params[field[:name]], class: "#{input} pl-11" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="flex gap-2">
+      <%= f.button type: :submit, class: "flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 lg:flex-none" do %>
+        <%= material_icon "filter_alt" %> <%= t("shared.filters.apply") %>
+      <% end %>
+      <% if active.any? %>
+        <%= link_to request.path + (params[:per_page].present? ? "?per_page=#{per_page}" : ""), title: t("shared.filters.clear"), aria: { label: t("shared.filters.clear") },
+              class: "flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 text-slate-600 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95" do %>
+          <%= material_icon "filter_alt_off" %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if active.any? %>
+    <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4" data-testid="applied-filters">
+      <span class="text-sm text-slate-500"><%= t("shared.filters.applied") %>:</span>
+      <% active.each do |filter| %>
+        <% rest = request.query_parameters.except(filter[:name], "page") %>
+        <%= link_to (rest.empty? ? request.path : "#{request.path}?#{rest.to_query}"), aria: { label: t("shared.filters.remove", label: filter[:label]) },
+              class: "inline-flex min-h-8 items-center gap-1 rounded-lg bg-indigo-50 px-3 text-sm text-indigo-700 transition-colors hover:bg-indigo-100" do %>
+          <span class="font-medium"><%= filter[:label] %>:</span> <%= filter[:value] %>
+          <%= material_icon "close" %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</section>
