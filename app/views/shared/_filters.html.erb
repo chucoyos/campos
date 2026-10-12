@@ -35,8 +35,7 @@
     <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4" data-testid="applied-filters">
       <span class="text-sm text-slate-500"><%= t("shared.filters.applied") %>:</span>
       <% active.each do |filter| %>
-        <% rest = request.query_parameters.except(filter[:name], "page") %>
-        <%= link_to (rest.empty? ? request.path : "#{request.path}?#{rest.to_query}"), aria: { label: t("shared.filters.remove", label: filter[:label]) },
+        <%= link_to filter_removal_path(filter[:name]), aria: { label: t("shared.filters.remove", label: filter[:label]) },
               class: "inline-flex min-h-8 items-center gap-1 rounded-lg bg-indigo-50 px-3 text-sm text-indigo-700 transition-colors hover:bg-indigo-100" do %>
           <span class="font-medium"><%= filter[:label] %>:</span> <%= filter[:value] %>
           <%= material_icon "close" %>
