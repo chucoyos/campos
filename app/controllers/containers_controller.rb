@@ -1,8 +1,8 @@
 class ContainersController < ApplicationController
   include ActiveStorage::SetCurrent
 
-  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo]
-  before_action :set_photo_section, only: %i[photos upload_photos]
+  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo remove_photos download_photos]
+  before_action :set_photo_section, only: %i[photos upload_photos remove_photos download_photos]
 
   def index
     authorize Container
@@ -80,6 +80,32 @@ class ContainersController < ApplicationController
     section = photo.name.delete_suffix("_photos")
     photo.purge_later
     redirect_to container_path(@container), notice: t("flash.containers.photo_removed")
+  end
+
+  def remove_photos
+    count = @container.public_send(:"#{@section}_photos_attachments").count
+    @container.public_send(:"#{@section}_photos").purge_later
+    redirect_to container_path(@container), notice: t("flash.containers.photos_removed", count: count)
+  end
+
+  def download_photos
+    photos = @container.public_send(:"#{@section}_photos_attachments").includes(:blob).order(:id)
+    return redirect_to container_path(@container), alert: t("flash.containers.photos_none") if photos.empty?
+
+    # Las imágenes ya están comprimidas: se empaquetan sin recomprimir y se transmiten desde un archivo temporal.
+    zip = Tempfile.new([ "fotos", ".zip" ])
+    begin
+      Zip::OutputStream.open(zip.path) do |out|
+        photos.each_with_index do |photo, index|
+          out.put_next_entry(format("%03d_%s", index + 1, photo.filename.sanitized), nil, nil, Zip::Entry::STORED)
+          photo.blob.download { |chunk| out.write(chunk) }
+        end
+      end
+      send_file zip.path, type: "application/zip", disposition: "attachment",
+                filename: "#{@container.number}_#{t("containers.photos.#{@section}").parameterize}.zip"
+    ensure
+      zip.close
+    end
   end
 
   private

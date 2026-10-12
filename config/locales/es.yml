@@ -14,6 +14,10 @@ es:
       photos_missing: "Selecciona al menos una fotografía."
       photos_invalid: "No se pudieron adjuntar las fotografías. Inténtalo de nuevo."
       photo_removed: "Fotografía eliminada."
+      photos_removed:
+        one: "Se eliminó 1 fotografía."
+        other: "Se eliminaron %{count} fotografías."
+      photos_none: "No hay fotografías para descargar."
     master_bls:
       create: "MBL creado."
       update: "MBL actualizado."
@@ -107,6 +111,9 @@ es:
       too_many: "Máximo %{max} fotografías por carga."
       remove: "Eliminar fotografía"
       confirm_remove: "¿Eliminar esta fotografía?"
+      remove_all: "Eliminar todas"
+      confirm_remove_all: "¿Eliminar TODAS las fotografías de esta etapa? Esta acción no se puede deshacer."
+      download_all: "Descargar todas (ZIP)"
       open_photo: "Abrir fotografía en una pestaña nueva"
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"

@@ -56,6 +56,32 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     expect(container.reload.deconsolidation_photos.count).to eq(0)
   end
 
+  it "elimina todas las fotos de una sección sin tocar las demás" do
+    container.opening_photos.attach(blob)
+    container.empty_photos.attach(blob)
+
+    delete remove_photos_container_path(container, section: "opening")
+
+    expect(response).to redirect_to(container_path(container))
+    expect(container.reload.opening_photos.count).to eq(0)
+    expect(container.empty_photos.count).to eq(1)
+  end
+
+  it "descarga las fotos de una sección en un ZIP" do
+    container.opening_photos.attach(blob)
+
+    get download_photos_container_path(container, section: "opening")
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("application/zip")
+    expect(response.body.bytes.first(2)).to eq([ 80, 75 ])
+  end
+
+  it "redirige si la sección no tiene fotos para descargar" do
+    get download_photos_container_path(container, section: "opening")
+    expect(response).to redirect_to(container_path(container))
+  end
+
   it "no permite eliminar fotos de otro contenedor" do
     other = create(:container)
     other.opening_photos.attach(blob)
