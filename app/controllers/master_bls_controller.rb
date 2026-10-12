@@ -3,7 +3,7 @@ class MasterBlsController < ApplicationController
 
   def index
     authorize MasterBl
-    @master_bls = policy_scope(MasterBl).includes(:client).order(:number)
+    @pagy, @master_bls = pagy(policy_scope(MasterBl).includes(:client).order(:number), limit: 10, raise_range_error: true)
   end
 
   def show

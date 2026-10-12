@@ -1,0 +1,36 @@
+<% if pagy.last > 1 %>
+  <% base = "flex h-12 min-w-12 items-center justify-center rounded-2xl px-3 text-sm font-medium transition-all duration-200 ease-out" %>
+  <% window = ([ 1, pagy.last ] + ((pagy.page - 1)..(pagy.page + 1)).to_a).select { |n| n.between?(1, pagy.last) }.uniq.sort %>
+  <nav class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between" aria-label="<%= t("shared.pagination.label") %>">
+    <p class="text-sm text-slate-500"><%= t("shared.pagination.summary", from: pagy.from, to: pagy.to, count: pagy.count) %></p>
+
+    <div class="flex flex-wrap items-center justify-center gap-1">
+      <% if pagy.previous %>
+        <%= link_to pagy.page_url(:previous), rel: "prev", aria: { label: t("shared.pagination.previous") }, class: "#{base} text-slate-600 hover:bg-slate-100 active:scale-95" do %>
+          <%= material_icon "chevron_left" %>
+        <% end %>
+      <% else %>
+        <span class="<%= base %> text-slate-300" aria-disabled="true"><%= material_icon "chevron_left" %></span>
+      <% end %>
+
+      <% window.each_with_index do |number, index| %>
+        <% if index.positive? && number - window[index - 1] > 1 %>
+          <span class="flex h-12 items-center px-1 text-slate-400" aria-hidden="true">…</span>
+        <% end %>
+        <% if number == pagy.page %>
+          <span class="<%= base %> bg-indigo-600 text-white" aria-current="page"><%= number %></span>
+        <% else %>
+          <%= link_to number, pagy.page_url(number), class: "#{base} text-slate-600 hover:bg-slate-100 active:scale-95" %>
+        <% end %>
+      <% end %>
+
+      <% if pagy.next %>
+        <%= link_to pagy.page_url(:next), rel: "next", aria: { label: t("shared.pagination.next") }, class: "#{base} text-slate-600 hover:bg-slate-100 active:scale-95" do %>
+          <%= material_icon "chevron_right" %>
+        <% end %>
+      <% else %>
+        <span class="<%= base %> text-slate-300" aria-disabled="true"><%= material_icon "chevron_right" %></span>
+      <% end %>
+    </div>
+  </nav>
+<% end %>

@@ -88,3 +88,5 @@ gem "devise-i18n", "~> 1.16"
 
 gem "caxlsx", "~> 4.5"
 gem "roo", "~> 3.0"
+
+gem "pagy", "~> 43.7"

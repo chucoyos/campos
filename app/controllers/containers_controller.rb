@@ -3,7 +3,7 @@ class ContainersController < ApplicationController
 
   def index
     authorize Container
-    @containers = policy_scope(Container).includes(:master_bl).order(:number)
+    @pagy, @containers = pagy(policy_scope(Container).includes(:master_bl).order(:number), limit: 10, raise_range_error: true)
   end
 
   def show

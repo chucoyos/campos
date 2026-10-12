@@ -40,6 +40,11 @@ es:
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
+    pagination:
+      label: "Paginación"
+      previous: "Página anterior"
+      next: "Página siguiente"
+      summary: "Mostrando %{from}–%{to} de %{count}"
     actions:
       title: "Acciones"
       show: "Ver"
