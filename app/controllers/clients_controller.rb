@@ -1,5 +1,7 @@
 class ClientsController < ApplicationController
-  before_action :set_client, only: %i[show edit update destroy]
+  include ManagesRelatedUsers
+
+  before_action :set_client, only: %i[show edit update destroy link_user unlink_user]
 
   def index
     authorize Client
@@ -7,6 +9,8 @@ class ClientsController < ApplicationController
   end
 
   def show
+    @users = @client.users.order(:email)
+    @linkable_users = User.where(role: Client::USER_ROLE, client_id: nil).order(:email)
   end
 
   def new
@@ -52,6 +56,8 @@ class ClientsController < ApplicationController
         apply: ->(scope, value) { scope.where("clients.name ILIKE ?", like(value)) } }
     ]
   end
+
+  def owner = @client
 
   def set_client
     @client = Client.find(params[:id])

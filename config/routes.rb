@@ -1,8 +1,18 @@
 Rails.application.routes.draw do
   devise_for :users
   resources :users
-  resources :clients
-  resources :carriers
+  resources :clients do
+    member do
+      post "users", action: :link_user, as: :link_user
+      delete "users/:user_id", action: :unlink_user, as: :unlink_user
+    end
+  end
+  resources :carriers do
+    member do
+      post "users", action: :link_user, as: :link_user
+      delete "users/:user_id", action: :unlink_user, as: :unlink_user
+    end
+  end
   resources :master_bls do
     member do
       get :template

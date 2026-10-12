@@ -1,5 +1,7 @@
 class CarriersController < ApplicationController
-  before_action :set_carrier, only: %i[show edit update destroy]
+  include ManagesRelatedUsers
+
+  before_action :set_carrier, only: %i[show edit update destroy link_user unlink_user]
 
   def index
     authorize Carrier
@@ -7,6 +9,8 @@ class CarriersController < ApplicationController
   end
 
   def show
+    @users = @carrier.users.order(:email)
+    @linkable_users = User.where(role: Carrier::USER_ROLE, carrier_id: nil).order(:email)
   end
 
   def new
@@ -49,6 +53,8 @@ class CarriersController < ApplicationController
         apply: ->(scope, value) { scope.where("carriers.name ILIKE ?", like(value)) } }
     ]
   end
+
+  def owner = @carrier
 
   def set_carrier
     @carrier = Carrier.find(params[:id])

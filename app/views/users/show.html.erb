@@ -23,6 +23,18 @@
         <dt class="text-slate-500"><%= User.human_attribute_name(:updated_at) %></dt>
         <dd class="font-medium text-slate-800"><%= l(@user.updated_at, format: :long) %></dd>
       </div>
+      <% if @user.client %>
+        <div>
+          <dt class="text-slate-500"><%= User.human_attribute_name(:client_id) %></dt>
+          <dd class="font-medium text-slate-800"><%= link_to @user.client.name, @user.client, class: "text-indigo-600 hover:underline" %></dd>
+        </div>
+      <% end %>
+      <% if @user.carrier %>
+        <div>
+          <dt class="text-slate-500"><%= User.human_attribute_name(:carrier_id) %></dt>
+          <dd class="font-medium text-slate-800"><%= link_to @user.carrier.name, @user.carrier, class: "text-indigo-600 hover:underline" %></dd>
+        </div>
+      <% end %>
     </dl>
 
     <div class="mt-6 flex flex-wrap items-center gap-3">

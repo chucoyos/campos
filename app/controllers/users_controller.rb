@@ -10,7 +10,9 @@ class UsersController < ApplicationController
   end
 
   def new
-    @user = User.new
+    @user = User.new(params.permit(:client_id, :carrier_id))
+    @user.role = "cliente" if @user.client_id
+    @user.role = "transporte" if @user.carrier_id
     authorize @user
   end
 
@@ -62,6 +64,6 @@ class UsersController < ApplicationController
   end
 
   def user_params
-    params.expect(user: %i[email role password password_confirmation])
+    params.expect(user: %i[email role client_id carrier_id password password_confirmation])
   end
 end

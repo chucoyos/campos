@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_041346) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -44,20 +44,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_041346) do
 
   create_table "carriers", force: :cascade do |t|
     t.string "name", null: false
-    t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_carriers_on_name"
-    t.index ["user_id"], name: "index_carriers_on_user_id"
   end
 
   create_table "clients", force: :cascade do |t|
     t.string "name", null: false
-    t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_clients_on_name"
-    t.index ["user_id"], name: "index_clients_on_user_id"
   end
 
   create_table "containers", force: :cascade do |t|
@@ -91,6 +87,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_041346) do
     t.string "role", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "client_id"
+    t.bigint "carrier_id"
+    t.index ["carrier_id"], name: "index_users_on_carrier_id"
+    t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
@@ -98,8 +98,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_041346) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "carriers", "users"
-  add_foreign_key "clients", "users"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
+  add_foreign_key "users", "carriers"
+  add_foreign_key "users", "clients"
 end

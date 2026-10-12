@@ -1,5 +1,7 @@
 class Client < ApplicationRecord
-  belongs_to :user, optional: true
+  USER_ROLE = "cliente".freeze
+
+  has_many :users, dependent: :nullify
   has_many :master_bls, dependent: :restrict_with_error
 
   normalizes :name, with: ->(name) { name.strip }

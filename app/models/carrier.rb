@@ -1,5 +1,7 @@
 class Carrier < ApplicationRecord
-  belongs_to :user, optional: true
+  USER_ROLE = "transporte".freeze
+
+  has_many :users, dependent: :nullify
 
   normalizes :name, with: ->(name) { name.strip }
 

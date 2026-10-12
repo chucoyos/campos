@@ -47,6 +47,18 @@ es:
     number: "Número"
     master_bl: "MBL"
   shared:
+    related_users:
+      title: "Usuarios relacionados"
+      empty: "Aún no hay usuarios relacionados."
+      new_user: "Nuevo usuario"
+      link_prompt: "Vincular usuario existente"
+      link: "Vincular"
+      manage: "Administrar"
+      unlink: "Desvincular"
+      confirm_unlink: "¿Desvincular a %{email}? El usuario no se elimina."
+      linked: "%{email} fue vinculado."
+      unlinked: "%{email} fue desvinculado."
+      link_failed: "No se pudo vincular el usuario."
     navbar:
       catalogs: "Catálogos"
       users: "Usuarios"
@@ -264,6 +276,7 @@ es:
       destroy_warning: "Eliminar este usuario es permanente."
     form:
       role_prompt: "Selecciona un rol"
+      no_link: "Sin vincular"
       keep_password: "Déjala en blanco para conservar la contraseña actual."
       save: "Guardar cambios"
       create: "Crear usuario"
@@ -346,6 +359,8 @@ es:
         password: "Contraseña"
         password_confirmation: "Confirmar contraseña"
         role: "Rol"
+        client_id: "Cliente"
+        carrier_id: "Transportista"
         current_password: "Contraseña actual"
         remember_me: "Recordarme"
         created_at: "Creado"

@@ -1,7 +1,7 @@
 <% input = "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
 <% label = "mb-1 block text-sm font-medium text-slate-700" %>
 
-<%= form_with model: user, class: "space-y-5" do |f| %>
+<%= form_with model: user, class: "space-y-5", data: { controller: "role-link" } do |f| %>
   <% if user.errors.any? %>
     <div class="flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
       <%= material_icon "error" %>
@@ -20,7 +20,18 @@
 
   <div>
     <%= f.label :role, class: label %>
-    <%= f.select :role, User::ROLES.map { |r| [t("users.roles.#{r}"), r] }, { prompt: t(".role_prompt") }, class: input %>
+    <%= f.select :role, User::ROLES.map { |r| [t("users.roles.#{r}"), r] }, { prompt: t(".role_prompt") },
+          class: input, data: { role_link_target: "role", action: "change->role-link#toggle" } %>
+  </div>
+
+  <div data-role-link-target="field" data-role="cliente" class="hidden">
+    <%= f.label :client_id, class: label %>
+    <%= f.collection_select :client_id, Client.order(:name), :id, :name, { include_blank: t(".no_link") }, class: input %>
+  </div>
+
+  <div data-role-link-target="field" data-role="transporte" class="hidden">
+    <%= f.label :carrier_id, class: label %>
+    <%= f.collection_select :carrier_id, Carrier.order(:name), :id, :name, { include_blank: t(".no_link") }, class: input %>
   </div>
 
   <div class="grid gap-5 sm:grid-cols-2">

@@ -4,6 +4,8 @@ class ClientPolicy < ApplicationPolicy
   def create? = user&.admin?
   def update? = user&.admin?
   def destroy? = user&.admin?
+  def link_user? = user&.admin?
+  def unlink_user? = user&.admin?
 
   class Scope < Scope
     def resolve

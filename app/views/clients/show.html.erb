@@ -33,4 +33,9 @@
       <% end %>
     </div>
   </div>
+
+  <%= render "shared/related_users", owner: @client, users: @users, linkable_users: @linkable_users,
+        role: "cliente", link_path: link_user_client_path(@client),
+        unlink_path: ->(user) { unlink_user_client_path(@client, user_id: user.id) },
+        new_path: new_user_path(role: "cliente", client_id: @client.id) %>
 </div>
