@@ -113,7 +113,21 @@ es:
       confirm_remove: "¿Eliminar esta fotografía?"
       remove_all: "Eliminar todas"
       confirm_remove_all: "¿Eliminar TODAS las fotografías de esta etapa? Esta acción no se puede deshacer."
-      download_all: "Descargar todas (ZIP)"
+      zip:
+        prepare: "Descargar todas (ZIP)"
+        working: "Preparando tu descarga…"
+        keep_browsing: "Puedes seguir navegando; te avisaremos aquí cuando esté lista."
+        ready: "¡Tu ZIP está listo!"
+        download: "Descargar"
+        expires: "El enlace estará disponible durante 1 hora."
+        failed: "No se pudo preparar el ZIP."
+        retry: "Reintentar"
+        messages:
+          - "Reuniendo las fotografías…"
+          - "Empaquetando las imágenes…"
+          - "Ordenando el contenido…"
+          - "Revisando que todo esté completo…"
+          - "Ya casi está listo…"
       open_photo: "Abrir fotografía en una pestaña nueva"
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"

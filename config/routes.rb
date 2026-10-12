@@ -18,7 +18,7 @@ Rails.application.routes.draw do
       get :photos
       post :upload_photos
       delete :remove_photos
-      get :download_photos
+      post :zip_photos
       delete "photos/:photo_id", action: :remove_photo, as: :remove_photo
     end
   end

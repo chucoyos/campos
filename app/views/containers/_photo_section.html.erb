@@ -29,6 +29,11 @@
       <p class="hidden w-full text-sm text-red-700" data-photo-upload-target="error" role="alert"></p>
     <% end %>
 
+    <% if count.positive? %>
+      <%= turbo_stream_from "container_zip", container.id, current_user.id, section %>
+      <%= render "containers/zip_status", container: container, section: section, state: :idle %>
+    <% end %>
+
     <%= turbo_frame_tag "photos_#{section}", src: photos_container_path(container, section: section), loading: :lazy do %>
       <p class="flex items-center gap-2 text-sm text-slate-500"><%= material_icon "hourglass_top" %> <%= t("containers.photos.loading") %></p>
     <% end %>

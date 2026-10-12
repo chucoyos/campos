@@ -8,7 +8,7 @@ class ContainerPolicy < ApplicationPolicy
   def upload_photos? = manager?
   def remove_photo? = manager?
   def remove_photos? = manager?
-  def download_photos? = manager?
+  def zip_photos? = manager?
   # Los cambios de estado del flujo con MBL son solo del administrador.
   def transition? = user&.admin?
 

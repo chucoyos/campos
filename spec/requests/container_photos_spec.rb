@@ -8,7 +8,9 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     ActiveStorage::Blob.create_and_upload!(io: StringIO.new(data), filename: filename, content_type: content_type)
   end
 
-  before { sign_in create(:user, :admin) }
+  let(:user) { create(:user, :admin) }
+
+  before { sign_in user }
 
   it "muestra las tres secciones colapsadas con carga diferida" do
     get container_path(container)
@@ -67,18 +69,16 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     expect(container.empty_photos.count).to eq(1)
   end
 
-  it "descarga las fotos de una sección en un ZIP" do
+  it "encola el ZIP de una sección y muestra el estado de espera" do
     container.opening_photos.attach(blob)
 
-    get download_photos_container_path(container, section: "opening")
-
-    expect(response).to have_http_status(:ok)
-    expect(response.media_type).to eq("application/zip")
-    expect(response.body.bytes.first(2)).to eq([ 80, 75 ])
+    expect { post zip_photos_container_path(container, section: "opening"), as: :turbo_stream }
+      .to have_enqueued_job(ContainerPhotosZipJob).with(container.id, "opening", user.id, hash_including(host: "www.example.com"))
+    expect(response.body).to include("zip_opening").and include("turbo-stream")
   end
 
-  it "redirige si la sección no tiene fotos para descargar" do
-    get download_photos_container_path(container, section: "opening")
+  it "redirige si la sección no tiene fotos para el ZIP" do
+    post zip_photos_container_path(container, section: "opening")
     expect(response).to redirect_to(container_path(container))
   end
 
