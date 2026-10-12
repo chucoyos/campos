@@ -3,7 +3,7 @@ class ClientsController < ApplicationController
 
   def index
     authorize Client
-    @clients = policy_scope(Client).order(:name)
+    @pagy, @clients = paginate(policy_scope(Client).order(:name))
   end
 
   def show

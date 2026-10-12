@@ -3,7 +3,7 @@ class CarriersController < ApplicationController
 
   def index
     authorize Carrier
-    @carriers = policy_scope(Carrier).order(:name)
+    @pagy, @carriers = paginate(policy_scope(Carrier).order(:name))
   end
 
   def show

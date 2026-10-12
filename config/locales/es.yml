@@ -44,6 +44,7 @@ es:
       label: "Paginación"
       previous: "Página anterior"
       next: "Página siguiente"
+      per_page: "Por página"
       summary: "Mostrando %{from}–%{to} de %{count}"
     actions:
       title: "Acciones"

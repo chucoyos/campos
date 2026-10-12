@@ -1,8 +1,19 @@
-<% if pagy.last > 1 %>
+<% if pagy.count > per_page_options.min %>
   <% base = "flex h-12 min-w-12 items-center justify-center rounded-2xl px-3 text-sm font-medium transition-all duration-200 ease-out" %>
   <% window = ([ 1, pagy.last ] + ((pagy.page - 1)..(pagy.page + 1)).to_a).select { |n| n.between?(1, pagy.last) }.uniq.sort %>
   <nav class="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-between" aria-label="<%= t("shared.pagination.label") %>">
-    <p class="text-sm text-slate-500"><%= t("shared.pagination.summary", from: pagy.from, to: pagy.to, count: pagy.count) %></p>
+    <div class="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+      <p class="text-sm text-slate-500"><%= t("shared.pagination.summary", from: pagy.from, to: pagy.to, count: pagy.count) %></p>
+
+      <%= form_with url: request.path, method: :get, class: "flex items-center gap-2", data: { controller: "per-page" } do |f| %>
+        <% request.query_parameters.except("per_page", "page").each do |key, value| %>
+          <%= hidden_field_tag key, value, id: nil if value.is_a?(String) %>
+        <% end %>
+        <%= f.label :per_page, t("shared.pagination.per_page"), class: "text-sm text-slate-500" %>
+        <%= f.select :per_page, per_page_options, { selected: per_page }, data: { action: "change->per-page#submit" },
+              class: "h-12 rounded-2xl border border-slate-200 bg-white px-3 text-sm focus:border-indigo-500 focus:outline-none" %>
+      <% end %>
+    </div>
 
     <div class="flex flex-wrap items-center justify-center gap-1">
       <% if pagy.previous %>

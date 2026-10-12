@@ -2,7 +2,10 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
   include Pagy::Method
 
+  PER_PAGE_OPTIONS = [ 10, 25, 50, 100 ].freeze
+
   before_action :authenticate_user!
+  helper_method :per_page_options, :per_page
 
   rescue_from Pundit::NotAuthorizedError do
     redirect_back_or_to root_path, alert: t("flash.application.not_authorized")
@@ -18,4 +21,16 @@ class ApplicationController < ActionController::Base
 
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
+
+  private
+
+  def per_page_options = PER_PAGE_OPTIONS
+
+  def per_page
+    PER_PAGE_OPTIONS.find { |option| option == params[:per_page].to_i } || PER_PAGE_OPTIONS.first
+  end
+
+  def paginate(scope)
+    pagy(scope, limit: per_page, raise_range_error: true)
+  end
 end

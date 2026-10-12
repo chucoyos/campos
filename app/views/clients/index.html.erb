@@ -6,7 +6,7 @@
       </span>
       <div>
         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= Client.model_name.human(count: 2) %></h1>
-        <p class="text-sm text-slate-500"><%= "#{@clients.size} #{Client.model_name.human(count: @clients.size).downcase}" %></p>
+        <p class="text-sm text-slate-500"><%= "#{@pagy.count} #{Client.model_name.human(count: @pagy.count).downcase}" %></p>
       </div>
     </div>
     <%= link_to new_client_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
@@ -49,4 +49,5 @@
       </tbody>
     </table>
   </div>
+  <%= render "shared/pagination", pagy: @pagy %>
 </div>
