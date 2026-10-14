@@ -7,17 +7,18 @@ const SLOT = { length: 6.06, width: 2.44, height: 2.59 }
 const GAP = { bay: 0.25, row: 0.5 }
 
 // Distribución de los bloques según el diagrama del patio (esquina de cada uno, en metros).
+// Separaciones: 1D-2D = 2D-3D = 8 m; 1A-1D = 3D-1C = 30 m.
 // Por omisión las bahías crecen en +X y las filas (A, B, C...) en +Z; con rotated, bahías en +Z y filas en +X.
 const BLOCK_LAYOUT = {
   "1A": { origin: [0, 0] },
-  "1C": { origin: [82, 163] },
-  "1D": { origin: [108, 59], rotated: true },
-  "2D": { origin: [108, 87], rotated: true },
-  "3D": { origin: [108, 117], rotated: true },
-  "1B": { origin: [244, 87], rotated: true }
+  "1C": { origin: [82, 157.6] },
+  "1D": { origin: [108, 35.9], rotated: true },
+  "2D": { origin: [108, 69.1], rotated: true },
+  "3D": { origin: [108, 102.4], rotated: true },
+  "1B": { origin: [244, 44], rotated: true }
 }
 const FALLBACK_ORIGIN_STEP = 40
-const AREA_ORIGINS = { DESYCON: { origin: [27, 231], size: [228, 29] } }
+const AREA_ORIGINS = { DESYCON: { origin: [27, 205], size: [228, 29] } }
 
 const UPRIGHT = new THREE.Quaternion()
 const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
@@ -296,8 +297,8 @@ export default class extends Controller {
       this.controls.target.set(x, 0, z)
       this.camera.position.set(x, distance * 1.1, z + distance * 0.6)
     } else {
-      this.controls.target.set(115, 0, 130)
-      this.camera.position.set(115, 330, 340)
+      this.controls.target.set(115, 0, 105)
+      this.camera.position.set(115, 300, 300)
     }
     this.controls.update()
   }
