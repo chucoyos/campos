@@ -20,6 +20,14 @@ RSpec.describe "Patio", type: :request do
     end
   end
 
+  it "renders the 3D map with the block definitions" do
+    sign_in create(:user, :admin)
+    get yard_path
+    expect(response.body).to include('data-controller="yard-map"')
+    expect(response.body).to include("1A")
+    expect(response.body).to include('data-yard-map-target="block"')
+  end
+
   it "filters by level and state" do
     sign_in create(:user, :admin)
     slot.update!(enabled: false)
