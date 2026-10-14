@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_200200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,10 +96,49 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_090000) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  create_table "yard_areas", force: :cascade do |t|
+    t.string "code", null: false
+    t.string "name", null: false
+    t.integer "capacity"
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_yard_areas_on_code", unique: true
+    t.check_constraint "capacity IS NULL OR capacity > 0", name: "yard_areas_capacity_positive"
+  end
+
+  create_table "yard_blocks", force: :cascade do |t|
+    t.string "code", null: false
+    t.integer "bays", null: false
+    t.integer "rows", null: false
+    t.integer "levels", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_yard_blocks_on_code", unique: true
+    t.check_constraint "bays > 0 AND rows >= 1 AND rows <= 26 AND levels > 0", name: "yard_blocks_dimensions_positive"
+  end
+
+  create_table "yard_slots", force: :cascade do |t|
+    t.bigint "yard_block_id", null: false
+    t.integer "bay", null: false
+    t.string "row", limit: 1, null: false
+    t.integer "level", null: false
+    t.string "code", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_yard_slots_on_code", unique: true
+    t.index ["yard_block_id", "bay", "row", "level"], name: "index_yard_slots_on_position", unique: true
+    t.index ["yard_block_id"], name: "index_yard_slots_on_yard_block_id"
+    t.check_constraint "bay > 0 AND level > 0 AND \"row\"::text ~ '^[A-Z]$'::text", name: "yard_slots_position_valid"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
+  add_foreign_key "yard_slots", "yard_blocks"
 end

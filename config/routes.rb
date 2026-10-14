@@ -32,6 +32,11 @@ Rails.application.routes.draw do
       delete "photos/:photo_id", action: :remove_photo, as: :remove_photo
     end
   end
+  get "yard", to: "yard#index", as: :yard
+  resources :yard_slots, only: [] do
+    patch :toggle, on: :member
+  end
+  resources :yard_areas, only: :update
   get "home/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

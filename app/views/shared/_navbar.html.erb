@@ -1,6 +1,7 @@
 <% links = [] %>
 <% links << [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls"] if policy(MasterBl).index? %>
 <% links << [t(".containers"), containers_path, "inventory_2", controller_name == "containers"] if policy(Container).index? %>
+<% links << [t(".yard"), yard_path, "grid_view", controller_name == "yard"] if policy(YardSlot).index? %>
 <% catalogs = [] %>
 <% catalogs << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
 <% catalogs << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>

@@ -18,6 +18,10 @@ es:
         one: "Se eliminó 1 fotografía."
         other: "Se eliminaron %{count} fotografías."
       photos_none: "No hay fotografías para descargar."
+    yard:
+      slot_enabled: "La posición %{code} fue habilitada."
+      slot_disabled: "La posición %{code} fue deshabilitada."
+      area_updated: "El área %{name} fue actualizada."
     master_bls:
       create: "MBL creado."
       update: "MBL actualizado."
@@ -64,6 +68,7 @@ es:
       users: "Usuarios"
       master_bls: "MBL"
       containers: "Contenedores"
+      yard: "Patio"
       clients: "Clientes"
       carriers: "Transportistas"
       main_navigation: "Navegación principal"
@@ -167,6 +172,25 @@ es:
       llenar: "Marcar como lleno"
       vaciar: "Marcar como vacío"
       entregar: "Marcar como entregado"
+  yard:
+    states:
+      enabled: "Habilitada"
+      disabled: "Deshabilitada"
+    index:
+      title: "Patio"
+      subtitle: "Bloques, posiciones y áreas del patio de contenedores."
+      slots:
+        one: "1 lugar"
+        other: "%{count} lugares"
+      disabled_count:
+        one: "1 posición deshabilitada"
+        other: "%{count} posiciones deshabilitadas"
+      area_hint: "Área general sin posiciones internas. La capacidad cuenta contenedores sin importar su tamaño."
+      unknown: "Desconocida"
+      positions: "Posiciones"
+      position: "Bloque %{block} · bahía %{bay} · fila %{row} · nivel %{level}"
+      toggle: "Habilitar o deshabilitar %{code}"
+      confirm_disable: "¿Deshabilitar la posición %{code}?"
   container_import:
     sheet: "Contenedores"
     instructions_sheet: "Instrucciones"
@@ -299,6 +323,15 @@ es:
         submit: "Cambiar contraseña"
   activerecord:
     models:
+      yard_block:
+        one: "Bloque"
+        other: "Bloques"
+      yard_slot:
+        one: "Posición"
+        other: "Posiciones"
+      yard_area:
+        one: "Área"
+        other: "Áreas"
       container:
         one: "Contenedor"
         other: "Contenedores"
@@ -325,12 +358,37 @@ es:
               too_large: "%{filename} no puede pesar más de %{max} MB"
             deconsolidation_photos: *photo_errors
             empty_photos: *photo_errors
+        yard_slot:
+          attributes:
+            bay:
+              out_of_block: "excede las bahías del bloque"
+            row:
+              out_of_block: "no existe en el bloque"
+            level:
+              out_of_block: "excede los niveles del bloque"
         master_bl:
           attributes:
             document:
               invalid_type: "debe ser un archivo PDF"
               too_large: "no puede pesar más de %{max} MB"
     attributes:
+      yard_block:
+        code: "Código"
+        bays: "Bahías"
+        rows: "Filas"
+        levels: "Niveles"
+        enabled: "Habilitado"
+      yard_slot:
+        code: "Código"
+        bay: "Bahía"
+        row: "Fila"
+        level: "Nivel"
+        enabled: "Estado"
+      yard_area:
+        code: "Código"
+        name: "Nombre"
+        capacity: "Capacidad"
+        enabled: "Habilitada"
       container:
         opening_photos: "Fotos de apertura"
         deconsolidation_photos: "Fotos de desconsolidación"
