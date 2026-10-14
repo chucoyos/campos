@@ -6,15 +6,21 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js"
 const SLOT = { length: 6.06, width: 2.44, height: 2.59 }
 const GAP = { bay: 0.25, row: 0.5 }
 
-// Distribución PROVISIONAL de los bloques (esquina de cada uno, en metros) hasta contar con el plano real.
-// Las bahías crecen en +X y las filas (A, B, C...) en +Z.
-const BLOCK_ORIGINS = {
-  "1A": [0, 0], "1B": [0, 20], "1C": [0, 45],
-  "1D": [150, 20], "2D": [185, 20], "3D": [220, 20]
+// Distribución de los bloques según el diagrama del patio (esquina de cada uno, en metros).
+// Por omisión las bahías crecen en +X y las filas (A, B, C...) en +Z; con rotated, bahías en +Z y filas en +X.
+const BLOCK_LAYOUT = {
+  "1A": { origin: [0, 0] },
+  "1C": { origin: [82, 163] },
+  "1D": { origin: [108, 59], rotated: true },
+  "2D": { origin: [108, 87], rotated: true },
+  "3D": { origin: [108, 117], rotated: true },
+  "1B": { origin: [244, 87], rotated: true }
 }
 const FALLBACK_ORIGIN_STEP = 40
-const AREA_ORIGINS = { DESYCON: { origin: [0, -45], size: [70, 30] } }
+const AREA_ORIGINS = { DESYCON: { origin: [27, 231], size: [228, 29] } }
 
+const UPRIGHT = new THREE.Quaternion()
+const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
 const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0x34d399, background: 0xf1f5f9 }
 
 export default class extends Controller {
@@ -72,17 +78,19 @@ export default class extends Controller {
     element.addEventListener("pointerup", (event) => this.pick(event))
   }
 
-  origin(code, index) {
-    return BLOCK_ORIGINS[code] || [index * FALLBACK_ORIGIN_STEP, 90]
+  layout(code, index) {
+    return BLOCK_LAYOUT[code] || { origin: [index * FALLBACK_ORIGIN_STEP, 300] }
   }
 
   buildBlocks() {
     const placed = []
     this.blockViews = {}
     this.blocksValue.forEach((block, index) => {
-      const [originX, originZ] = this.origin(block.code, index)
-      const width = block.bays * (SLOT.length + GAP.bay)
-      const depth = block.rows * (SLOT.width + GAP.row)
+      const { origin: [originX, originZ], rotated = false } = this.layout(block.code, index)
+      const bayLength = block.bays * (SLOT.length + GAP.bay)
+      const rowLength = block.rows * (SLOT.width + GAP.row)
+      const width = rotated ? rowLength : bayLength
+      const depth = rotated ? bayLength : rowLength
 
       const ground = new THREE.Mesh(
         new THREE.PlaneGeometry(width + 2, depth + 2),
@@ -98,12 +106,14 @@ export default class extends Controller {
         for (let row = 0; row < block.rows; row++) {
           for (let bay = 1; bay <= block.bays; bay++) {
             const letter = String.fromCharCode(65 + row)
+            const alongBays = (bay - 1) * (SLOT.length + GAP.bay) + SLOT.length / 2
+            const alongRows = row * (SLOT.width + GAP.row) + SLOT.width / 2
             placed.push({
-              code: `${block.code}${bay}${letter}${level}`, block: block.code, bay, row: letter, level,
+              code: `${block.code}${bay}${letter}${level}`, block: block.code, bay, row: letter, level, rotated,
               position: new THREE.Vector3(
-                originX + (bay - 1) * (SLOT.length + GAP.bay) + SLOT.length / 2,
+                originX + (rotated ? alongRows : alongBays),
                 (level - 1) * SLOT.height + SLOT.height / 2,
-                originZ + row * (SLOT.width + GAP.row) + SLOT.width / 2
+                originZ + (rotated ? alongBays : alongRows)
               )
             })
           }
@@ -137,12 +147,12 @@ export default class extends Controller {
       }
       if (mergeable(slot, partner)) {
         units.push({
-          slots: [ slot, partner ], block: slot.block, level: slot.level,
+          slots: [ slot, partner ], block: slot.block, level: slot.level, rotated: slot.rotated,
           position: slot.position.clone().add(partner.position).multiplyScalar(0.5),
           scale: (2 * SLOT.length + GAP.bay) / SLOT.length
         })
       } else {
-        units.push({ slots: [ slot ], block: slot.block, level: slot.level, position: slot.position, scale: 1 })
+        units.push({ slots: [ slot ], block: slot.block, level: slot.level, rotated: slot.rotated, position: slot.position, scale: 1 })
       }
     })
     return units
@@ -202,13 +212,13 @@ export default class extends Controller {
     })
     if (this.areaMeshes) this.areaMeshes.forEach((mesh) => { mesh.visible = mesh.userData.label.visible = !block })
     const matrix = new THREE.Matrix4()
+    const scale = new THREE.Vector3()
     const hidden = new THREE.Matrix4().makeScale(0, 0, 0)
     const color = new THREE.Color()
 
     this.units.forEach((unit, index) => {
       const visible = (!level || unit.level === Number(level)) && (!block || unit.block === block)
-      const { x, y, z } = unit.position
-      this.mesh.setMatrixAt(index, visible ? matrix.makeScale(unit.scale, 1, 1).setPosition(x, y, z) : hidden)
+      this.mesh.setMatrixAt(index, visible ? matrix.compose(unit.position, unit.rotated ? ROTATED : UPRIGHT, scale.set(unit.scale, 1, 1)) : hidden)
       const codes = unit.slots.map((slot) => slot.code)
       const state = codes.includes(this.selected) ? "selected" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
       this.mesh.setColorAt(index, color.setHex(COLORS[state]))
@@ -286,8 +296,8 @@ export default class extends Controller {
       this.controls.target.set(x, 0, z)
       this.camera.position.set(x, distance * 1.1, z + distance * 0.6)
     } else {
-      this.controls.target.set(110, 0, 20)
-      this.camera.position.set(110, 170, 190)
+      this.controls.target.set(115, 0, 130)
+      this.camera.position.set(115, 330, 340)
     }
     this.controls.update()
   }

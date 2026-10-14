@@ -180,7 +180,7 @@ es:
       title: "Patio"
       map: "Mapa 3D"
       map_hint: "Toca una posición para ver su código. Arrastra para rotar, pellizca o usa la rueda para acercar."
-      map_provisional: "Distribución provisional de los bloques, pendiente del plano real."
+      map_provisional: "Distribución según el diagrama del patio; las distancias entre bloques son aproximadas."
       reset_view: "Restablecer vista"
       selected: "Seleccionada"
       subtitle: "Bloques, posiciones y áreas del patio de contenedores."
