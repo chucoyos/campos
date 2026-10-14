@@ -112,13 +112,44 @@ export default class extends Controller {
     })
 
     this.slots = placed
+    this.units = this.buildUnits(placed)
     this.mesh = new THREE.InstancedMesh(
       new THREE.BoxGeometry(SLOT.length * 0.96, SLOT.height * 0.96, SLOT.width * 0.96),
       new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.55, roughness: 0.6 }),
-      placed.length
+      this.units.length
     )
     this.scene.add(this.mesh)
     this.paint()
+  }
+
+  // Cada par de bahías (impar + siguiente) se dibuja como un contenedor de 40 pies,
+  // salvo que alguna de las dos bahías esté deshabilitada u ocupada por uno de 20: entonces se muestran separadas.
+  buildUnits(placed) {
+    const byKey = new Map(placed.map((slot) => [`${slot.block}|${slot.row}|${slot.level}|${slot.bay}`, slot]))
+    const partnerOf = (slot) => slot.bay % 2 === 1 ? byKey.get(`${slot.block}|${slot.row}|${slot.level}|${slot.bay + 1}`) : null
+    const mergeable = (slot, partner) => partner && !this.isSplit(slot) && !this.isSplit(partner)
+    const units = []
+    placed.forEach((slot) => {
+      const partner = partnerOf(slot)
+      if (slot.bay % 2 === 0) {
+        const anchor = byKey.get(`${slot.block}|${slot.row}|${slot.level}|${slot.bay - 1}`)
+        if (mergeable(anchor, slot)) return
+      }
+      if (mergeable(slot, partner)) {
+        units.push({
+          slots: [ slot, partner ], block: slot.block, level: slot.level,
+          position: slot.position.clone().add(partner.position).multiplyScalar(0.5),
+          scale: (2 * SLOT.length + GAP.bay) / SLOT.length
+        })
+      } else {
+        units.push({ slots: [ slot ], block: slot.block, level: slot.level, position: slot.position, scale: 1 })
+      }
+    })
+    return units
+  }
+
+  isSplit(slot) {
+    return this.disabledCodes.has(slot.code)
   }
 
   buildAreas() {
@@ -174,10 +205,12 @@ export default class extends Controller {
     const hidden = new THREE.Matrix4().makeScale(0, 0, 0)
     const color = new THREE.Color()
 
-    this.slots.forEach((slot, index) => {
-      const visible = (!level || slot.level === Number(level)) && (!block || slot.block === block)
-      this.mesh.setMatrixAt(index, visible ? matrix.makeTranslation(slot.position.x, slot.position.y, slot.position.z) : hidden)
-      const state = slot.code === this.selected ? "selected" : this.disabledCodes.has(slot.code) ? "disabled" : "enabled"
+    this.units.forEach((unit, index) => {
+      const visible = (!level || unit.level === Number(level)) && (!block || unit.block === block)
+      const { x, y, z } = unit.position
+      this.mesh.setMatrixAt(index, visible ? matrix.makeScale(unit.scale, 1, 1).setPosition(x, y, z) : hidden)
+      const codes = unit.slots.map((slot) => slot.code)
+      const state = codes.includes(this.selected) ? "selected" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
       this.mesh.setColorAt(index, color.setHex(COLORS[state]))
     })
     this.mesh.instanceMatrix.needsUpdate = true
@@ -208,10 +241,10 @@ export default class extends Controller {
     this.raycaster.setFromCamera(pointer, this.camera)
 
     const hits = this.raycaster.intersectObject(this.mesh).filter((hit) => this.visibleInstance(hit.instanceId))
-    const slot = hits.length ? this.slots[hits[0].instanceId] : null
-    if (slot) {
-      this.selected = slot.code
-      this.showInfo(slot)
+    const unit = hits.length ? this.units[hits[0].instanceId] : null
+    if (unit) {
+      this.selected = unit.slots[0].code
+      this.showInfo(unit)
     } else {
       const area = this.areaMeshes && this.raycaster.intersectObjects(this.areaMeshes)[0]?.object.userData.area
       this.selected = null
@@ -223,17 +256,19 @@ export default class extends Controller {
   visibleInstance(index) {
     const level = this.hasLevelTarget ? this.levelTarget.value : ""
     const block = this.currentBlock()
-    const slot = this.slots[index]
-    return (!level || slot.level === Number(level)) && (!block || slot.block === block)
+    const unit = this.units[index]
+    return (!level || unit.level === Number(level)) && (!block || unit.block === block)
   }
 
-  showInfo(slot, area) {
+  showInfo(unit, area) {
     const labels = this.labelsValue
     let html = `<p class="text-sm text-slate-500">${labels.hint}</p>`
-    if (slot) {
-      const state = this.disabledCodes.has(slot.code) ? labels.disabled : labels.enabled
-      html = `<p class="font-mono text-xl font-bold text-slate-900">${slot.code}</p>
-              <p class="text-sm text-slate-600">${labels.block} ${slot.block} · ${labels.bay} ${slot.bay} · ${labels.row} ${slot.row} · ${labels.level} ${slot.level}</p>
+    if (unit) {
+      const [first] = unit.slots
+      const state = unit.slots.some((slot) => this.disabledCodes.has(slot.code)) ? labels.disabled : labels.enabled
+      const bays = unit.slots.map((slot) => slot.bay).join("-")
+      html = `<p class="font-mono text-xl font-bold text-slate-900">${unit.slots.map((slot) => slot.code).join(" · ")}</p>
+              <p class="text-sm text-slate-600">${labels.block} ${first.block} · ${labels.bay} ${bays} · ${labels.row} ${first.row} · ${labels.level} ${first.level}</p>
               <p class="mt-1 text-sm font-medium text-slate-800">${state}</p>`
     } else if (area) {
       html = `<p class="text-xl font-bold text-slate-900">${area.name}</p>
