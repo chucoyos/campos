@@ -12,9 +12,8 @@
   <section class="mb-6 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" aria-label="<%= t(".map") %>"
            data-controller="yard-map"
            data-yard-map-blocks-value="<%= @blocks.map { |block| { code: block.code, bays: block.bays, rows: block.rows, levels: block.levels } }.to_json %>"
-           data-yard-map-areas-value="<%= @areas.map { |area| { code: area.code, name: area.name, capacity: area.capacity, enabled: area.enabled } }.to_json %>"
            data-yard-map-disabled-value="<%= @disabled_codes.to_json %>"
-           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), capacity: YardArea.human_attribute_name(:capacity), unknown: t(".unknown") }.to_json %>">
+           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), desycon: t(".desycon") }.to_json %>">
     <div class="flex flex-wrap items-end justify-between gap-3 p-4">
       <div>
         <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "view_in_ar" %> <%= t(".map") %></h2>
@@ -72,39 +71,6 @@
           </dl>
           <% if disabled.positive? %>
             <p class="mt-3 text-sm text-amber-700"><%= t(".disabled_count", count: disabled) %></p>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
-  </section>
-
-  <section class="mb-6" aria-label="<%= YardArea.model_name.human(count: 2) %>">
-    <h2 class="mb-3 text-lg font-bold text-slate-900"><%= YardArea.model_name.human(count: 2) %></h2>
-    <ul class="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      <% @areas.each do |area| %>
-        <li class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div class="flex items-center justify-between gap-3">
-            <p class="flex items-center gap-2 text-xl font-bold text-slate-900"><%= material_icon "precision_manufacturing" %> <%= area.name %></p>
-            <span class="rounded-lg px-3 py-1 text-sm font-medium <%= area.enabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600" %>">
-              <%= t("yard.states.#{area.enabled ? 'enabled' : 'disabled'}") %>
-            </span>
-          </div>
-          <p class="mt-2 text-sm text-slate-500"><%= t(".area_hint") %></p>
-          <% if policy(area).update? %>
-            <%= form_with model: area, url: yard_area_path(area), method: :patch, class: "mt-4 flex flex-wrap items-end gap-3" do |f| %>
-              <div>
-                <%= f.label :capacity, YardArea.human_attribute_name(:capacity), class: "mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" %>
-                <%= f.number_field :capacity, min: 1, placeholder: t(".unknown"), class: "h-12 w-40 rounded-2xl border border-slate-200 px-4 text-sm focus:border-indigo-500 focus:outline-none" %>
-              </div>
-              <label class="flex min-h-12 items-center gap-2 text-sm text-slate-700">
-                <%= f.check_box :enabled, class: "h-5 w-5 rounded" %> <%= YardArea.human_attribute_name(:enabled) %>
-              </label>
-              <%= f.button type: :submit, class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
-                <%= material_icon "save" %> <%= t("shared.actions.save") %>
-              <% end %>
-            <% end %>
-          <% else %>
-            <p class="mt-3 text-sm text-slate-700"><%= YardArea.human_attribute_name(:capacity) %>: <span class="font-medium"><%= area.capacity || t(".unknown") %></span></p>
           <% end %>
         </li>
       <% end %>

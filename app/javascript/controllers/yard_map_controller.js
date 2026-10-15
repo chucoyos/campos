@@ -7,26 +7,28 @@ const SLOT = { length: 6.06, width: 2.44, height: 2.59 }
 const GAP = { bay: 0.25, row: 0.5 }
 
 // Distribución de los bloques según el diagrama del patio (esquina de cada uno, en metros).
-// Separaciones: 1D-2D = 2D-3D = 8 m; 1A-1D = 3D-1C = 30 m.
 // Por omisión las bahías crecen en +X y las filas (A, B, C...) en +Z; con rotated, bahías en +Z y filas en +X.
+// reverseRows dibuja las filas en orden inverso (la A donde estaría la última). Solo afecta al mapa.
+// Separaciones: 1CFS-2CFS = 2CFS-3CFS = 15 m; 1A-1CFS = 3CFS-1C = 40 m.
 const BLOCK_LAYOUT = {
   "1A": { origin: [0, 0] },
-  "1C": { origin: [82, 157.6] },
-  "1D": { origin: [108, 35.9], rotated: true },
-  "2D": { origin: [108, 69.1], rotated: true },
-  "3D": { origin: [108, 102.4], rotated: true },
-  "1B": { origin: [244, 44], rotated: true }
+  "1CFS": { origin: [108, 45.9], rotated: true },
+  "2CFS": { origin: [108, 86.1], rotated: true },
+  "3CFS": { origin: [108, 126.3], rotated: true },
+  "1C": { origin: [82, 191.5], reverseRows: true },
+  "1B": { origin: [244, 60.9], rotated: true, reverseRows: true }
 }
+// Los bloques CFS forman el área de DesyCon.
+const DESYCON_BLOCKS = [ "1CFS", "2CFS", "3CFS" ]
 const FALLBACK_ORIGIN_STEP = 40
-const AREA_ORIGINS = { DESYCON: { origin: [27, 205], size: [228, 29] } }
 
 const UPRIGHT = new THREE.Quaternion()
 const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0x34d399, background: 0xf1f5f9 }
+const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, background: 0xf1f5f9 }
 
 export default class extends Controller {
   static targets = ["canvas", "info", "level", "block", "empty"]
-  static values = { blocks: Array, areas: Array, disabled: Array, labels: Object }
+  static values = { blocks: Array, disabled: Array, labels: Object }
 
   connect() {
     this.disabledCodes = new Set(this.disabledValue)
@@ -34,7 +36,7 @@ export default class extends Controller {
     this.selected = null
     this.setupScene()
     this.buildBlocks()
-    this.buildAreas()
+    this.buildDesycon()
     this.paint()
     this.frameView()
     this.resizeObserver = new ResizeObserver(() => this.resize())
@@ -87,7 +89,7 @@ export default class extends Controller {
     const placed = []
     this.blockViews = {}
     this.blocksValue.forEach((block, index) => {
-      const { origin: [originX, originZ], rotated = false } = this.layout(block.code, index)
+      const { origin: [originX, originZ], rotated = false, reverseRows = false } = this.layout(block.code, index)
       const bayLength = block.bays * (SLOT.length + GAP.bay)
       const rowLength = block.rows * (SLOT.width + GAP.row)
       const width = rotated ? rowLength : bayLength
@@ -101,14 +103,18 @@ export default class extends Controller {
       ground.position.set(originX + width / 2, -0.05, originZ + depth / 2)
       this.scene.add(ground)
       const label = this.addLabel(block.code, originX + width / 2, originZ - 4, 6)
-      this.blockViews[block.code] = { ground, label, center: [originX + width / 2, originZ + depth / 2], extent: Math.max(width, depth) }
+      this.blockViews[block.code] = {
+        ground, label, center: [originX + width / 2, originZ + depth / 2], extent: Math.max(width, depth),
+        bounds: { minX: originX, maxX: originX + width, minZ: originZ, maxZ: originZ + depth }
+      }
 
       for (let level = 1; level <= block.levels; level++) {
         for (let row = 0; row < block.rows; row++) {
           for (let bay = 1; bay <= block.bays; bay++) {
             const letter = String.fromCharCode(65 + row)
             const alongBays = (bay - 1) * (SLOT.length + GAP.bay) + SLOT.length / 2
-            const alongRows = row * (SLOT.width + GAP.row) + SLOT.width / 2
+            const rowIndex = reverseRows ? block.rows - 1 - row : row
+            const alongRows = rowIndex * (SLOT.width + GAP.row) + SLOT.width / 2
             placed.push({
               code: `${block.code}${bay}${letter}${level}`, block: block.code, bay, row: letter, level, rotated,
               position: new THREE.Vector3(
@@ -163,23 +169,24 @@ export default class extends Controller {
     return this.disabledCodes.has(slot.code)
   }
 
-  buildAreas() {
-    this.areasValue.forEach((area) => {
-      const config = AREA_ORIGINS[area.code]
-      if (!config) return
-      const [originX, originZ] = config.origin
-      const [width, depth] = config.size
-      const box = new THREE.Mesh(
-        new THREE.BoxGeometry(width, 0.4, depth),
-        new THREE.MeshStandardMaterial({ color: COLORS.area, transparent: true, opacity: area.enabled ? 0.7 : 0.25 })
-      )
-      box.position.set(originX + width / 2, 0.2, originZ + depth / 2)
-      box.userData.area = area
-      this.scene.add(box)
-      this.areaMeshes = [ ...(this.areaMeshes || []), box ]
-      const capacity = area.capacity ?? this.labelsValue.unknown
-      box.userData.label = this.addLabel(`${area.name} · ${this.labelsValue.capacity}: ${capacity}`, originX + width / 2, originZ - 4, 6)
-    })
+  // Fondo y etiqueta que agrupan los bloques CFS bajo el nombre de DesyCon.
+  buildDesycon() {
+    const views = DESYCON_BLOCKS.map((code) => this.blockViews[code]).filter(Boolean)
+    if (!views.length) return
+
+    const minX = Math.min(...views.map((view) => view.bounds.minX)) - 4
+    const maxX = Math.max(...views.map((view) => view.bounds.maxX)) + 4
+    const minZ = Math.min(...views.map((view) => view.bounds.minZ)) - 4
+    const maxZ = Math.max(...views.map((view) => view.bounds.maxZ)) + 4
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(maxX - minX, maxZ - minZ),
+      new THREE.MeshBasicMaterial({ color: COLORS.area })
+    )
+    ground.rotation.x = -Math.PI / 2
+    ground.position.set((minX + maxX) / 2, -0.1, (minZ + maxZ) / 2)
+    this.scene.add(ground)
+    const label = this.addLabel(this.labelsValue.desycon, (minX + maxX) / 2, minZ - 12, 8)
+    this.desycon = { ground, label }
   }
 
   addLabel(text, x, z, size) {
@@ -211,7 +218,7 @@ export default class extends Controller {
     Object.entries(this.blockViews).forEach(([code, view]) => {
       view.ground.visible = view.label.visible = !block || code === block
     })
-    if (this.areaMeshes) this.areaMeshes.forEach((mesh) => { mesh.visible = mesh.userData.label.visible = !block })
+    if (this.desycon) this.desycon.ground.visible = this.desycon.label.visible = !block
     const matrix = new THREE.Matrix4()
     const scale = new THREE.Vector3()
     const hidden = new THREE.Matrix4().makeScale(0, 0, 0)
@@ -257,9 +264,8 @@ export default class extends Controller {
       this.selected = unit.slots[0].code
       this.showInfo(unit)
     } else {
-      const area = this.areaMeshes && this.raycaster.intersectObjects(this.areaMeshes)[0]?.object.userData.area
       this.selected = null
-      this.showInfo(null, area)
+      this.showInfo(null)
     }
     this.paint()
   }
@@ -271,7 +277,7 @@ export default class extends Controller {
     return (!level || unit.level === Number(level)) && (!block || unit.block === block)
   }
 
-  showInfo(unit, area) {
+  showInfo(unit) {
     const labels = this.labelsValue
     let html = `<p class="text-sm text-slate-500">${labels.hint}</p>`
     if (unit) {
@@ -281,9 +287,6 @@ export default class extends Controller {
       html = `<p class="font-mono text-xl font-bold text-slate-900">${unit.slots.map((slot) => slot.code).join(" · ")}</p>
               <p class="text-sm text-slate-600">${labels.block} ${first.block} · ${labels.bay} ${bays} · ${labels.row} ${first.row} · ${labels.level} ${first.level}</p>
               <p class="mt-1 text-sm font-medium text-slate-800">${state}</p>`
-    } else if (area) {
-      html = `<p class="text-xl font-bold text-slate-900">${area.name}</p>
-              <p class="text-sm text-slate-600">${labels.capacity}: ${area.capacity ?? labels.unknown}</p>`
     }
     this.infoTarget.innerHTML = html
   }

@@ -12,10 +12,4 @@ FactoryBot.define do
     row { "A" }
     level { 1 }
   end
-
-  factory :yard_area do
-    sequence(:code) { |n| "AREA#{n}" }
-    name { "Área" }
-    capacity { 72 }
-  end
 end

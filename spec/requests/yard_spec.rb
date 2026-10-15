@@ -4,7 +4,6 @@ RSpec.describe "Patio", type: :request do
   before { YardCatalog.new(blocks: [ { code: "1A", bays: 4, rows: 2, levels: 2 } ]).call }
 
   let(:slot) { YardSlot.find_by!(code: "1A1A1") }
-  let(:area) { YardArea.find_by!(code: "DESYCON") }
 
   it "requires login" do
     get yard_path
@@ -12,11 +11,11 @@ RSpec.describe "Patio", type: :request do
   end
 
   %i[admin seguridad].each do |role|
-    it "lets #{role} see blocks, areas and positions" do
+    it "lets #{role} see blocks and positions" do
       sign_in create(:user, role)
       get yard_path
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include("1A1A1", "DesyCon")
+      expect(response.body).to include("1A1A1")
     end
   end
 
@@ -63,19 +62,5 @@ RSpec.describe "Patio", type: :request do
     expect(slot.reload).to be_enabled
     get yard_path
     expect(response.body).not_to include(toggle_yard_slot_path(slot))
-  end
-
-  it "lets admin edit the DesyCon capacity, and rejects invalid values" do
-    sign_in create(:user, :admin)
-    patch yard_area_path(area), params: { yard_area: { capacity: 80 } }
-    expect(area.reload.capacity).to eq(80)
-    patch yard_area_path(area), params: { yard_area: { capacity: 0 } }
-    expect(area.reload.capacity).to eq(80)
-  end
-
-  it "does not let seguridad edit the area" do
-    sign_in create(:user, :seguridad)
-    patch yard_area_path(area), params: { yard_area: { capacity: 1 } }
-    expect(area.reload.capacity).to eq(72)
   end
 end

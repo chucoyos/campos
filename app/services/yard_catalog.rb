@@ -1,39 +1,46 @@
-# Deja el catálogo del patio (bloques, posiciones y áreas) exactamente como lo define DEFINITION.
-# Solo escribe en yard_blocks, yard_slots y yard_areas; es repetible para el ciclo de revisión con el cliente.
+# Deja el catálogo del patio (bloques y posiciones) exactamente como lo define BLOCKS.
+# Solo escribe en yard_blocks y yard_slots; es repetible para el ciclo de revisión con el cliente.
 class YardCatalog
   # Cada bahía es un lugar de 20 pies; un contenedor de 40 pies ocupa dos bahías contiguas.
   BLOCKS = [
     { code: "1A", bays: 36, rows: 2,  levels: 5 },
     { code: "1B", bays: 12, rows: 3,  levels: 5 },
     { code: "1C", bays: 20, rows: 7,  levels: 5 },
-    { code: "1D", bays: 4,  rows: 12, levels: 5 },
-    { code: "2D", bays: 4,  rows: 12, levels: 5 },
-    { code: "3D", bays: 4,  rows: 12, levels: 5 }
+    { code: "1CFS", bays: 4, rows: 12, levels: 1 },
+    { code: "2CFS", bays: 4, rows: 12, levels: 1 },
+    { code: "3CFS", bays: 4, rows: 12, levels: 1 }
   ].freeze
 
-  AREAS = [
-    { code: YardArea::DESYCON, name: "DesyCon", capacity: 72 }
-  ].freeze
+  # Bloques que cambiaron de código: se renombran en su lugar para conservar sus posiciones y su estado.
+  RENAMES = { "1D" => "1CFS", "2D" => "2CFS", "3D" => "3CFS" }.freeze
 
-  Result = Struct.new(:blocks, :areas, keyword_init: true)
+  Result = Struct.new(:blocks, keyword_init: true)
 
-  def initialize(blocks: BLOCKS, areas: AREAS)
+  def initialize(blocks: BLOCKS, renames: RENAMES)
     @blocks = blocks
-    @areas = areas
+    @renames = renames
   end
 
   def call
     ActiveRecord::Base.transaction do
+      apply_renames
       YardBlock.where.not(code: @blocks.pluck(:code)).find_each { |block| remove(block) }
-      YardArea.where.not(code: @areas.pluck(:code)).delete_all
 
-      areas = @areas.map { |attributes| YardArea.find_or_initialize_by(code: attributes[:code]).tap { |area| area.update!(attributes) } }
-      blocks = @blocks.map { |attributes| sync_block(attributes) }
-      Result.new(blocks: blocks, areas: areas)
+      Result.new(blocks: @blocks.map { |attributes| sync_block(attributes) })
     end
   end
 
   private
+
+  def apply_renames
+    @renames.each do |old_code, new_code|
+      block = YardBlock.find_by(code: old_code)
+      next unless block && @blocks.any? { |attributes| attributes[:code] == new_code } && !YardBlock.exists?(code: new_code)
+
+      block.update!(code: new_code)
+      YardSlot.where(yard_block_id: block.id).update_all([ "code = ? || bay || row || level", new_code ])
+    end
+  end
 
   def sync_block(attributes)
     block = YardBlock.find_or_initialize_by(code: attributes[:code])

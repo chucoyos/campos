@@ -48,16 +48,3 @@ RSpec.describe YardSlot, type: :model do
     expect(create(:yard_slot, yard_block: block)).to be_enabled
   end
 end
-
-RSpec.describe YardArea, type: :model do
-  subject { build(:yard_area) }
-
-  it { is_expected.to validate_presence_of(:code) }
-  it { is_expected.to validate_presence_of(:name) }
-  it { is_expected.to validate_uniqueness_of(:code).ignoring_case_sensitivity }
-  it { is_expected.to validate_numericality_of(:capacity).only_integer.is_greater_than(0).allow_nil }
-
-  it "accepts an unknown capacity" do
-    expect(build(:yard_area, capacity: nil)).to be_valid
-  end
-end

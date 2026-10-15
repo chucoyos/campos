@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_200200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -94,17 +94,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_200200) do
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
     t.index ["role"], name: "index_users_on_role"
-  end
-
-  create_table "yard_areas", force: :cascade do |t|
-    t.string "code", null: false
-    t.string "name", null: false
-    t.integer "capacity"
-    t.boolean "enabled", default: true, null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["code"], name: "index_yard_areas_on_code", unique: true
-    t.check_constraint "capacity IS NULL OR capacity > 0", name: "yard_areas_capacity_positive"
   end
 
   create_table "yard_blocks", force: :cascade do |t|

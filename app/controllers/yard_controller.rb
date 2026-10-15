@@ -2,7 +2,6 @@ class YardController < ApplicationController
   def index
     authorize YardSlot
     @blocks = YardBlock.order(:code)
-    @areas = YardArea.order(:code)
     @slot_counts = YardSlot.group(:yard_block_id, :enabled).count
     @disabled_codes = YardSlot.where(enabled: false).pluck(:code)
     @pagy, @slots = paginate(apply_filters(policy_scope(YardSlot)).eager_load(:yard_block).order("yard_blocks.code", :level, :row, :bay))

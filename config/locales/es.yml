@@ -21,7 +21,6 @@ es:
     yard:
       slot_enabled: "La posición %{code} fue habilitada."
       slot_disabled: "La posición %{code} fue deshabilitada."
-      area_updated: "El área %{name} fue actualizada."
     master_bls:
       create: "MBL creado."
       update: "MBL actualizado."
@@ -183,16 +182,15 @@ es:
       map_provisional: "Distribución según el diagrama del patio; las distancias entre bloques son aproximadas."
       reset_view: "Restablecer vista"
       selected: "Seleccionada"
-      subtitle: "Bloques, posiciones y áreas del patio de contenedores."
+      subtitle: "Bloques y posiciones del patio de contenedores."
       slots:
         one: "1 lugar"
         other: "%{count} lugares"
       disabled_count:
         one: "1 posición deshabilitada"
         other: "%{count} posiciones deshabilitadas"
-      area_hint: "Área general sin posiciones internas. La capacidad cuenta contenedores sin importar su tamaño."
-      unknown: "Desconocida"
       positions: "Posiciones"
+      desycon: "DesyCon"
       position: "Bloque %{block} · bahía %{bay} · fila %{row} · nivel %{level}"
       toggle: "Habilitar o deshabilitar %{code}"
       confirm_disable: "¿Deshabilitar la posición %{code}?"
@@ -334,9 +332,6 @@ es:
       yard_slot:
         one: "Posición"
         other: "Posiciones"
-      yard_area:
-        one: "Área"
-        other: "Áreas"
       container:
         one: "Contenedor"
         other: "Contenedores"
@@ -389,11 +384,6 @@ es:
         row: "Fila"
         level: "Nivel"
         enabled: "Estado"
-      yard_area:
-        code: "Código"
-        name: "Nombre"
-        capacity: "Capacidad"
-        enabled: "Habilitada"
       container:
         opening_photos: "Fotos de apertura"
         deconsolidation_photos: "Fotos de desconsolidación"

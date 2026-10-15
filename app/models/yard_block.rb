@@ -1,5 +1,5 @@
 class YardBlock < ApplicationRecord
-  CODE_FORMAT = /\A\d[A-Z]\z/
+  CODE_FORMAT = /\A\d[A-Z]+\z/
 
   has_many :yard_slots, dependent: :restrict_with_error
 
