@@ -74,3 +74,17 @@ RSpec.describe "Warehouse map data", type: :request do
     expect(response.body).not_to include("N1-08")
   end
 end
+
+RSpec.describe "Stored item location", type: :request do
+  it "shows the location in the manifest detail" do
+    slot = create(:warehouse_slot, number: 5)
+    item = create(:cargo_item)
+    item.cargo_manifest.update_columns(status: "confirmed", confirmed_at: Time.current)
+    item.reload.store_at!(slot, "C", create(:user, :montacargas))
+    sign_in create(:user, :admin)
+
+    get cargo_manifest_path(item.cargo_manifest)
+
+    expect(response.body).to include("N1-05 · C")
+  end
+end
