@@ -37,4 +37,24 @@
   <% end %>
 
   <%= render "cargo_manifests/items", manifest: @cargo_manifest, items: @cargo_items, new_item: @new_cargo_item, packagings: @active_packagings %>
+
+  <% if @events.present? %>
+    <details class="group mt-6 rounded-3xl border border-slate-100 bg-white shadow-sm">
+      <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 p-6 text-lg font-bold text-slate-900 sm:px-8 [&::-webkit-details-marker]:hidden">
+        <%= material_icon "history" %> <%= t(".history_title") %>
+        <span class="ml-auto transition-all duration-200 ease-out group-open:rotate-180"><%= material_icon "expand_more" %></span>
+      </summary>
+      <ol class="space-y-3 px-6 pb-6 sm:px-8 sm:pb-8">
+        <% @events.each do |event| %>
+          <li class="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 text-sm">
+            <span class="<%= event.event == "confirm" ? "text-emerald-700" : "text-amber-700" %>"><%= material_icon(event.event == "confirm" ? "task_alt" : "lock_open") %></span>
+            <div>
+              <p class="font-medium text-slate-900"><%= t("cargo_manifests.events.#{event.event}") %></p>
+              <p class="text-slate-600"><%= event.user&.email || t(".unknown_user") %> · <%= l(event.created_at, format: :long) %></p>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    </details>
+  <% end %>
 </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,6 +57,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_200000) do
     t.index ["qr_token"], name: "index_cargo_items_on_qr_token", unique: true, where: "(qr_token IS NOT NULL)"
     t.check_constraint "quantity > 0", name: "cargo_items_quantity_positive"
     t.check_constraint "weight_kg IS NULL OR weight_kg > 0::numeric", name: "cargo_items_weight_positive"
+  end
+
+  create_table "cargo_manifest_events", force: :cascade do |t|
+    t.bigint "cargo_manifest_id", null: false
+    t.bigint "user_id"
+    t.string "event", null: false
+    t.string "from_status", null: false
+    t.string "to_status", null: false
+    t.datetime "created_at", null: false
+    t.index ["cargo_manifest_id", "created_at"], name: "idx_on_cargo_manifest_id_created_at_1692a9d850"
+    t.index ["cargo_manifest_id"], name: "index_cargo_manifest_events_on_cargo_manifest_id"
+    t.index ["user_id"], name: "index_cargo_manifest_events_on_user_id"
+    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying, 'reopen'::character varying]::text[])", name: "cargo_manifest_events_event_valid"
   end
 
   create_table "cargo_manifests", force: :cascade do |t|
@@ -171,6 +184,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_200000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "cargo_items", "cargo_manifests"
   add_foreign_key "cargo_items", "cargo_packagings"
+  add_foreign_key "cargo_manifest_events", "cargo_manifests"
+  add_foreign_key "cargo_manifest_events", "users", on_delete: :nullify
   add_foreign_key "cargo_manifests", "clients"
   add_foreign_key "cargo_manifests", "containers"
   add_foreign_key "containers", "master_bls"

@@ -6,6 +6,7 @@ class CargoManifestPolicy < ApplicationPolicy
   def destroy? = record.draft? && (user&.admin? || (owner? && client_may_manage?))
   def confirm? = record.draft? && (manager? || (owner? && client_may_manage?))
   def reopen? = record.confirmed? && user&.admin?
+  def history? = user&.admin?
   def template? = show?
   def import? = update?
 

@@ -78,6 +78,33 @@ RSpec.describe "Cargo capture", type: :request do
       end.to change(CargoItem, :count).by(1)
     end
 
+    it "shows the history of confirmations and reopenings only to administrators" do
+      item_manifest = create(:cargo_manifest, client: client)
+      create(:cargo_item, cargo_manifest: item_manifest, cargo_packaging: packaging)
+      admin = create(:user, :admin, email: "auditor@example.com")
+      sign_in admin
+
+      patch confirm_cargo_manifest_path(item_manifest)
+      patch reopen_cargo_manifest_path(item_manifest)
+      get cargo_manifest_path(item_manifest)
+
+      expect(response.body).to include("Historial de captura", "Captura confirmada", "Captura reabierta", "auditor@example.com")
+
+      sign_in create(:user, :seguridad)
+      get cargo_manifest_path(item_manifest)
+      expect(response.body).not_to include("Historial de captura")
+    end
+
+    it "shows an error instead of confirming an empty record" do
+      sign_in create(:user, :admin)
+      empty = create(:cargo_manifest, client: client)
+
+      patch confirm_cargo_manifest_path(empty)
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(empty.reload).to be_draft
+    end
+
     it "does not let security staff reopen it" do
       sign_in create(:user, :seguridad)
 

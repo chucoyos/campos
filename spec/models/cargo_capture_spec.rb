@@ -1,11 +1,64 @@
 require "rails_helper"
 
 RSpec.describe "Cargo capture models", type: :model do
+  describe CargoManifestEvent do
+    it { is_expected.to belong_to(:cargo_manifest) }
+    it { is_expected.to belong_to(:user).optional }
+    it { is_expected.to validate_inclusion_of(:event).in_array(%w[confirm reopen]) }
+
+    it "is immutable once recorded" do
+      user = create(:user, :admin)
+      manifest = create(:cargo_manifest, :confirmed)
+      manifest.reopen_by!(user)
+      event = manifest.events.last
+
+      expect(event.update(to_status: "confirmed")).to be false
+    end
+  end
+
   describe CargoPackaging do
     it { is_expected.to have_many(:cargo_items).dependent(:restrict_with_error) }
   end
 
   describe CargoManifest do
+    describe "state machine" do
+      let(:user) { create(:user, :admin) }
+      let(:manifest) { create(:cargo_manifest) }
+
+      it "starts as a draft and cannot be confirmed without items" do
+        expect(manifest).to be_draft
+        expect(manifest).not_to be_may_confirm
+        expect { manifest.confirm_by!(user) }.to raise_error(AASM::InvalidTransition)
+        expect(manifest.reload).to be_draft
+      end
+
+      it "confirms, stamps the date and records who did it" do
+        create(:cargo_item, cargo_manifest: manifest)
+
+        manifest.confirm_by!(user)
+
+        expect(manifest.reload).to be_confirmed
+        expect(manifest.confirmed_at).to be_present
+        expect(manifest.events.last).to have_attributes(user: user, event: "confirm", from_status: "draft", to_status: "confirmed")
+      end
+
+      it "reopens only confirmed records, clears the date and records who did it" do
+        expect { manifest.reopen_by!(user) }.to raise_error(AASM::InvalidTransition)
+
+        confirmed = create(:cargo_manifest, :confirmed)
+        confirmed.reopen_by!(user)
+
+        expect(confirmed.reload).to be_draft
+        expect(confirmed.confirmed_at).to be_nil
+        expect(confirmed.events.last).to have_attributes(user: user, event: "reopen")
+      end
+
+      it "does not record an event when the transition is invalid" do
+        expect { manifest.reopen_by!(user) }.to raise_error(AASM::InvalidTransition)
+        expect(manifest.events).to be_empty
+      end
+    end
+
     it { is_expected.to belong_to(:client) }
     it { is_expected.to belong_to(:container).optional }
     it { is_expected.to have_many(:cargo_items).dependent(:destroy) }

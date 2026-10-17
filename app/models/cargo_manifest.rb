@@ -1,9 +1,24 @@
 class CargoManifest < ApplicationRecord
+  include AASM
+
   belongs_to :client
   belongs_to :container, optional: true
   has_many :cargo_items, dependent: :destroy
+  has_many :events, class_name: "CargoManifestEvent", dependent: :delete_all
 
-  validates :status, inclusion: { in: %w[draft confirmed] }
+  aasm column: :status, whiny_persistence: true do
+    state :draft, initial: true
+    state :confirmed
+
+    event :confirm, before: -> { self.confirmed_at = Time.current } do
+      transitions from: :draft, to: :confirmed, guard: :cargo_items_present?, after: -> { record_event("confirm", "draft", "confirmed") }
+    end
+
+    event :reopen, before: -> { self.confirmed_at = nil } do
+      transitions from: :confirmed, to: :draft, after: -> { record_event("reopen", "confirmed", "draft") }
+    end
+  end
+
   validates :container_id, uniqueness: true, allow_nil: true
   validate :container_matches_client
 
@@ -12,30 +27,26 @@ class CargoManifest < ApplicationRecord
   }
   scope :for_client, ->(client_id) { where(client_id: client_id) }
 
-  def draft? = status == "draft"
-  def confirmed? = status == "confirmed"
   def general_cargo? = container_id.nil?
 
-  def confirm!
-    with_lock do
-      unless draft? && cargo_items.exists?
-        errors.add(:base, :cannot_confirm)
-        raise ActiveRecord::RecordInvalid, self
-      end
+  def confirm_by!(user) = fire_locked(:confirm!, user)
 
-      update!(status: "confirmed", confirmed_at: Time.current)
-    end
-  end
-
-  def reopen!
-    with_lock do
-      raise ActiveRecord::RecordInvalid, self unless confirmed?
-
-      update!(status: "draft", confirmed_at: nil)
-    end
-  end
+  def reopen_by!(user) = fire_locked(:reopen!, user)
 
   private
+
+  def fire_locked(event, user)
+    with_lock do
+      @audit_user = user
+      public_send(event)
+    end
+  end
+
+  def cargo_items_present? = cargo_items.exists?
+
+  def record_event(event, from, to)
+    events.build(user: @audit_user, event: event, from_status: from, to_status: to, created_at: Time.current)
+  end
 
   def container_matches_client
     return unless container

@@ -75,7 +75,7 @@ La mercancía se registra en un manifiesto asociado a un cliente. Si procede de 
 
 El catálogo inicial de embalajes distingue unidades individuales (pallet y rollo) de cantidades agrupadas (caja). Cada pallet y rollo se captura individualmente y requiere su peso; el QR interno es opcional para ambos. El identificador de origen es opcional y aplica a cualquier embalaje. Las cajas se registran en líneas agrupadas por descripción y cantidad, sin peso por unidad.
 
-Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. Esta etapa no registra recepción verificada, ubicación de almacén, movimientos, ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
+Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. El ciclo `draft → confirmed` se gestiona con AASM; un administrador puede reabrir la captura. Cada confirmación y reapertura se registra en `cargo_manifest_events` (usuario, fecha, estado origen y destino, inmutable) y el historial solo lo ve el administrador. Los cambios de líneas no se auditan. Esta etapa no registra recepción verificada, ubicación de almacén, movimientos, ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
 
 ---
 

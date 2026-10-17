@@ -39,6 +39,7 @@ es:
       destroy: "Registro de mercancía eliminado."
       confirm: "Registro de mercancía confirmado. Ya no puede modificarse."
       reopen: "Captura reabierta. El registro volvió a borrador y debe confirmarse de nuevo."
+      invalid_transition: "El registro ya cambió de estado. Actualiza la página e inténtalo de nuevo."
       import:
         one: "Se importó 1 línea de mercancía."
         other: "Se importaron %{count} líneas de mercancía."
@@ -278,6 +279,9 @@ es:
       document_upload_failed: "No se pudo subir el archivo. Inténtalo de nuevo."
       document_uploading: "Subiendo documento"
   cargo_manifests:
+    events:
+      confirm: "Captura confirmada"
+      reopen: "Captura reabierta"
     statuses:
       draft: "Borrador"
       confirmed: "Confirmado"
@@ -314,6 +318,8 @@ es:
       qr_label: "Ver etiqueta QR"
       import_failed: "No se importó ninguna línea. Corrige estos errores e inténtalo de nuevo:"
       confirm_action: "Confirmar captura"
+      history_title: "Historial de captura"
+      unknown_user: "Usuario eliminado"
       reopen_action: "Reabrir captura"
       reopen_manifest: "¿Reabrir la captura? El registro volverá a borrador y deberás confirmarlo de nuevo al terminar los cambios."
       confirm_notice: "Agrega todas las mercancías antes de confirmar la captura. Una vez confirmada, no podrás agregar, editar ni eliminar líneas."
@@ -453,6 +459,9 @@ es:
       cargo_manifest:
         one: "Registro de mercancía"
         other: "Registros de mercancía"
+      cargo_manifest_event:
+        one: "Evento de captura"
+        other: "Eventos de captura"
       cargo_item:
         one: "Línea de mercancía"
         other: "Líneas de mercancía"

@@ -40,9 +40,11 @@ RSpec.describe CargoManifestPolicy do
       expect(policy.confirm?).to be false
     end
 
-    it { is_expected.to permit_action(:reopen) }
+    it { is_expected.to permit_actions(%i[reopen history]) }
 
     it "does not let other roles reopen" do
+      expect(described_class.new(create(:user, :seguridad), manifest).history?).to be false
+      expect(described_class.new(create(:user, :cliente, client: manifest.client), manifest).history?).to be false
       expect(described_class.new(create(:user, :seguridad), manifest).reopen?).to be false
       expect(described_class.new(create(:user, :cliente, client: manifest.client), manifest).reopen?).to be false
     end

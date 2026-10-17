@@ -10,6 +10,7 @@ class CargoManifestsController < ApplicationController
 
   def show
     load_show_data
+    @events = @cargo_manifest.events.includes(:user).order(created_at: :desc, id: :desc) if policy(@cargo_manifest).history?
   end
 
   def new
@@ -59,17 +60,20 @@ class CargoManifestsController < ApplicationController
 
   def confirm
     authorize @cargo_manifest, :confirm?
-    @cargo_manifest.confirm!
+    @cargo_manifest.confirm_by!(current_user)
     redirect_back_or_to @cargo_manifest, notice: t("flash.cargo_manifests.confirm")
-  rescue ActiveRecord::RecordInvalid
+  rescue AASM::InvalidTransition
+    @cargo_manifest.errors.add(:base, :cannot_confirm)
     load_show_data
     render :show, status: :unprocessable_entity
   end
 
   def reopen
     authorize @cargo_manifest, :reopen?
-    @cargo_manifest.reopen!
+    @cargo_manifest.reopen_by!(current_user)
     redirect_back_or_to @cargo_manifest, notice: t("flash.cargo_manifests.reopen")
+  rescue AASM::InvalidTransition
+    redirect_to @cargo_manifest, alert: t("flash.cargo_manifests.invalid_transition")
   end
 
   def template
