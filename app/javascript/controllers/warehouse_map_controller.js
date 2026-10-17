@@ -9,6 +9,8 @@ const COLUMN_GAP = 4
 const BAY_GAP = 14
 const ROWS_PER_COLUMN = 8
 const FREE_SPACE = 6
+// Pasillo en todas las naves y columnas tras la segunda fila: entre 2 y 3 (izquierda) y entre 15 y 14 (derecha).
+const AISLE_AFTER_ROWS = 2
 const COLORS = { empty: 0x7dd3fc, stored: 0xf59e0b, disabled: 0x94a3b8, selected: 0x10b981, ground: 0xe2e8f0, background: 0xf1f5f9 }
 
 export default class extends Controller {
@@ -71,18 +73,19 @@ export default class extends Controller {
 
     this.baysValue.forEach((bay, index) => {
       const originX = index * (bayWidth + BAY_GAP)
-      const depth = ROWS_PER_COLUMN * (SLOT.depth + GAP)
-      const ground = new THREE.Mesh(new THREE.PlaneGeometry(bayWidth, depth + 2), new THREE.MeshBasicMaterial({ color: COLORS.ground }))
+      const ground = new THREE.Mesh(new THREE.PlaneGeometry(bayWidth, 1), new THREE.MeshBasicMaterial({ color: COLORS.ground }))
       ground.rotation.x = -Math.PI / 2
-      ground.position.set(originX + bayWidth / 2, -0.05, depth / 2)
       this.scene.add(ground)
       this.addLabel(bay.label, originX + bayWidth / 2, -5, 5)
+      let depth = 0
 
       bay.slots.forEach((slot) => {
         const column = slot.number <= ROWS_PER_COLUMN ? 0 : 1
         // La columna 9-16 va en orden descendente: el 16 frente al 1 y el 9 frente al 8.
         const row = column === 0 ? slot.number - 1 : 2 * ROWS_PER_COLUMN - slot.number
-        const afterFree = bay.free_space_after && column === 0 && slot.number > bay.free_space_after ? FREE_SPACE : 0
+        // El +GAP alinea 5, 6 y 7 de la nave 1 con 11, 10 y 9 de la segunda columna.
+        const bayGap = bay.free_space_after && column === 0 && slot.number > bay.free_space_after ? FREE_SPACE + GAP : 0
+        const afterFree = bayGap + (row >= AISLE_AFTER_ROWS ? FREE_SPACE : 0)
         const height = slot.enabled ? 0.6 + Math.min(slot.items, 6) * 0.5 : 0.3
         const mesh = new THREE.Mesh(
           new THREE.BoxGeometry(SLOT.width, height, SLOT.depth),
@@ -93,12 +96,16 @@ export default class extends Controller {
           height / 2,
           row * (SLOT.depth + GAP) + SLOT.depth / 2 + afterFree
         )
+        depth = Math.max(depth, mesh.position.z + SLOT.depth / 2)
         mesh.userData = { slot }
         this.scene.add(mesh)
         this.meshes.push(mesh)
         this.addLabel(String(slot.number), mesh.position.x, mesh.position.z, 3, height + 1.5)
       })
 
+      // El piso llega hasta el borde de la última ubicación de la nave.
+      ground.scale.y = depth + 2
+      ground.position.set(originX + bayWidth / 2, -0.05, depth / 2)
       this.bounds.maxX = originX + bayWidth
       this.bounds.maxZ = Math.max(this.bounds.maxZ, depth)
     })
