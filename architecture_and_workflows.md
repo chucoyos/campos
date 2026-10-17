@@ -75,7 +75,13 @@ La mercancía se registra en un manifiesto asociado a un cliente. Si procede de 
 
 El catálogo inicial de embalajes distingue unidades individuales (pallet y rollo) de cantidades agrupadas (caja). Cada pallet y rollo se captura individualmente y requiere su peso; el QR interno es opcional para ambos. El identificador de origen es opcional y aplica a cualquier embalaje. Las cajas se registran en líneas agrupadas por descripción y cantidad, sin peso por unidad.
 
-Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. El ciclo `draft → confirmed` se gestiona con AASM; un administrador puede reabrir la captura. Cada confirmación y reapertura se registra en `cargo_manifest_events` (usuario, fecha, estado origen y destino, inmutable) y el historial solo lo ve el administrador. Los cambios de líneas no se auditan. Esta etapa no registra recepción verificada, ubicación de almacén, movimientos, ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
+Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. El ciclo `draft → confirmed` se gestiona con AASM; un administrador puede reabrir la captura. Cada confirmación y reapertura se registra en `cargo_manifest_events` (usuario, fecha, estado origen y destino, inmutable) y el historial solo lo ve el administrador. Los cambios de líneas no se auditan. Esta etapa no registra recepción verificada ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
+
+### Ubicaciones en bodega
+
+La bodega tiene 4 naves con ubicaciones de piso numeradas del 1 al 16 (la nave 1 no tiene la ubicación 8; en el mapa se dibuja un espacio libre entre la 4 y la 5). Cada ubicación se divide en las subdivisiones A, B y C, con capacidad aproximada de 3 contenedores; no hay estado "llena", la ocupación se calcula con las líneas ubicadas. Cada ubicación tiene una etiqueta QR (`qr_token`) que abre su detalle.
+
+Solo las líneas de una captura confirmada se pueden ubicar (`captured → stored`, AASM), por administrador o montacargas, también para reubicar. Cada ubicación o reubicación se registra de forma inmutable en `cargo_item_movements` (origen, destino, usuario y fecha). Una línea de cajas agrupadas se ubica completa en una sola ubicación. El catálogo se carga con `bin/rails db:seed:warehouse` y el mapa 3D está en `/warehouse`.
 
 ---
 

@@ -18,6 +18,9 @@ es:
         one: "Se eliminó 1 fotografía."
         other: "Se eliminaron %{count} fotografías."
       photos_none: "No hay fotografías para descargar."
+    warehouse:
+      stored: "Mercancía ubicada en %{code}."
+      invalid_transition: "Solo se puede ubicar mercancía de una captura confirmada."
     yard:
       slot_enabled: "La posición %{code} fue habilitada."
       slot_disabled: "La posición %{code} fue deshabilitada."
@@ -87,6 +90,7 @@ es:
       cargo_manifests: "Mercancías"
       cargo_packagings: "Embalajes"
       yard: "Patio"
+      warehouse: "Bodega"
       clients: "Clientes"
       carriers: "Transportistas"
       main_navigation: "Navegación principal"
@@ -192,6 +196,38 @@ es:
       llenar: "Marcar como lleno"
       vaciar: "Marcar como vacío"
       entregar: "Marcar como entregado"
+  warehouse:
+    index:
+      title: "Bodega"
+      subtitle: "Naves y ubicaciones de piso. Cada ubicación se divide en A, B y C."
+      bay: "Nave %{number}"
+      empty: "Vacía"
+      items:
+        one: "%{count} línea"
+        other: "%{count} líneas"
+      free_space: "Espacio libre"
+      map: "Mapa 3D"
+      map_hint: "Toca una ubicación para ver su detalle. Arrastra para rotar, pellizca o usa la rueda para acercar."
+      map_provisional: "Distribución según el plano de la bodega; las medidas son aproximadas."
+      reset_view: "Restablecer vista"
+      open_slot: "Abrir ubicación"
+      with_items: "Con mercancía"
+      disabled: "Deshabilitada"
+      labels: "Etiquetas QR"
+    labels:
+      title: "Etiquetas QR de ubicaciones"
+      print: "Imprimir"
+  warehouse_slots:
+    show:
+      back: "Volver a la bodega"
+      subtitle: "Nave %{bay} · ubicación %{number}"
+      section: "Subdivisión %{section}"
+      empty_section: "Sin mercancía."
+      store_title: "Ubicar mercancía aquí"
+      nothing_to_store: "No hay mercancía confirmada disponible para ubicar."
+      item: "Mercancía"
+      section_label: "Subdivisión"
+      store_action: "Ubicar"
   yard:
     states:
       enabled: "Habilitada"
@@ -459,6 +495,12 @@ es:
       cargo_manifest:
         one: "Registro de mercancía"
         other: "Registros de mercancía"
+      warehouse_bay:
+        one: "Nave"
+        other: "Naves"
+      warehouse_slot:
+        one: "Ubicación"
+        other: "Ubicaciones"
       cargo_manifest_event:
         one: "Evento de captura"
         other: "Eventos de captura"
@@ -498,6 +540,9 @@ es:
           attributes:
             cargo_manifest:
               not_draft: "debe estar en borrador para modificar su mercancía"
+              not_confirmed: "debe estar confirmada para ubicar su mercancía"
+            warehouse_slot:
+              disabled: "está deshabilitada"
             cargo_packaging:
               inactive: "está desactivado y no se puede usar en una línea nueva"
             quantity:
@@ -564,6 +609,12 @@ es:
         origin_identifier: "Identificador de origen"
         generate_qr: "Generar etiqueta QR"
         qr_token: "Código QR"
+        warehouse_slot: "Ubicación"
+        slot_section: "Subdivisión"
+      warehouse_slot:
+        code: "Código"
+        number: "Número"
+        enabled: "Habilitada"
       cargo_packaging:
         code: "Código"
         name: "Nombre"

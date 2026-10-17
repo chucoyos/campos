@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "cargo_item_movements", force: :cascade do |t|
+    t.bigint "cargo_item_id", null: false
+    t.bigint "from_slot_id"
+    t.string "from_section", limit: 1
+    t.bigint "to_slot_id", null: false
+    t.string "to_section", limit: 1, null: false
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.index ["cargo_item_id", "created_at"], name: "index_cargo_item_movements_on_cargo_item_id_and_created_at"
+    t.index ["cargo_item_id"], name: "index_cargo_item_movements_on_cargo_item_id"
+    t.index ["from_slot_id"], name: "index_cargo_item_movements_on_from_slot_id"
+    t.index ["to_slot_id"], name: "index_cargo_item_movements_on_to_slot_id"
+    t.index ["user_id"], name: "index_cargo_item_movements_on_user_id"
+  end
+
   create_table "cargo_items", force: :cascade do |t|
     t.bigint "cargo_manifest_id", null: false
     t.bigint "cargo_packaging_id", null: false
@@ -52,10 +67,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
     t.string "qr_token"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "warehouse_slot_id"
+    t.string "slot_section", limit: 1
+    t.string "status", default: "captured", null: false
     t.index ["cargo_manifest_id"], name: "index_cargo_items_on_cargo_manifest_id"
     t.index ["cargo_packaging_id"], name: "index_cargo_items_on_cargo_packaging_id"
     t.index ["qr_token"], name: "index_cargo_items_on_qr_token", unique: true, where: "(qr_token IS NOT NULL)"
+    t.index ["warehouse_slot_id"], name: "index_cargo_items_on_warehouse_slot_id"
+    t.check_constraint "(warehouse_slot_id IS NULL) = (slot_section IS NULL) AND (status::text = 'stored'::text) = (warehouse_slot_id IS NOT NULL)", name: "cargo_items_location_consistent"
     t.check_constraint "quantity > 0", name: "cargo_items_quantity_positive"
+    t.check_constraint "slot_section::text = ANY (ARRAY['A'::character varying, 'B'::character varying, 'C'::character varying]::text[])", name: "cargo_items_slot_section_valid"
+    t.check_constraint "status::text = ANY (ARRAY['captured'::character varying, 'stored'::character varying]::text[])", name: "cargo_items_status_valid"
     t.check_constraint "weight_kg IS NULL OR weight_kg > 0::numeric", name: "cargo_items_weight_positive"
   end
 
@@ -69,7 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
     t.index ["cargo_manifest_id", "created_at"], name: "idx_on_cargo_manifest_id_created_at_1692a9d850"
     t.index ["cargo_manifest_id"], name: "index_cargo_manifest_events_on_cargo_manifest_id"
     t.index ["user_id"], name: "index_cargo_manifest_events_on_user_id"
-    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying, 'reopen'::character varying]::text[])", name: "cargo_manifest_events_event_valid"
+    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying::text, 'reopen'::character varying::text])", name: "cargo_manifest_events_event_valid"
   end
 
   create_table "cargo_manifests", force: :cascade do |t|
@@ -153,6 +175,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  create_table "warehouse_bays", force: :cascade do |t|
+    t.integer "number", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["number"], name: "index_warehouse_bays_on_number", unique: true
+    t.check_constraint "number >= 1 AND number <= 4", name: "warehouse_bays_number_valid"
+  end
+
+  create_table "warehouse_slots", force: :cascade do |t|
+    t.bigint "warehouse_bay_id", null: false
+    t.integer "number", null: false
+    t.string "code", null: false
+    t.string "qr_token", null: false
+    t.boolean "enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_warehouse_slots_on_code", unique: true
+    t.index ["qr_token"], name: "index_warehouse_slots_on_qr_token", unique: true
+    t.index ["warehouse_bay_id", "number"], name: "index_warehouse_slots_on_warehouse_bay_id_and_number", unique: true
+    t.index ["warehouse_bay_id"], name: "index_warehouse_slots_on_warehouse_bay_id"
+    t.check_constraint "number >= 1 AND number <= 16", name: "warehouse_slots_number_valid"
+  end
+
   create_table "yard_blocks", force: :cascade do |t|
     t.string "code", null: false
     t.integer "bays", null: false
@@ -182,8 +228,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "cargo_item_movements", "cargo_items"
+  add_foreign_key "cargo_item_movements", "users", on_delete: :nullify
+  add_foreign_key "cargo_item_movements", "warehouse_slots", column: "from_slot_id"
+  add_foreign_key "cargo_item_movements", "warehouse_slots", column: "to_slot_id"
   add_foreign_key "cargo_items", "cargo_manifests"
   add_foreign_key "cargo_items", "cargo_packagings"
+  add_foreign_key "cargo_items", "warehouse_slots"
   add_foreign_key "cargo_manifest_events", "cargo_manifests"
   add_foreign_key "cargo_manifest_events", "users", on_delete: :nullify
   add_foreign_key "cargo_manifests", "clients"
@@ -192,5 +243,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_220000) do
   add_foreign_key "master_bls", "clients"
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
+  add_foreign_key "warehouse_slots", "warehouse_bays"
   add_foreign_key "yard_slots", "yard_blocks"
 end

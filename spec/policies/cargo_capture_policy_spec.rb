@@ -50,3 +50,26 @@ RSpec.describe CargoManifestPolicy do
     end
   end
 end
+
+RSpec.describe WarehouseSlotPolicy do
+  let(:slot) { create(:warehouse_slot) }
+
+  it "lets operators view and only admin and forklift users store" do
+    expect(described_class.new(create(:user, :seguridad), slot)).to permit_actions(%i[index show labels])
+    expect(described_class.new(create(:user, :seguridad), slot).store?).to be false
+    expect(described_class.new(create(:user, :montacargas), slot)).to permit_actions(%i[index show store labels])
+    expect(described_class.new(create(:user, :cliente), slot).index?).to be false
+  end
+end
+
+RSpec.describe CargoItemPolicy, "#store?" do
+  it "requires a confirmed capture and an admin or forklift user" do
+    item = create(:cargo_item)
+    expect(described_class.new(create(:user, :montacargas), item).store?).to be false
+
+    item.cargo_manifest.update_columns(status: "confirmed")
+    expect(described_class.new(create(:user, :montacargas), item).store?).to be true
+    expect(described_class.new(create(:user, :admin), item).store?).to be true
+    expect(described_class.new(create(:user, :seguridad), item).store?).to be false
+  end
+end

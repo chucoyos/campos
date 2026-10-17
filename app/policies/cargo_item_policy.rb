@@ -3,4 +3,5 @@ class CargoItemPolicy < ApplicationPolicy
   def create? = CargoManifestPolicy.new(user, record.cargo_manifest).update?
   def update? = create?
   def destroy? = create?
+  def store? = record.cargo_manifest.confirmed? && (user&.admin? || user&.montacargas?)
 end

@@ -1,0 +1,61 @@
+<div class="w-full">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-50 text-sky-800"><%= material_icon "warehouse" %></span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+        <p class="text-sm text-slate-500"><%= t(".subtitle") %></p>
+      </div>
+    </div>
+    <%= link_to warehouse_labels_path, class: "flex min-h-12 items-center gap-2 rounded-full border border-slate-200 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95" do %>
+      <%= material_icon "qr_code_2" %> <%= t(".labels") %>
+    <% end %>
+  </div>
+
+  <section class="mb-6 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" aria-label="<%= t(".map") %>"
+           data-controller="warehouse-map"
+           data-warehouse-map-bays-value="<%= warehouse_map_data(@bays, @section_counts).to_json %>"
+           data-warehouse-map-labels-value="<%= { hint: t(".map_hint"), open: t(".open_slot") }.to_json %>">
+    <div class="flex flex-wrap items-end justify-between gap-3 p-4">
+      <div>
+        <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "view_in_ar" %> <%= t(".map") %></h2>
+        <p class="text-sm text-amber-700"><%= t(".map_provisional") %></p>
+      </div>
+      <button type="button" data-action="warehouse-map#resetView"
+              class="flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-4 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95">
+        <%= material_icon "center_focus_strong" %> <%= t(".reset_view") %>
+      </button>
+    </div>
+    <div data-warehouse-map-target="canvas" class="h-[60vh] min-h-80 w-full touch-none"></div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4">
+      <div data-warehouse-map-target="info" class="min-w-0"><p class="text-sm text-slate-500"><%= t(".map_hint") %></p></div>
+      <ul class="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+        <li class="flex items-center gap-2"><span class="h-3 w-3 rounded-sm bg-sky-300"></span><%= t(".empty") %></li>
+        <li class="flex items-center gap-2"><span class="h-3 w-3 rounded-sm bg-amber-500"></span><%= t(".with_items") %></li>
+        <li class="flex items-center gap-2"><span class="h-3 w-3 rounded-sm bg-slate-400"></span><%= t(".disabled") %></li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="space-y-6">
+    <% @bays.each do |bay| %>
+      <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <h2 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "warehouse" %> <%= t(".bay", number: bay.number) %></h2>
+        <ul class="grid grid-cols-4 gap-3 sm:grid-cols-6 lg:grid-cols-8">
+          <% bay.warehouse_slots.sort_by(&:number).each do |slot| %>
+            <% count = @item_counts.fetch(slot.id, 0) %>
+            <% if bay.number == 1 && slot.number == 5 %>
+              <li class="col-span-1 flex min-h-16 items-center justify-center rounded-2xl border border-dashed border-slate-200 text-xs text-slate-400" aria-hidden="true"><%= t(".free_space") %></li>
+            <% end %>
+            <li>
+              <%= link_to warehouse_slot_path(slot), class: "flex min-h-16 flex-col items-center justify-center rounded-2xl border p-2 text-center transition-all duration-200 ease-out active:scale-95 #{count.positive? ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-sky-100 bg-sky-50 text-sky-900'} #{'opacity-50' unless slot.enabled?}" do %>
+                <span class="font-semibold"><%= slot.code %></span>
+                <span class="text-xs"><%= count.positive? ? t(".items", count: count) : t(".empty") %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+</div>

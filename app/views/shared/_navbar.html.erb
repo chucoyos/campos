@@ -3,6 +3,7 @@
 <% links << [t(".cargo_manifests"), cargo_manifests_path, "package_2", controller_name.in?(%w[cargo_manifests cargo_items])] if policy(CargoManifest).index? %>
 <% links << [t(".containers"), containers_path, "inventory_2", controller_name == "containers"] if policy(Container).index? %>
 <% links << [t(".yard"), yard_path, "grid_view", controller_name == "yard"] if policy(YardSlot).index? %>
+<% links << [t(".warehouse"), warehouse_path, "warehouse", controller_name.in?(%w[warehouse warehouse_slots])] if policy(WarehouseSlot).index? %>
 <% catalogs = [] %>
 <% catalogs << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
 <% catalogs << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>

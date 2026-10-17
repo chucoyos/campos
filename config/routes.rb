@@ -46,6 +46,11 @@ Rails.application.routes.draw do
   resources :yard_slots, only: [] do
     patch :toggle, on: :member
   end
+  get "warehouse", to: "warehouse#index", as: :warehouse
+  get "warehouse/labels", to: "warehouse#labels", as: :warehouse_labels
+  resources :warehouse_slots, only: :show do
+    patch :store, on: :member
+  end
   get "home/index"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

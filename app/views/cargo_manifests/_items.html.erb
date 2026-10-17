@@ -35,6 +35,7 @@
                 <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-800"><%= packaging_icon(item.cargo_packaging) %></span>
                 <div>
                 <h3 class="font-semibold text-slate-900"><%= item.description %></h3>
+                <% if item.warehouse_slot %><p class="flex items-center gap-1 text-sm font-medium text-sky-800"><%= material_icon "warehouse" %> <%= item.location_label %></p><% end %>
                 <p class="text-sm text-slate-600"><%= item.cargo_packaging.name %> · <%= t("cargo_manifests.show.quantity", count: item.quantity) %></p>
                 <% if item.weight_kg.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.weight", weight: number_with_precision(item.weight_kg, strip_insignificant_zeros: true)) %></p><% end %>
                 <% if item.origin_identifier.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.origin_identifier", value: item.origin_identifier) %></p><% end %>

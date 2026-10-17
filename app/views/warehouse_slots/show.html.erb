@@ -1,0 +1,56 @@
+<div class="mx-auto w-full max-w-4xl space-y-6">
+  <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+    <%= link_to warehouse_path, class: "mb-3 inline-flex min-h-12 items-center gap-1 text-sm font-medium text-sky-800" do %>
+      <%= material_icon "arrow_back" %> <%= t(".back") %>
+    <% end %>
+    <h1 class="flex items-center gap-2 text-2xl font-bold text-slate-900"><span class="text-sky-800"><%= material_icon "warehouse" %></span> <%= @slot.code %></h1>
+    <p class="mt-1 text-sm text-slate-500"><%= t(".subtitle", bay: @slot.warehouse_bay.number, number: @slot.number) %></p>
+  </section>
+
+  <section class="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <% WarehouseSlot::SECTIONS.each do |section| %>
+      <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+        <h2 class="mb-3 flex items-center gap-2 font-bold text-slate-900"><%= material_icon "inventory_2" %> <%= t(".section", section: section) %></h2>
+        <% items = @items_by_section.fetch(section, []) %>
+        <% if items.empty? %>
+          <p class="text-sm text-slate-500"><%= t(".empty_section") %></p>
+        <% else %>
+          <ul class="space-y-2">
+            <% items.each do |item| %>
+              <li class="rounded-2xl bg-slate-50 p-3 text-sm">
+                <p class="font-medium text-slate-900"><%= item.description %></p>
+                <p class="text-slate-600"><%= item.cargo_packaging.name %> · <%= item.cargo_manifest.container&.number || t("cargo_manifests.show.general_cargo") %></p>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <% if policy(@slot).store? %>
+    <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+      <h2 class="mb-4 flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "forklift" %> <%= t(".store_title") %></h2>
+      <% if flash.now[:alert].present? %>
+        <p class="mb-3 rounded-2xl bg-red-50 p-3 text-sm text-red-800"><%= flash.now[:alert] %></p>
+      <% end %>
+      <% if @movable_items.empty? %>
+        <p class="text-sm text-slate-500"><%= t(".nothing_to_store") %></p>
+      <% else %>
+        <%= form_with url: store_warehouse_slot_path(@slot), method: :patch, class: "grid grid-cols-1 gap-4 sm:grid-cols-[1fr_8rem_auto] sm:items-end" do |form| %>
+          <div>
+            <%= form.label :cargo_item_id, t(".item"), class: "mb-1 block text-sm font-medium text-slate-700" %>
+            <%= form.select :cargo_item_id, @movable_items.map { |item| [ "#{item.cargo_manifest.container&.number || t('cargo_manifests.show.general_cargo')} · #{item.cargo_manifest.client.name} · #{item.description} (#{item.cargo_packaging.name})#{" · #{item.location_label}" if item.warehouse_slot_id}", item.id ] }, {}, class: "min-h-12 w-full rounded-lg border border-slate-200 bg-white px-3" %>
+          </div>
+          <div>
+            <%= form.label :section, t(".section_label"), class: "mb-1 block text-sm font-medium text-slate-700" %>
+            <%= form.select :section, WarehouseSlot::SECTIONS, {}, class: "min-h-12 w-full rounded-lg border border-slate-200 bg-white px-3" %>
+          </div>
+          <%= form.button type: :submit, class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-sky-800 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-sky-900 active:scale-95" do %>
+            <%= material_icon "move_to_inbox" %> <%= t(".store_action") %>
+          <% end %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+</div>
