@@ -76,6 +76,22 @@
     <% end %>
   </div>
 
+  <% if @cargo_manifest %>
+    <div class="mt-6">
+      <%= render "cargo_manifests/items", manifest: @cargo_manifest, items: @cargo_items, new_item: @new_cargo_item, packagings: @active_packagings %>
+    </div>
+  <% elsif @new_cargo_manifest && policy(@new_cargo_manifest).create? %>
+    <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+      <h2 class="text-lg font-bold text-slate-900"><%= t("cargo_manifests.show.items_title") %></h2>
+      <p class="mb-4 mt-1 text-sm text-slate-500"><%= t(".cargo_empty") %></p>
+      <%= button_to cargo_manifests_path, method: :post,
+            params: { return_to: "container", cargo_manifest: { container_id: @container.id, client_id: @new_cargo_manifest.client_id } },
+            class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+        <%= material_icon "add" %> <%= t(".cargo_start") %>
+      <% end %>
+    </section>
+  <% end %>
+
   <% if policy(@container).photos? %>
   <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
     <h2 class="flex items-center gap-3 text-lg font-bold text-slate-900">

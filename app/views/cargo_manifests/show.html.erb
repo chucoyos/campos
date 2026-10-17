@@ -1,0 +1,40 @@
+<div class="mx-auto w-full max-w-6xl">
+  <%= link_to cargo_manifests_path, class: "mb-4 inline-flex min-h-12 items-center gap-2 text-sm text-slate-500 hover:text-slate-800" do %>
+    <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+  <% end %>
+
+  <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900"><%= @cargo_manifest.container&.number || t(".general_cargo") %></h1>
+        <p class="mt-1 text-slate-600"><%= @cargo_manifest.client.name %></p>
+        <p class="mt-2 text-sm text-slate-500"><%= t("cargo_manifests.statuses.#{@cargo_manifest.status}") %></p>
+      </div>
+      <% if policy(@cargo_manifest).update? %>
+        <%= link_to edit_cargo_manifest_path(@cargo_manifest), class: "flex min-h-12 items-center gap-2 rounded-full bg-slate-100 px-5 font-medium text-slate-700 hover:bg-slate-200" do %>
+          <%= material_icon "edit" %> <%= t("shared.actions.edit") %>
+        <% end %>
+      <% end %>
+    </div>
+    <% if policy(@cargo_manifest).destroy? %>
+      <%= button_to cargo_manifest_path(@cargo_manifest), method: :delete, form: { data: { turbo_confirm: t(".confirm_destroy") } },
+            class: "mt-4 flex min-h-12 items-center gap-2 rounded-full px-5 font-medium text-red-600 hover:bg-red-50" do %>
+        <%= material_icon "delete" %> <%= t("shared.actions.destroy") %>
+      <% end %>
+    <% end %>
+  </section>
+  <% if @cargo_manifest.errors.any? %>
+    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <ul class="list-disc pl-5"><% @cargo_manifest.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <% if @import_errors.present? %>
+    <div class="mt-5 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <p class="font-medium"><%= t(".import_failed") %></p>
+      <ul class="mt-1 list-disc pl-5"><% @import_errors.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <%= render "cargo_manifests/items", manifest: @cargo_manifest, items: @cargo_items, new_item: @new_cargo_item, packagings: @active_packagings %>
+</div>

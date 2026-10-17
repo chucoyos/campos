@@ -1,11 +1,13 @@
 <% links = [] %>
 <% links << [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls"] if policy(MasterBl).index? %>
+<% links << [t(".cargo_manifests"), cargo_manifests_path, "package_2", controller_name.in?(%w[cargo_manifests cargo_items])] if policy(CargoManifest).index? %>
 <% links << [t(".containers"), containers_path, "inventory_2", controller_name == "containers"] if policy(Container).index? %>
 <% links << [t(".yard"), yard_path, "grid_view", controller_name == "yard"] if policy(YardSlot).index? %>
 <% catalogs = [] %>
 <% catalogs << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
 <% catalogs << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
 <% catalogs << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
+<% catalogs << [t(".cargo_packagings"), cargo_packagings_path, "category", controller_name == "cargo_packagings"] if policy(CargoPackaging).index? %>
 <% catalogs_active = catalogs.any? { |*, active| active } %>
 
 <header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">

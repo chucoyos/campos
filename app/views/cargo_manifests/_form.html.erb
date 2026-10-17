@@ -1,0 +1,52 @@
+<%= form_with model: @cargo_manifest, data: { controller: "cargo-scope" }, class: "space-y-5 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8" do |f| %>
+  <% if @cargo_manifest.errors.any? %>
+    <div class="rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <ul class="list-disc pl-5"><% @cargo_manifest.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <% with_container = @cargo_manifest.container_id.present? %>
+  <% if @clients %>
+    <div>
+      <%= f.label :client_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.collection_select :client_id, @clients, :id, :name, { prompt: t(".client_prompt") }, required: true,
+            data: { cargo_scope_target: "client", action: "change->cargo-scope#filter" },
+            class: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3" %>
+    </div>
+  <% end %>
+
+  <fieldset>
+    <legend class="mb-2 text-sm font-medium text-slate-700"><%= t(".scope_title") %></legend>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <% [ [ "general", "inventory_2", t(".scope_general"), !with_container ],
+           [ "container", "directions_boat", t(".scope_container"), with_container ] ].each do |value, icon, label, checked| %>
+        <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-700">
+          <%= radio_button_tag :cargo_scope, value, checked, class: "h-5 w-5 text-indigo-600",
+                data: { cargo_scope_target: "scope", action: "change->cargo-scope#toggle" } %>
+          <%= material_icon icon %> <span class="font-medium"><%= label %></span>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <div data-cargo-scope-target="containerField" <%= "hidden" unless with_container %>>
+    <%= f.label :container_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <select name="cargo_manifest[container_id]" id="cargo_manifest_container_id" data-cargo-scope-target="container"
+            class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3">
+      <option value=""><%= t(".container_prompt") %></option>
+      <% @containers.each do |container| %>
+        <option value="<%= container.id %>" data-client-id="<%= container.master_bl.client_id %>" <%= "selected" if container.id == @cargo_manifest.container_id %>>
+          <%= container.number %> · <%= container.master_bl.number %>
+        </option>
+      <% end %>
+    </select>
+    <p class="mt-1 text-sm text-slate-500"><%= t(".container_hint") %></p>
+  </div>
+  <div class="flex flex-wrap gap-3">
+    <%= f.button class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+      <%= material_icon "save" %> <%= t("shared.actions.save") %>
+    <% end %>
+    <%= link_to t("shared.actions.cancel"), @cargo_manifest.persisted? ? cargo_manifest_path(@cargo_manifest) : cargo_manifests_path,
+          class: "flex min-h-12 items-center rounded-full px-5 font-medium text-slate-700 hover:bg-slate-100" %>
+  </div>
+<% end %>

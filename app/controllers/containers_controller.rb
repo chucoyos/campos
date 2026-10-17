@@ -1,5 +1,6 @@
 class ContainersController < ApplicationController
   include ActiveStorage::SetCurrent
+  include CargoManifestData
 
   before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo remove_photos zip_photos]
   before_action :set_photo_section, only: %i[photos upload_photos remove_photos zip_photos]
@@ -11,6 +12,7 @@ class ContainersController < ApplicationController
 
   def show
     @photo_counts = policy(@container).photos? ? ActiveStorage::Attachment.where(record: @container).group(:name).count : {}
+    load_container_cargo
   end
 
   def new
@@ -103,6 +105,17 @@ class ContainersController < ApplicationController
   end
 
   private
+
+  def load_container_cargo
+    return unless @container.master_bl && policy(CargoManifest).index?
+
+    @cargo_manifest = @container.cargo_manifest
+    return load_cargo_manifest_data(@cargo_manifest) if @cargo_manifest && policy(@cargo_manifest).show?
+
+    @cargo_manifest = nil
+    @new_cargo_manifest = @container.build_cargo_manifest(client: @container.master_bl.client)
+  end
+
 
   def set_photo_section
     @section = params[:section].to_s

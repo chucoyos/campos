@@ -13,6 +13,7 @@ class Container < ApplicationRecord
   MAX_PHOTOS_PER_UPLOAD = 30
 
   belongs_to :master_bl, optional: true
+  has_one :cargo_manifest, dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos

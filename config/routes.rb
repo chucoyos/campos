@@ -22,6 +22,16 @@ Rails.application.routes.draw do
       delete :remove_document
     end
   end
+  resources :cargo_manifests do
+    member do
+      get :template
+      post :import
+      patch :confirm
+      patch :reopen
+    end
+    resources :cargo_items, only: %i[show create update destroy]
+  end
+  resources :cargo_packagings, except: :show
   resources :containers do
     member do
       patch :transition

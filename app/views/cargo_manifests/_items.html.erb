@@ -1,0 +1,92 @@
+  <section class="mt-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <h2 class="text-lg font-bold text-slate-900"><%= t("cargo_manifests.show.items_title") %> (<%= items.size %>)</h2>
+      <% if manifest.draft? && policy(manifest).confirm? && items.any? %>
+        <%= button_to confirm_cargo_manifest_path(manifest), method: :patch,
+              form: { data: { turbo_confirm: t("cargo_manifests.show.confirm_manifest") } },
+              class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-emerald-700 px-5 font-medium text-white hover:bg-emerald-800" do %>
+          <%= material_icon "task_alt" %> <%= t("cargo_manifests.show.confirm_action") %>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if policy(manifest).reopen? %>
+      <%= button_to reopen_cargo_manifest_path(manifest), method: :patch,
+            form: { data: { turbo_confirm: t("cargo_manifests.show.reopen_manifest") } },
+            class: "mb-4 flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-amber-100 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-200 active:scale-95" do %>
+        <%= material_icon "lock_open" %> <%= t("cargo_manifests.show.reopen_action") %>
+      <% end %>
+    <% end %>
+
+    <% if manifest.draft? && policy(manifest).update? %>
+      <p class="mb-4 flex items-start gap-2 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900">
+        <%= material_icon "warning" %> <span><%= t("cargo_manifests.show.confirm_notice") %></span>
+      </p>
+    <% end %>
+
+    <% if items.empty? %>
+      <p class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500"><%= t("cargo_manifests.show.items_empty") %></p>
+    <% else %>
+      <div class="space-y-3">
+        <% items.each do |item| %>
+          <article id="cargo-item-<%= item.id %>" class="rounded-2xl border border-slate-100 p-4" data-controller="item-edit">
+            <div data-item-edit-target="summary" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h3 class="font-semibold text-slate-900"><%= item.description %></h3>
+                <p class="text-sm text-slate-600"><%= item.cargo_packaging.name %> · <%= t("cargo_manifests.show.quantity", count: item.quantity) %></p>
+                <% if item.weight_kg.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.weight", weight: number_with_precision(item.weight_kg, strip_insignificant_zeros: true)) %></p><% end %>
+                <% if item.origin_identifier.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.origin_identifier", value: item.origin_identifier) %></p><% end %>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <% if item.qr_token.present? %>
+                  <%= link_to cargo_manifest_cargo_item_path(manifest, item, token: item.qr_token), class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-50 px-4 font-medium text-indigo-700 hover:bg-indigo-100" do %>
+                    <%= material_icon "qr_code_2" %> <%= t("cargo_manifests.show.qr_label") %>
+                  <% end %>
+                <% end %>
+                <% if policy(item).update? %>
+                  <button type="button" data-action="item-edit#open" class="flex min-h-12 cursor-pointer items-center gap-2 rounded-full px-4 font-medium text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-50 active:scale-95">
+                    <%= material_icon "edit" %> <%= t("cargo_manifests.show.edit_item") %>
+                  </button>
+                <% end %>
+                <% if policy(item).destroy? %>
+                  <%= button_to cargo_manifest_cargo_item_path(manifest, item), method: :delete,
+                        form: { data: { turbo_confirm: t("cargo_manifests.show.confirm_item_destroy") } },
+                        class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full px-4 text-red-600 transition-all duration-200 ease-out hover:bg-red-50 active:scale-95" do %>
+                    <%= material_icon "delete" %> <%= t("shared.actions.destroy") %>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+            <% if policy(item).update? %>
+              <div data-item-edit-target="form" hidden>
+                <%= render "cargo_items/form", cargo_item: item, cargo_manifest: manifest, cancel: true,
+                      packagings: (packagings + [ item.cargo_packaging ]).uniq, submit_label: t("cargo_manifests.show.save_item") %>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <% if policy(manifest).update? %>
+    <section class="mt-6 grid gap-6 lg:grid-cols-2">
+      <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <h2 class="mb-4 text-lg font-bold text-slate-900"><%= t("cargo_manifests.show.new_item") %></h2>
+        <%= render "cargo_items/form", cargo_item: new_item, cargo_manifest: manifest, packagings: packagings %>
+      </div>
+      <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+        <h2 class="mb-2 text-lg font-bold text-slate-900"><%= t("cargo_manifests.show.import_title") %></h2>
+        <p class="mb-4 text-sm text-slate-500"><%= t("cargo_manifests.show.import_hint") %></p>
+        <%= link_to template_cargo_manifest_path(manifest), class: "mb-4 inline-flex min-h-12 items-center gap-2 rounded-full bg-slate-100 px-5 font-medium text-slate-700 hover:bg-slate-200" do %>
+          <%= material_icon "download" %> <%= t("cargo_manifests.show.download_template") %>
+        <% end %>
+        <%= form_with url: import_cargo_manifest_path(manifest), multipart: true, class: "space-y-3" do |f| %>
+          <%= f.file_field :file, accept: ".xlsx", required: true, class: "min-h-12 w-full text-sm file:mr-3 file:min-h-12 file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700" %>
+          <%= f.button class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700" do %>
+            <%= material_icon "upload_file" %> <%= t("cargo_manifests.show.import_action") %>
+          <% end %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>

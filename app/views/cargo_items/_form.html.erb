@@ -1,0 +1,50 @@
+<%= form_with model: [cargo_manifest, cargo_item], namespace: (cargo_item.persisted? ? "item_#{cargo_item.id}" : nil), class: "space-y-4" do |f| %>
+  <% if cargo_item.errors.any? %>
+    <div class="rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+      <ul class="list-disc pl-5"><% cargo_item.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+  <div>
+    <%= f.label :cargo_packaging_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <%= f.collection_select :cargo_packaging_id, packagings, :id, :name, { prompt: t(".packaging_prompt") }, required: true,
+          class: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3" %>
+    <p class="mt-1 text-xs text-slate-500"><%= t(".packaging_hint") %></p>
+  </div>
+  <div>
+    <%= f.label :description, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <% descriptions_id = "cargo-descriptions-#{cargo_item.id || "new"}" %>
+    <%= f.text_field :description, value: cargo_item.description.presence || CargoItem::DEFAULT_DESCRIPTION, list: descriptions_id,
+          required: true, autocomplete: "off", class: "min-h-12 w-full rounded-lg border border-slate-300 px-3" %>
+    <datalist id="<%= descriptions_id %>"><% CargoItem::DESCRIPTION_SUGGESTIONS.each do |suggestion| %><option value="<%= suggestion %>"></option><% end %></datalist>
+    <p class="mt-1 text-xs text-slate-500"><%= t(".description_hint") %></p>
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <%= f.label :quantity, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.number_field :quantity, min: 1, step: 1, value: cargo_item.quantity || 1, required: true,
+            class: "min-h-12 w-full rounded-lg border border-slate-300 px-3" %>
+    </div>
+    <div>
+      <%= f.label :weight_kg, class: "mb-1 block text-sm font-medium text-slate-700" %>
+      <%= f.number_field :weight_kg, min: 0.001, step: 0.001, class: "min-h-12 w-full rounded-lg border border-slate-300 px-3" %>
+    </div>
+  </div>
+  <div>
+    <%= f.label :origin_identifier, class: "mb-1 block text-sm font-medium text-slate-700" %>
+    <%= f.text_field :origin_identifier, class: "min-h-12 w-full rounded-lg border border-slate-300 px-3" %>
+  </div>
+  <label class="flex min-h-12 items-center gap-3 text-sm text-slate-700">
+    <%= f.check_box :generate_qr, class: "h-5 w-5 rounded border-slate-300 text-indigo-600" %>
+    <%= t(".generate_qr") %>
+  </label>
+  <div class="flex flex-wrap gap-3">
+    <%= f.button class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+      <%= material_icon local_assigns[:cancel] ? "save" : "add" %> <%= local_assigns[:submit_label] || t(".add") %>
+    <% end %>
+    <% if local_assigns[:cancel] %>
+      <button type="button" data-action="item-edit#close" class="flex min-h-12 cursor-pointer items-center rounded-full px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95">
+        <%= t("shared.actions.cancel") %>
+      </button>
+    <% end %>
+  </div>
+<% end %>

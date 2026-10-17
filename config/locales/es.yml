@@ -33,6 +33,22 @@ es:
       import:
         one: "Se cargó 1 contenedor."
         other: "Se cargaron %{count} contenedores."
+    cargo_manifests:
+      create: "Registro de mercancía creado."
+      update: "Registro de mercancía actualizado."
+      destroy: "Registro de mercancía eliminado."
+      confirm: "Registro de mercancía confirmado. Ya no puede modificarse."
+      reopen: "Captura reabierta. El registro volvió a borrador y debe confirmarse de nuevo."
+      import:
+        one: "Se importó 1 línea de mercancía."
+        other: "Se importaron %{count} líneas de mercancía."
+      item_created: "Mercancía agregada."
+      item_updated: "Mercancía actualizada."
+      item_destroyed: "Mercancía eliminada."
+    cargo_packagings:
+      create: "Embalaje creado."
+      update: "Embalaje actualizado."
+      deactivate: "Embalaje desactivado."
     clients:
       create: "Cliente creado."
       update: "Cliente actualizado."
@@ -67,6 +83,8 @@ es:
       users: "Usuarios"
       master_bls: "MBL"
       containers: "Contenedores"
+      cargo_manifests: "Mercancías"
+      cargo_packagings: "Embalajes"
       yard: "Patio"
       clients: "Clientes"
       carriers: "Transportistas"
@@ -156,6 +174,8 @@ es:
       photos_hint: "Evidencia fotográfica por etapa. Se cargan al abrir cada sección."
       change_status: "Cambiar estado"
       no_master_bl: "Sin MBL"
+      cargo_empty: "Este contenedor aún no tiene un registro de mercancía."
+      cargo_start: "Registrar mercancía"
     sizes:
       "20": "20 pies"
       "40": "40 pies"
@@ -257,6 +277,107 @@ es:
       document_too_large: "El archivo supera los 10 MB."
       document_upload_failed: "No se pudo subir el archivo. Inténtalo de nuevo."
       document_uploading: "Subiendo documento"
+  cargo_manifests:
+    statuses:
+      draft: "Borrador"
+      confirmed: "Confirmado"
+    index:
+      title: "Registros de mercancía"
+      subtitle: "Captura mercancía vinculada a contenedores o carga general por cliente."
+      new: "Nuevo registro"
+      empty: "Aún no hay registros de mercancía."
+      general_cargo: "Carga general"
+      item_count:
+        one: "1 línea"
+        other: "%{count} líneas"
+    new:
+      title: "Nuevo registro de mercancía"
+    edit:
+      title: "Editar registro de mercancía"
+    form:
+      client_prompt: "Selecciona un cliente"
+      scope_title: "Tipo de registro"
+      scope_general: "Carga general"
+      scope_container: "Contenedor"
+      container_prompt: "Selecciona un contenedor"
+      container_hint: "Solo se listan contenedores con MBL que aún no tienen registro de mercancía. Lo habitual es registrarla desde el detalle del contenedor."
+    show:
+      general_cargo: "Carga general"
+      confirm_destroy: "¿Eliminar este registro y sus mercancías?"
+      items_title: "Mercancía capturada"
+      items_empty: "Aún no se han capturado líneas de mercancía."
+      quantity:
+        one: "1 unidad"
+        other: "%{count} unidades"
+      weight: "%{weight} kg"
+      origin_identifier: "Identificador de origen: %{value}"
+      qr_label: "Ver etiqueta QR"
+      import_failed: "No se importó ninguna línea. Corrige estos errores e inténtalo de nuevo:"
+      confirm_action: "Confirmar captura"
+      reopen_action: "Reabrir captura"
+      reopen_manifest: "¿Reabrir la captura? El registro volverá a borrador y deberás confirmarlo de nuevo al terminar los cambios."
+      confirm_notice: "Agrega todas las mercancías antes de confirmar la captura. Una vez confirmada, no podrás agregar, editar ni eliminar líneas."
+      confirm_manifest: "¿Ya agregaste todas las mercancías? Al confirmar, la captura se cierra y ya no podrás agregar, editar ni eliminar líneas."
+      new_item: "Agregar mercancía"
+      edit_item: "Editar"
+      save_item: "Guardar línea"
+      confirm_item_destroy: "¿Eliminar esta línea de mercancía?"
+      import_title: "Carga desde Excel"
+      import_hint: "Usa una fila por pallet o rollo y agrupa cajas iguales en una sola fila."
+      download_template: "Descargar plantilla"
+      import_action: "Importar mercancía"
+      back_to_manifest: "Volver al registro"
+  cargo_items:
+    form:
+      packaging_prompt: "Selecciona el embalaje"
+      description_hint: "Viene con Acero; elige otra sugerencia (como Lingote de Acero) o escribe otra mercancía."
+      packaging_hint: "Pallet y rollo se registran individualmente con peso. Las cajas se agrupan por cantidad."
+      generate_qr: "Generar etiqueta QR (opcional)"
+      add: "Agregar mercancía"
+  cargo_packagings:
+    tracking_modes:
+      individual: "Seguimiento individual"
+      aggregate: "Cantidad agrupada"
+    index:
+      title: "Catálogo de embalajes"
+      subtitle: "Los embalajes usados se desactivan para conservar el historial."
+      new: "Nuevo embalaje"
+      active: "Activo"
+      inactive: "Inactivo"
+      deactivate: "Desactivar"
+      confirm_deactivate: "¿Desactivar %{name}? Se conservará en los registros existentes."
+    new:
+      title: "Nuevo embalaje"
+    edit:
+      title: "Editar embalaje"
+  cargo_import:
+    sheet: "Mercancías"
+    catalog_sheet: "Catálogo de embalajes"
+    catalog_headers: ["Embalaje", "Código", "Forma de control", "Peso obligatorio", "QR disponible"]
+    instructions_title: "Instrucciones para capturar mercancías"
+    "yes": "Sí"
+    "no": "No"
+    validation:
+      packaging: "Elige un embalaje de la lista. Consulta la hoja Catálogo de embalajes."
+      quantity: "Captura un número entero mayor o igual a 1."
+      weight: "Captura un peso en kg mayor a 0."
+      yes_no: "Elige Sí o No."
+    instructions:
+      - "Llena una fila por línea de mercancía en la hoja Mercancías, empezando en la fila 2."
+      - "Descripción: escribe libremente la mercancía, por ejemplo Acero."
+      - "Embalaje: elige un valor de la lista desplegable (consulta la hoja Catálogo de embalajes)."
+      - "Pallet y rollo se capturan individualmente: cantidad 1 y peso en kg obligatorio."
+      - "Caja y otros embalajes agrupados: una fila por descripción con la cantidad total, sin peso por unidad."
+      - "Identificador de origen: opcional, aplica a cualquier embalaje."
+      - "Generar QR: Sí o No. Solo aplica a embalajes individuales con QR disponible."
+      - "Si alguna fila tiene errores no se carga ninguna."
+    errors:
+      no_file: "Selecciona un archivo Excel."
+      invalid_file: "El archivo debe ser un Excel (.xlsx) válido de máximo 5 MB."
+      empty: "El archivo no contiene mercancías."
+      closed: "No se pueden importar líneas porque el registro está confirmado."
+      too_many: "El archivo supera el máximo de %{max} filas."
+      row: "Fila %{row}: %{messages}"
   clients:
     index:
       new: "Nuevo cliente"
@@ -329,6 +450,15 @@ es:
       yard_block:
         one: "Bloque"
         other: "Bloques"
+      cargo_manifest:
+        one: "Registro de mercancía"
+        other: "Registros de mercancía"
+      cargo_item:
+        one: "Línea de mercancía"
+        other: "Líneas de mercancía"
+      cargo_packaging:
+        one: "Embalaje"
+        other: "Embalajes"
       yard_slot:
         one: "Posición"
         other: "Posiciones"
@@ -349,6 +479,37 @@ es:
         other: "Usuarios"
     errors:
       models:
+        cargo_manifest:
+          attributes:
+            container:
+              wrong_client: "debe pertenecer a un MBL del mismo cliente"
+            base:
+              cannot_confirm: "agrega al menos una línea y deja el registro en borrador antes de confirmarlo"
+        cargo_item:
+          attributes:
+            cargo_manifest:
+              not_draft: "debe estar en borrador para modificar su mercancía"
+            cargo_packaging:
+              inactive: "está desactivado y no se puede usar en una línea nueva"
+            quantity:
+              individual_quantity: "debe ser 1 para pallets y rollos, que se registran individualmente"
+            weight_kg:
+              not_allowed: "no se captura por caja agrupada"
+            qr_token:
+              not_allowed: "no está permitido para este embalaje"
+            generate_qr:
+              not_allowed: "no está disponible para este embalaje"
+        cargo_packaging:
+          attributes:
+            tracking_mode:
+              cannot_change_after_use: "no se puede cambiar después de usar el embalaje"
+            weight_required:
+              cannot_change_after_use: "no se puede cambiar después de usar el embalaje"
+              aggregate_not_allowed: "no se puede exigir por unidad con cantidad agrupada"
+              individual_required: "debe ser obligatorio para el seguimiento individual"
+            qr_allowed:
+              cannot_change_after_use: "no se puede cambiar después de usar el embalaje"
+              aggregate_not_allowed: "solo está disponible para embalajes con seguimiento individual"
         container:
           attributes:
             master_bl_id:
@@ -378,6 +539,29 @@ es:
         rows: "Filas"
         levels: "Niveles"
         enabled: "Habilitado"
+      cargo_manifest:
+        client: "Cliente"
+        client_id: "Cliente"
+        container: "Contenedor"
+        container_id: "Contenedor"
+        status: "Estado"
+        confirmed_at: "Confirmado el"
+      cargo_item:
+        cargo_packaging: "Embalaje"
+        cargo_packaging_id: "Embalaje"
+        description: "Descripción de la mercancía"
+        quantity: "Cantidad"
+        weight_kg: "Peso (kg)"
+        origin_identifier: "Identificador de origen"
+        generate_qr: "Generar etiqueta QR"
+        qr_token: "Código QR"
+      cargo_packaging:
+        code: "Código"
+        name: "Nombre"
+        tracking_mode: "Forma de control"
+        weight_required: "Requiere peso por unidad"
+        qr_allowed: "Permite etiqueta QR"
+        active: "Activo"
       yard_slot:
         code: "Código"
         bay: "Bahía"

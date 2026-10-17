@@ -69,6 +69,14 @@ La aplicación **Soluciones Campos** es una plataforma web logística diseñada 
    * **Condición de cierre:** Cuando se despacha la *totalidad* de la mercancía perteneciente a todas las unidades de un MBL, el sistema **crea automáticamente el Servicio Único**.
    * La facturación se ejecuta de forma manual en una fase posterior.
 
+### Captura inicial de mercancías
+
+La mercancía se registra en un manifiesto asociado a un cliente. Si procede de un contenedor, se asocia al contenedor y hereda la relación con su MBL; si es carga general, se registra directamente para el cliente, sin MBL ni contenedor.
+
+El catálogo inicial de embalajes distingue unidades individuales (pallet y rollo) de cantidades agrupadas (caja). Cada pallet y rollo se captura individualmente y requiere su peso; el QR interno es opcional para ambos. El identificador de origen es opcional y aplica a cualquier embalaje. Las cajas se registran en líneas agrupadas por descripción y cantidad, sin peso por unidad.
+
+Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. Esta etapa no registra recepción verificada, ubicación de almacén, movimientos, ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
+
 ---
 
 ### 4. Flujo Diferenciado: Patio de Maniobras (Resguardo y Traspaleo)

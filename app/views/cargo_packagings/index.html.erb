@@ -1,0 +1,29 @@
+<div class="mx-auto w-full max-w-5xl">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900"><%= t(".title") %></h1>
+      <p class="text-sm text-slate-500"><%= t(".subtitle") %></p>
+    </div>
+    <%= link_to new_cargo_packaging_path, class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700" do %>
+      <%= material_icon "add" %> <%= t(".new") %>
+    <% end %>
+  </div>
+  <div class="space-y-3">
+    <% @cargo_packagings.each do |packaging| %>
+      <div class="flex flex-col justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+        <div>
+          <p class="font-medium text-slate-900"><%= packaging.name %> <span class="text-sm text-slate-500">(<%= packaging.code %>)</span></p>
+          <p class="text-sm text-slate-500"><%= t("cargo_packagings.tracking_modes.#{packaging.tracking_mode}") %> · <%= packaging.active? ? t(".active") : t(".inactive") %></p>
+        </div>
+        <div class="flex gap-2">
+          <%= link_to t("shared.actions.edit"), edit_cargo_packaging_path(packaging), class: "flex min-h-12 items-center rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700" %>
+          <% if packaging.active? %>
+            <%= button_to t(".deactivate"), cargo_packaging_path(packaging), method: :delete, form: { data: { turbo_confirm: t(".confirm_deactivate", name: packaging.name) } },
+                  class: "flex min-h-12 items-center rounded-full px-4 text-sm font-medium text-red-600 hover:bg-red-50" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

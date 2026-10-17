@@ -1,0 +1,8 @@
+<div class="mx-auto w-full max-w-xl rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-sm sm:p-8">
+  <h1 class="text-2xl font-bold text-slate-900"><%= @cargo_item.description %></h1>
+  <p class="mt-2 text-slate-600"><%= @cargo_item.cargo_packaging.name %></p>
+  <p class="text-slate-600"><%= t("cargo_manifests.show.quantity", count: @cargo_item.quantity) %></p>
+  <% if @cargo_item.weight_kg.present? %><p class="text-slate-600"><%= t("cargo_manifests.show.weight", weight: number_with_precision(@cargo_item.weight_kg, strip_insignificant_zeros: true)) %></p><% end %>
+  <div class="mx-auto my-6 w-fit rounded-2xl bg-white p-3"><%= cargo_qr_svg(@cargo_item) %></div>
+  <%= link_to t("cargo_manifests.show.back_to_manifest"), cargo_manifest_path(@cargo_manifest), class: "inline-flex min-h-12 items-center rounded-full bg-slate-100 px-5 font-medium text-slate-700" %>
+</div>

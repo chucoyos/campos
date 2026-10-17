@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,50 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_230000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "cargo_items", force: :cascade do |t|
+    t.bigint "cargo_manifest_id", null: false
+    t.bigint "cargo_packaging_id", null: false
+    t.string "description", null: false
+    t.integer "quantity", default: 1, null: false
+    t.decimal "weight_kg", precision: 12, scale: 3
+    t.string "origin_identifier"
+    t.string "qr_token"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cargo_manifest_id"], name: "index_cargo_items_on_cargo_manifest_id"
+    t.index ["cargo_packaging_id"], name: "index_cargo_items_on_cargo_packaging_id"
+    t.index ["qr_token"], name: "index_cargo_items_on_qr_token", unique: true, where: "(qr_token IS NOT NULL)"
+    t.check_constraint "quantity > 0", name: "cargo_items_quantity_positive"
+    t.check_constraint "weight_kg IS NULL OR weight_kg > 0::numeric", name: "cargo_items_weight_positive"
+  end
+
+  create_table "cargo_manifests", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.bigint "container_id"
+    t.string "status", default: "draft", null: false
+    t.datetime "confirmed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_cargo_manifests_on_client_id"
+    t.index ["container_id"], name: "index_cargo_manifests_on_container_id", unique: true, where: "(container_id IS NOT NULL)"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'confirmed'::character varying::text])", name: "cargo_manifests_status_valid"
+  end
+
+  create_table "cargo_packagings", force: :cascade do |t|
+    t.string "code", null: false
+    t.string "name", null: false
+    t.string "tracking_mode", null: false
+    t.boolean "weight_required", default: false, null: false
+    t.boolean "qr_allowed", default: false, null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_cargo_packagings_on_code", unique: true
+    t.check_constraint "tracking_mode::text = 'aggregate'::text OR weight_required = true", name: "cargo_packagings_individual_weight_required"
+    t.check_constraint "tracking_mode::text = 'individual'::text OR weight_required = false AND qr_allowed = false", name: "cargo_packagings_aggregate_capabilities_valid"
+    t.check_constraint "tracking_mode::text = ANY (ARRAY['individual'::character varying::text, 'aggregate'::character varying::text])", name: "cargo_packagings_tracking_mode_valid"
   end
 
   create_table "carriers", force: :cascade do |t|
@@ -125,6 +169,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_230000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "cargo_items", "cargo_manifests"
+  add_foreign_key "cargo_items", "cargo_packagings"
+  add_foreign_key "cargo_manifests", "clients"
+  add_foreign_key "cargo_manifests", "containers"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
   add_foreign_key "users", "carriers"
