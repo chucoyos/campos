@@ -31,11 +31,14 @@
         <% items.each do |item| %>
           <article id="cargo-item-<%= item.id %>" class="rounded-2xl border border-slate-100 p-4" data-controller="item-edit">
             <div data-item-edit-target="summary" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+              <div class="flex items-start gap-3">
+                <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-800"><%= packaging_icon(item.cargo_packaging) %></span>
+                <div>
                 <h3 class="font-semibold text-slate-900"><%= item.description %></h3>
                 <p class="text-sm text-slate-600"><%= item.cargo_packaging.name %> · <%= t("cargo_manifests.show.quantity", count: item.quantity) %></p>
                 <% if item.weight_kg.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.weight", weight: number_with_precision(item.weight_kg, strip_insignificant_zeros: true)) %></p><% end %>
                 <% if item.origin_identifier.present? %><p class="text-sm text-slate-600"><%= t("cargo_manifests.show.origin_identifier", value: item.origin_identifier) %></p><% end %>
+                </div>
               </div>
               <div class="flex flex-wrap gap-2">
                 <% if item.qr_token.present? %>

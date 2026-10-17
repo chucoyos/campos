@@ -6,7 +6,7 @@
   <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900"><%= @cargo_manifest.container&.number || t(".general_cargo") %></h1>
+        <h1 class="flex items-center gap-2 text-2xl font-bold text-slate-900"><span class="text-sky-800"><%= manifest_icon(@cargo_manifest) %></span> <%= @cargo_manifest.container&.number || t(".general_cargo") %></h1>
         <p class="mt-1 text-slate-600"><%= @cargo_manifest.client.name %></p>
         <p class="mt-2 text-sm text-slate-500"><%= t("cargo_manifests.statuses.#{@cargo_manifest.status}") %></p>
       </div>
