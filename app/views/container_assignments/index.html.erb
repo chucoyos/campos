@@ -1,0 +1,61 @@
+<div class="w-full">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "assignment" %></span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+        <p class="text-sm text-slate-500"><%= t(".count", count: @pagy.count) %></p>
+      </div>
+    </div>
+    <% if policy(ContainerAssignment).create? %>
+      <%= link_to new_container_assignment_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
+        <%= material_icon "add" %> <%= t(".new") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%= render "shared/filters" %>
+
+  <% if @assignments.empty? %>
+    <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".empty") %></p>
+  <% end %>
+
+  <% @assignments.group_by { |assignment| assignment.container.master_bl }.each do |master_bl, assignments| %>
+    <section class="mb-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+      <h2 class="flex flex-wrap items-center gap-2 bg-slate-50 p-4 font-semibold text-slate-900">
+        <%= material_icon "description", classes: "text-indigo-600" %> <%= master_bl.number %>
+        <span class="text-sm font-normal text-slate-500">· <%= master_bl.client.name %></span>
+      </h2>
+      <ul class="divide-y divide-slate-100">
+        <% assignments.each do |assignment| %>
+          <li class="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div class="min-w-0">
+              <p class="font-mono font-medium text-slate-900"><%= assignment.container.number %></p>
+              <p class="text-sm text-slate-600">
+                <%= material_icon "local_shipping", classes: "!text-base align-middle" %> <%= assignment.carrier.name %> ·
+                <%= t("container_assignments.operations.#{assignment.operation}") %>
+              </p>
+              <% if assignment.yard_area %>
+                <p class="text-sm text-slate-500">
+                  <%= t(".preferred") %>: <%= assignment.yard_area.code %><%= " · #{assignment.yard_area_section.name}" if assignment.yard_area_section %><%= " · #{t('.level', level: assignment.preferred_level)}" if assignment.preferred_level %>
+                </p>
+              <% end %>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="rounded-full px-3 py-1 text-xs font-medium <%= { "pendiente" => "bg-amber-100 text-amber-800", "utilizada" => "bg-emerald-100 text-emerald-800", "cancelada" => "bg-slate-100 text-slate-600" }[assignment.status] %>">
+                <%= t("container_assignments.statuses.#{assignment.status}") %>
+              </span>
+              <% if policy(assignment).cancel? && assignment.may_cancelar? %>
+                <%= button_to cancel_container_assignment_path(assignment), method: :patch, form: { data: { turbo_confirm: t(".confirm_cancel") } },
+                      class: "flex min-h-12 cursor-pointer items-center gap-1 rounded-2xl px-4 text-sm font-medium text-red-600 transition-all duration-200 ease-out hover:bg-red-50 active:scale-95" do %>
+                  <%= material_icon "cancel" %> <%= t(".cancel") %>
+                <% end %>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

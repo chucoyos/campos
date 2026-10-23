@@ -58,6 +58,12 @@ es:
       update: "Cliente actualizado."
       destroy: "Cliente eliminado."
       destroy_restricted: "No se puede eliminar el cliente porque tiene MBL asociados."
+    container_assignments:
+      create:
+        one: "Se asignó 1 contenedor al transportista."
+        other: "Se asignaron %{count} contenedores al transportista."
+      cancel: "Asignación cancelada."
+      not_cancelable: "Solo se pueden cancelar asignaciones pendientes."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -105,6 +111,7 @@ es:
       clients: "Clientes"
       carriers: "Transportistas"
       yard_areas: "Áreas"
+      container_assignments: "Asignaciones"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
@@ -449,6 +456,39 @@ es:
       subtitle: "Registra un cliente."
     edit:
       title: "Editar cliente"
+  container_assignments:
+    operations:
+      ingreso: "Ingreso"
+      salida: "Salida"
+    statuses:
+      pendiente: "Pendiente"
+      utilizada: "Utilizada"
+      cancelada: "Cancelada"
+    index:
+      title: "Asignaciones a transporte"
+      new: "Nueva asignación"
+      search: "Contenedor o MBL"
+      empty: "No hay asignaciones."
+      preferred: "Preferencia"
+      level: "estiba %{level}"
+      cancel: "Cancelar"
+      confirm_cancel: "¿Cancelar esta asignación?"
+      count:
+        one: "%{count} asignación"
+        other: "%{count} asignaciones"
+    new:
+      title: "Nueva asignación"
+      subtitle: "Asigna contenedores de un MBL a un transportista para ingreso o salida."
+      master_bl_prompt: "Selecciona un MBL"
+      load_containers: "Cargar contenedores"
+      no_containers: "Este MBL no tiene contenedores disponibles."
+      carrier_prompt: "Selecciona un transportista"
+      destination: "Área o sección preferida"
+      no_destination: "Sin preferencia"
+      whole_area: "Toda el área"
+      destination_hint: "Opcional. Garita elegirá la posición exacta."
+      level_hint: "Opcional. La estiba es preferida, no obligatoria."
+      submit: "Asignar"
   yard_areas:
     guide:
       title: "Guía rápida: áreas y secciones"
@@ -575,6 +615,9 @@ es:
       yard_block:
         one: "Bloque"
         other: "Bloques"
+      container_assignment:
+        one: "Asignación"
+        other: "Asignaciones"
       yard_area:
         one: "Área"
         other: "Áreas"
@@ -662,6 +705,22 @@ es:
               too_large: "%{filename} no puede pesar más de %{max} MB"
             deconsolidation_photos: *photo_errors
             empty_photos: *photo_errors
+        container_assignment:
+          attributes:
+            container:
+              without_master_bl: "debe pertenecer a un MBL"
+              taken: "ya tiene una asignación pendiente para esta operación"
+            container_id:
+              taken: "ya tiene una asignación pendiente para esta operación"
+            yard_area:
+              inactive: "no está activa"
+              wrong_client: "pertenece a otro cliente"
+            yard_area_section:
+              inactive: "no está activa"
+              wrong_area: "no pertenece al área"
+              wrong_master_bl: "está reservada para otro MBL"
+            preferred_level:
+              out_of_block: "excede los niveles del bloque"
         yard_area_section:
           attributes:
             master_bl:
@@ -680,6 +739,16 @@ es:
               invalid_type: "debe ser un archivo PDF"
               too_large: "no puede pesar más de %{max} MB"
     attributes:
+      container_assignment:
+        container: "Contenedor"
+        container_id: "Contenedor"
+        carrier: "Transportista"
+        carrier_id: "Transportista"
+        operation: "Operación"
+        status: "Estado"
+        yard_area: "Área"
+        yard_area_section: "Sección"
+        preferred_level: "Estiba preferida"
       yard_area:
         code: "Código"
         name: "Nombre"

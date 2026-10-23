@@ -50,6 +50,9 @@ Rails.application.routes.draw do
       delete "photos/:photo_id", action: :remove_photo, as: :remove_photo
     end
   end
+  resources :container_assignments, only: %i[index new create] do
+    patch :cancel, on: :member
+  end
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do
     patch :toggle, on: :member

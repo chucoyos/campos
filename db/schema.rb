@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,6 +133,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_clients_on_name"
+  end
+
+  create_table "container_assignments", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "carrier_id", null: false
+    t.bigint "assigned_by_id"
+    t.bigint "yard_area_id"
+    t.bigint "yard_area_section_id"
+    t.string "operation", null: false
+    t.string "status", default: "pendiente", null: false
+    t.integer "preferred_level"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_by_id"], name: "index_container_assignments_on_assigned_by_id"
+    t.index ["carrier_id"], name: "index_container_assignments_on_carrier_id"
+    t.index ["container_id", "operation"], name: "index_container_assignments_open_unique", unique: true, where: "((status)::text = 'pendiente'::text)"
+    t.index ["container_id"], name: "index_container_assignments_on_container_id"
+    t.index ["yard_area_id"], name: "index_container_assignments_on_yard_area_id"
+    t.index ["yard_area_section_id"], name: "index_container_assignments_on_yard_area_section_id"
+    t.check_constraint "operation::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying]::text[])", name: "container_assignments_operation_valid"
+    t.check_constraint "preferred_level IS NULL OR preferred_level > 0", name: "container_assignments_level_positive"
   end
 
   create_table "containers", force: :cascade do |t|
@@ -268,6 +289,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
   add_foreign_key "cargo_manifest_events", "users", on_delete: :nullify
   add_foreign_key "cargo_manifests", "clients"
   add_foreign_key "cargo_manifests", "containers"
+  add_foreign_key "container_assignments", "carriers"
+  add_foreign_key "container_assignments", "containers"
+  add_foreign_key "container_assignments", "users", column: "assigned_by_id", on_delete: :nullify
+  add_foreign_key "container_assignments", "yard_area_sections"
+  add_foreign_key "container_assignments", "yard_areas"
   add_foreign_key "containers", "clients"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
