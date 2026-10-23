@@ -94,3 +94,5 @@ gem "roo", "~> 3.0"
 gem "rqrcode", "~> 2.2"
 
 gem "pagy", "~> 43.7"
+
+gem "prawn", "~> 2.5"

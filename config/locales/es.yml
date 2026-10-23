@@ -64,6 +64,11 @@ es:
         other: "Se asignaron %{count} contenedores al transportista."
       cancel: "Asignación cancelada."
       not_cancelable: "Solo se pueden cancelar asignaciones pendientes."
+    movement_passes:
+      create: "Pase emitido. Ya puedes descargar el PDF con el QR."
+      cancel: "Pase cancelado."
+      not_cancelable: "Solo se pueden cancelar pases vigentes."
+      not_downloadable: "Este pase ya no está vigente; no se puede descargar."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -112,6 +117,7 @@ es:
       carriers: "Transportistas"
       yard_areas: "Áreas"
       container_assignments: "Asignaciones"
+      movement_passes: "Pases"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
@@ -473,6 +479,7 @@ es:
       level: "estiba %{level}"
       cancel: "Cancelar"
       confirm_cancel: "¿Cancelar esta asignación?"
+      request_pass: "Tramitar pase"
       count:
         one: "%{count} asignación"
         other: "%{count} asignaciones"
@@ -489,6 +496,52 @@ es:
       destination_hint: "Opcional. Garita elegirá la posición exacta."
       level_hint: "Opcional. La estiba es preferida, no obligatoria."
       submit: "Asignar"
+  movement_passes:
+    types:
+      ingreso: "Ingreso"
+      salida: "Salida"
+      traspaleo: "Traspaleo"
+    statuses:
+      vigente: "Vigente"
+      completado: "Completado"
+      cancelado: "Cancelado"
+      vencido: "Vencido"
+    load_statuses:
+      lleno: "Lleno"
+      vacio: "Vacío"
+    unit_types:
+      sencillo: "Sencillo"
+      full: "Full"
+    index:
+      title: "Pases de movimiento"
+      new: "Nueva solicitud"
+      search: "Contenedor"
+      empty: "No hay pases."
+      expires: "Vence"
+      count:
+        one: "%{count} pase"
+        other: "%{count} pases"
+    new:
+      title: "Solicitar pase"
+      subtitle: "Captura los datos del transporte para emitir el pase con QR."
+      assigned: "Asignaciones pendientes"
+      standalone: "Contenedores de resguardo"
+      request: "Solicitar"
+      nothing: "No hay contenedores disponibles para solicitar un pase."
+      unit_prompt: "Selecciona el tipo"
+      submit: "Emitir pase"
+    show:
+      download: "Descargar PDF"
+      qr_alt: "Código QR del pase"
+      cancel: "Cancelar pase"
+      confirm_cancel: "¿Cancelar este pase? El QR dejará de ser válido."
+    pdf:
+      title: "Pase de movimiento"
+      issued_at: "Emitido"
+      expires_at: "Vence"
+      vehicle_principal: "Vehículo"
+      vehicle_destino: "Vehículo destino"
+      single_use: "Pase de un solo uso, válido %{hours} horas. Preséntalo en garita."
   yard_areas:
     guide:
       title: "Guía rápida: áreas y secciones"
@@ -660,8 +713,26 @@ es:
       user:
         one: "Usuario"
         other: "Usuarios"
+      movement_pass:
+        one: "Pase"
+        other: "Pases"
+      movement_pass_vehicle:
+        one: "Vehículo"
+        other: "Vehículos"
     errors:
       models:
+        movement_pass:
+          attributes:
+            container_id:
+              taken: "ya tiene un pase vigente para este movimiento"
+            container_assignment:
+              mismatch: "no corresponde al contenedor y movimiento"
+              not_pending: "ya no está pendiente"
+              required: "es obligatoria para contenedores con MBL"
+            movement_type:
+              not_allowed: "no está disponible para este contenedor"
+            vehicles:
+              incomplete: "faltan los datos del vehículo requerido para este movimiento"
         cargo_manifest:
           attributes:
             container:
@@ -749,6 +820,23 @@ es:
         yard_area: "Área"
         yard_area_section: "Sección"
         preferred_level: "Estiba preferida"
+      movement_pass:
+        container: "Contenedor"
+        container_id: "Contenedor"
+        container_assignment: "Asignación"
+        movement_type: "Movimiento"
+        status: "Estado"
+        load_status: "Estado de carga"
+        issued_at: "Emitido"
+        expires_at: "Vence"
+        consumed_at: "Utilizado"
+        vehicles: "Vehículo"
+      movement_pass_vehicle:
+        company_name: "Empresa transportista"
+        operator_name: "Operador"
+        plate: "Placas"
+        unit_type: "Tipo de unidad"
+        role: "Rol"
       yard_area:
         code: "Código"
         name: "Nombre"

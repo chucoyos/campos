@@ -1,0 +1,127 @@
+<% input = "w-full rounded-2xl border border-slate-200 bg-white p-3 focus:border-indigo-500 focus:outline-none" %>
+<% label = "mb-1 block text-sm font-medium text-slate-700" %>
+<div class="mx-auto w-full max-w-3xl">
+  <%= link_to movement_passes_path, class: "mb-4 inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800" do %>
+    <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+  <% end %>
+
+  <div class="space-y-6 rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "qr_code_2" %></span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900"><%= t(".title") %></h1>
+        <p class="text-sm text-slate-500"><%= t(".subtitle") %></p>
+      </div>
+    </div>
+
+    <% if @pass %>
+      <%= form_with model: @pass, url: movement_passes_path, class: "space-y-5" do |f| %>
+        <% if @pass.errors.any? %>
+          <div class="flex gap-3 rounded-2xl bg-red-50 p-4 text-sm text-red-700" role="alert">
+            <%= material_icon "error" %>
+            <ul><% @pass.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+          </div>
+        <% end %>
+        <% if @pass.container_assignment_id %>
+          <%= hidden_field_tag :assignment_id, @pass.container_assignment_id, id: nil %>
+        <% else %>
+          <%= hidden_field_tag :container_id, @pass.container_id, id: nil %>
+          <%= hidden_field_tag :movement_type, @pass.movement_type, id: nil %>
+        <% end %>
+
+        <div class="flex flex-wrap items-center gap-3 rounded-2xl bg-slate-50 p-4">
+          <%= material_icon "inventory_2", classes: "text-indigo-600" %>
+          <span class="font-mono text-lg font-semibold"><%= @pass.container.number %></span>
+          <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-800"><%= t("movement_passes.types.#{@pass.movement_type}") %></span>
+          <% if @pass.container.master_bl %><span class="text-sm text-slate-500"><%= @pass.container.master_bl.number %></span><% end %>
+        </div>
+
+        <% unless @pass.container.with_master_bl? %>
+          <div>
+            <%= f.label :load_status, class: label %>
+            <%= f.select :load_status, Container::STANDALONE_STATUSES.map { |value| [ t("movement_passes.load_statuses.#{value}"), value ] }, { include_blank: !@pass.ingreso? }, class: input %>
+          </div>
+        <% end %>
+
+        <%= f.fields_for :vehicles do |vf| %>
+          <fieldset class="space-y-4 rounded-2xl border border-slate-200 p-4">
+            <legend class="px-2 text-sm font-semibold text-slate-700"><%= t("movement_passes.pdf.vehicle_#{vf.object.role}") %></legend>
+            <%= vf.hidden_field :role %>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <div>
+                <%= vf.label :company_name, class: label %>
+                <%= vf.text_field :company_name, required: true, class: input %>
+              </div>
+              <div>
+                <%= vf.label :operator_name, class: label %>
+                <%= vf.text_field :operator_name, required: true, autocomplete: "off", class: input %>
+              </div>
+              <div>
+                <%= vf.label :plate, class: label %>
+                <%= vf.text_field :plate, required: true, autocomplete: "off", class: "#{input} uppercase" %>
+              </div>
+              <div>
+                <%= vf.label :unit_type, class: label %>
+                <%= vf.select :unit_type, MovementPassVehicle::UNIT_TYPES.map { |value| [ t("movement_passes.unit_types.#{value}"), value ] }, { prompt: t("movement_passes.new.unit_prompt") }, required: true, class: input %>
+              </div>
+            </div>
+          </fieldset>
+        <% end %>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <%= f.button class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>
+            <%= material_icon "qr_code_2" %> <%= t("movement_passes.new.submit") %>
+          <% end %>
+          <%= link_to new_movement_pass_path, class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 hover:bg-slate-100" do %>
+            <%= material_icon "close" %> <%= t("shared.actions.cancel") %>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <% if @assignments.any? %>
+        <section>
+          <h2 class="mb-2 flex items-center gap-2 font-semibold text-slate-900"><%= material_icon "assignment", classes: "text-indigo-600" %> <%= t(".assigned") %></h2>
+          <ul class="divide-y divide-slate-100 rounded-2xl border border-slate-100">
+            <% @assignments.each do |assignment| %>
+              <li class="flex flex-wrap items-center justify-between gap-3 p-3">
+                <div>
+                  <p class="font-mono font-medium"><%= assignment.container.number %></p>
+                  <p class="text-sm text-slate-500"><%= t("movement_passes.types.#{assignment.operation}") %> · <%= assignment.container.master_bl.number %> · <%= assignment.carrier.name %></p>
+                </div>
+                <%= link_to new_movement_pass_path(assignment_id: assignment.id), class: "flex min-h-12 items-center gap-1 rounded-2xl bg-indigo-600 px-4 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+                  <%= material_icon "qr_code_2" %> <%= t(".request") %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @containers.any? %>
+        <section>
+          <h2 class="mb-2 flex items-center gap-2 font-semibold text-slate-900"><%= material_icon "inventory_2", classes: "text-indigo-600" %> <%= t(".standalone") %></h2>
+          <ul class="divide-y divide-slate-100 rounded-2xl border border-slate-100">
+            <% @containers.each do |container| %>
+              <li class="flex flex-wrap items-center justify-between gap-3 p-3">
+                <div>
+                  <p class="font-mono font-medium"><%= container.number %></p>
+                  <p class="text-sm text-slate-500"><%= container.client&.name %></p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <% MovementPass::MOVEMENT_TYPES.each do |type| %>
+                    <%= link_to t("movement_passes.types.#{type}"), new_movement_pass_path(container_id: container.id, movement_type: type),
+                          class: "flex min-h-12 items-center rounded-2xl border border-slate-200 px-4 text-sm font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-indigo-50 hover:text-indigo-700 active:scale-95" %>
+                  <% end %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <% if @assignments.none? && @containers.none? %>
+        <p class="rounded-2xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".nothing") %></p>
+      <% end %>
+    <% end %>
+  </div>
+</div>

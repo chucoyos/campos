@@ -45,6 +45,11 @@
               <span class="rounded-full px-3 py-1 text-xs font-medium <%= { "pendiente" => "bg-amber-100 text-amber-800", "utilizada" => "bg-emerald-100 text-emerald-800", "cancelada" => "bg-slate-100 text-slate-600" }[assignment.status] %>">
                 <%= t("container_assignments.statuses.#{assignment.status}") %>
               </span>
+              <% if assignment.pendiente? && policy(MovementPass.new(container: assignment.container, container_assignment: assignment)).create? %>
+                <%= link_to new_movement_pass_path(assignment_id: assignment.id), class: "flex min-h-12 items-center gap-1 rounded-2xl bg-indigo-50 px-4 text-sm font-medium text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-100 active:scale-95" do %>
+                  <%= material_icon "qr_code_2" %> <%= t(".request_pass") %>
+                <% end %>
+              <% end %>
               <% if policy(assignment).cancel? && assignment.may_cancelar? %>
                 <%= button_to cancel_container_assignment_path(assignment), method: :patch, form: { data: { turbo_confirm: t(".confirm_cancel") } },
                       class: "flex min-h-12 cursor-pointer items-center gap-1 rounded-2xl px-4 text-sm font-medium text-red-600 transition-all duration-200 ease-out hover:bg-red-50 active:scale-95" do %>

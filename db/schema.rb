@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -180,6 +180,50 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_020000) do
     t.index ["number"], name: "index_master_bls_on_number", unique: true
   end
 
+  create_table "movement_pass_vehicles", force: :cascade do |t|
+    t.bigint "movement_pass_id", null: false
+    t.string "role", null: false
+    t.string "company_name", null: false
+    t.string "operator_name", null: false
+    t.string "plate", null: false
+    t.string "unit_type", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["movement_pass_id", "role"], name: "index_movement_pass_vehicles_on_movement_pass_id_and_role", unique: true
+    t.index ["movement_pass_id"], name: "index_movement_pass_vehicles_on_movement_pass_id"
+    t.check_constraint "role::text = ANY (ARRAY['principal'::character varying, 'destino'::character varying]::text[])", name: "movement_pass_vehicles_role_check"
+    t.check_constraint "unit_type::text = ANY (ARRAY['sencillo'::character varying, 'full'::character varying]::text[])", name: "movement_pass_vehicles_unit_type_check"
+  end
+
+  create_table "movement_passes", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "container_assignment_id"
+    t.bigint "carrier_id"
+    t.bigint "client_id"
+    t.bigint "requested_by_id"
+    t.string "movement_type", null: false
+    t.string "status", default: "vigente", null: false
+    t.string "token", null: false
+    t.string "load_status"
+    t.datetime "issued_at", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "consumed_at"
+    t.datetime "cancelled_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["carrier_id"], name: "index_movement_passes_on_carrier_id"
+    t.index ["client_id"], name: "index_movement_passes_on_client_id"
+    t.index ["container_assignment_id"], name: "index_movement_passes_on_container_assignment_id"
+    t.index ["container_id", "movement_type"], name: "index_movement_passes_on_active_container_and_type", unique: true, where: "((status)::text = 'vigente'::text)"
+    t.index ["container_id"], name: "index_movement_passes_on_container_id"
+    t.index ["requested_by_id"], name: "index_movement_passes_on_requested_by_id"
+    t.index ["status", "expires_at"], name: "index_movement_passes_on_status_and_expires_at"
+    t.index ["token"], name: "index_movement_passes_on_token", unique: true
+    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying, 'vacio'::character varying]::text[]))", name: "movement_passes_load_status_check"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying]::text[])", name: "movement_passes_type_check"
+    t.check_constraint "status::text = ANY (ARRAY['vigente'::character varying, 'completado'::character varying, 'cancelado'::character varying, 'vencido'::character varying]::text[])", name: "movement_passes_status_check"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -297,6 +341,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_020000) do
   add_foreign_key "containers", "clients"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
+  add_foreign_key "movement_pass_vehicles", "movement_passes", on_delete: :cascade
+  add_foreign_key "movement_passes", "carriers"
+  add_foreign_key "movement_passes", "clients"
+  add_foreign_key "movement_passes", "container_assignments"
+  add_foreign_key "movement_passes", "containers"
+  add_foreign_key "movement_passes", "users", column: "requested_by_id", on_delete: :nullify
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
   add_foreign_key "warehouse_slots", "warehouse_bays"

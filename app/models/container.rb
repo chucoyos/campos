@@ -17,6 +17,7 @@ class Container < ApplicationRecord
   belongs_to :client, optional: true
   has_one :cargo_manifest, dependent: :restrict_with_error
   has_many :assignments, class_name: "ContainerAssignment", dependent: :restrict_with_error
+  has_many :movement_passes, dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos

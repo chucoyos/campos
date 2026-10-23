@@ -53,6 +53,9 @@ Rails.application.routes.draw do
   resources :container_assignments, only: %i[index new create] do
     patch :cancel, on: :member
   end
+  resources :movement_passes, only: %i[index new create show] do
+    patch :cancel, on: :member
+  end
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do
     patch :toggle, on: :member
