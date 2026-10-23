@@ -7,6 +7,14 @@ Rails.application.routes.draw do
       delete "users/:user_id", action: :unlink_user, as: :unlink_user
     end
   end
+  resources :yard_areas do
+    resources :sections, controller: "yard_area_sections", only: %i[create update destroy] do
+      member do
+        post :assign_slots
+        post :release_slots
+      end
+    end
+  end
   resources :carriers do
     member do
       post "users", action: :link_user, as: :link_user

@@ -10,7 +10,7 @@ class CarriersController < ApplicationController
 
   def show
     @users = @carrier.users.order(:email)
-    @linkable_users = User.where(role: Carrier::USER_ROLE, carrier_id: nil).order(:email)
+    @linkable_users = User.where(role: User::EXTERNAL_ROLES, carrier_id: nil).order(:email)
   end
 
   def new

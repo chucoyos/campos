@@ -14,9 +14,11 @@ RSpec.describe "Containers", type: :request do
       expect(response.body).to include(record.number)
     end
 
+    let(:client) { create(:client) }
+
     it "creates a record without MBL" do
-      expect { post containers_path, params: { container: { number: "msku1234567", size: 40, container_type: "hq", status: "vacio" } } }.to change(Container, :count).by(1)
-      expect(Container.last).to have_attributes(number: "MSKU1234567", size: 40, container_type: "hq", status: "vacio", master_bl: nil)
+      expect { post containers_path, params: { container: { number: "msku1234567", size: 40, container_type: "hq", status: "vacio", client_id: client.id } } }.to change(Container, :count).by(1)
+      expect(Container.last).to have_attributes(number: "MSKU1234567", size: 40, container_type: "hq", status: "vacio", master_bl: nil, client_id: client.id)
       expect(flash[:notice]).to eq(I18n.t("flash.containers.create"))
     end
 
@@ -119,7 +121,7 @@ RSpec.describe "Contenedores como Seguridad", type: :request do
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(container.master_bl.number)
 
-    post containers_path, params: { container: { number: "ABCD1234567", size: 20, container_type: "standard", status: "lleno" } }
+    post containers_path, params: { container: { number: "ABCD1234567", size: 20, container_type: "standard", status: "lleno", client_id: create(:client).id } }
     expect(Container.find_by(number: "ABCD1234567")).to be_present
 
     patch container_path(container), params: { container: { size: 40 } }

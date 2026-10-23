@@ -14,6 +14,21 @@ RSpec.describe "Usuarios relacionados", type: :request do
     expect(User.find_by(email: "c@example.com").client).to eq(client)
   end
 
+  it "crea una cuenta dual vinculada a cliente y transportista y la muestra en el listado" do
+    post users_path, params: { user: { email: "d@example.com", role: "transporte", client_id: client.id, carrier_id: carrier.id,
+                                       password: "password123", password_confirmation: "password123" } }
+
+    user = User.find_by(email: "d@example.com")
+    expect([ user.client, user.carrier ]).to eq([ client, carrier ])
+    get users_path
+    expect(response.body).to include(client.name, carrier.name)
+  end
+
+  it "ofrece ambos selectores en el formulario de usuario" do
+    get new_user_path
+    expect(response.body).to include("user_client_id", "user_carrier_id")
+  end
+
   it "edita el transportista de un usuario" do
     user = create(:user, :transporte)
     patch user_path(user), params: { user: { carrier_id: carrier.id } }

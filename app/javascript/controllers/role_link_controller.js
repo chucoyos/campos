@@ -1,6 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Muestra el selector de Cliente o Transportista según el rol elegido.
+// Muestra los selectores de Cliente y Transportista solo para roles externos (data-roles separados por espacio).
 export default class extends Controller {
   static targets = ["role", "field"]
 
@@ -11,7 +11,7 @@ export default class extends Controller {
   toggle() {
     const role = this.roleTarget.value
     this.fieldTargets.forEach((field) => {
-      const visible = field.dataset.role === role
+      const visible = field.dataset.roles.split(" ").includes(role)
       field.classList.toggle("hidden", !visible)
       field.querySelector("select").disabled = !visible
     })

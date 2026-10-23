@@ -14,6 +14,16 @@ class User < ApplicationRecord
 
   validates :role, presence: true
 
+  EXTERNAL_ROLES = %w[cliente transporte].freeze
+
+  def client_member? = EXTERNAL_ROLES.include?(role) && client_id.present?
+  def carrier_member? = EXTERNAL_ROLES.include?(role) && carrier_id.present?
+
+  # Afiliaciones del usuario como pares [icono, entidad] (puede tener cliente y transportista).
+  def entities
+    [ [ "person_search", client ], [ "local_shipping", carrier ] ].reject { |_, entity| entity.nil? }
+  end
+
   # Cliente o transportista al que pertenece el usuario (nil para roles internos).
   def entity
     client || carrier
@@ -21,9 +31,11 @@ class User < ApplicationRecord
 
   private
 
-  # Solo los usuarios cliente se vinculan a un Client y solo los de transporte a un Carrier.
+  # Los roles internos no se vinculan a empresas; cliente y transporte pueden tener ambas afiliaciones.
   def clear_unrelated_links
-    self.client_id = nil unless cliente?
-    self.carrier_id = nil unless transporte?
+    return if cliente? || transporte?
+
+    self.client_id = nil
+    self.carrier_id = nil
   end
 end

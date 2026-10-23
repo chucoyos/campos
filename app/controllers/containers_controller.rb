@@ -22,6 +22,7 @@ class ContainersController < ApplicationController
 
   def create
     @container = Container.new(container_params)
+    @container.client_id = current_user.client_id if current_user.client_member? && @container.master_bl_id.blank?
     authorize @container
 
     if @container.save
@@ -151,6 +152,7 @@ class ContainersController < ApplicationController
     permitted = %i[number size container_type]
     permitted << :master_bl_id if action_name == "create" || current_user.admin?
     permitted << :status if action_name == "create"
+    permitted << :client_id if action_name == "create" && !current_user.client_member?
     params.expect(container: permitted)
   end
 end

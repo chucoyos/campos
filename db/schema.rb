@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -91,7 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.index ["cargo_manifest_id", "created_at"], name: "idx_on_cargo_manifest_id_created_at_1692a9d850"
     t.index ["cargo_manifest_id"], name: "index_cargo_manifest_events_on_cargo_manifest_id"
     t.index ["user_id"], name: "index_cargo_manifest_events_on_user_id"
-    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying::text, 'reopen'::character varying::text])", name: "cargo_manifest_events_event_valid"
+    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying, 'reopen'::character varying]::text[])", name: "cargo_manifest_events_event_valid"
   end
 
   create_table "cargo_manifests", force: :cascade do |t|
@@ -103,7 +103,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_cargo_manifests_on_client_id"
     t.index ["container_id"], name: "index_cargo_manifests_on_container_id", unique: true, where: "(container_id IS NOT NULL)"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'confirmed'::character varying::text])", name: "cargo_manifests_status_valid"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'confirmed'::character varying]::text[])", name: "cargo_manifests_status_valid"
   end
 
   create_table "cargo_packagings", force: :cascade do |t|
@@ -118,7 +118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.index ["code"], name: "index_cargo_packagings_on_code", unique: true
     t.check_constraint "tracking_mode::text = 'aggregate'::text OR weight_required = true", name: "cargo_packagings_individual_weight_required"
     t.check_constraint "tracking_mode::text = 'individual'::text OR weight_required = false AND qr_allowed = false", name: "cargo_packagings_aggregate_capabilities_valid"
-    t.check_constraint "tracking_mode::text = ANY (ARRAY['individual'::character varying::text, 'aggregate'::character varying::text])", name: "cargo_packagings_tracking_mode_valid"
+    t.check_constraint "tracking_mode::text = ANY (ARRAY['individual'::character varying, 'aggregate'::character varying]::text[])", name: "cargo_packagings_tracking_mode_valid"
   end
 
   create_table "carriers", force: :cascade do |t|
@@ -143,6 +143,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.bigint "master_bl_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "client_id"
+    t.index ["client_id"], name: "index_containers_on_client_id"
     t.index ["master_bl_id"], name: "index_containers_on_master_bl_id"
     t.index ["number"], name: "index_containers_on_number"
     t.index ["status"], name: "index_containers_on_status"
@@ -199,6 +201,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.check_constraint "number >= 1 AND number <= 16", name: "warehouse_slots_number_valid"
   end
 
+  create_table "yard_area_sections", force: :cascade do |t|
+    t.bigint "yard_area_id", null: false
+    t.bigint "master_bl_id"
+    t.string "name", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["master_bl_id"], name: "index_yard_area_sections_on_master_bl_id"
+    t.index ["yard_area_id", "name"], name: "index_yard_area_sections_on_yard_area_id_and_name", unique: true
+    t.index ["yard_area_id"], name: "index_yard_area_sections_on_yard_area_id"
+  end
+
+  create_table "yard_areas", force: :cascade do |t|
+    t.bigint "yard_block_id", null: false
+    t.bigint "client_id"
+    t.string "code", null: false
+    t.string "name", null: false
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_yard_areas_on_client_id"
+    t.index ["code"], name: "index_yard_areas_on_code", unique: true
+    t.index ["yard_block_id"], name: "index_yard_areas_on_yard_block_id"
+  end
+
   create_table "yard_blocks", force: :cascade do |t|
     t.string "code", null: false
     t.integer "bays", null: false
@@ -220,7 +247,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
     t.boolean "enabled", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "yard_area_section_id"
     t.index ["code"], name: "index_yard_slots_on_code", unique: true
+    t.index ["yard_area_section_id"], name: "index_yard_slots_on_yard_area_section_id"
     t.index ["yard_block_id", "bay", "row", "level"], name: "index_yard_slots_on_position", unique: true
     t.index ["yard_block_id"], name: "index_yard_slots_on_yard_block_id"
     t.check_constraint "bay > 0 AND level > 0 AND \"row\"::text ~ '^[A-Z]$'::text", name: "yard_slots_position_valid"
@@ -239,10 +268,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_000000) do
   add_foreign_key "cargo_manifest_events", "users", on_delete: :nullify
   add_foreign_key "cargo_manifests", "clients"
   add_foreign_key "cargo_manifests", "containers"
+  add_foreign_key "containers", "clients"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "master_bls", "clients"
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
   add_foreign_key "warehouse_slots", "warehouse_bays"
+  add_foreign_key "yard_area_sections", "master_bls"
+  add_foreign_key "yard_area_sections", "yard_areas"
+  add_foreign_key "yard_areas", "clients"
+  add_foreign_key "yard_areas", "yard_blocks"
+  add_foreign_key "yard_slots", "yard_area_sections", on_delete: :nullify
   add_foreign_key "yard_slots", "yard_blocks"
 end

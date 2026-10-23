@@ -1,0 +1,123 @@
+<% input = "h-12 rounded-2xl border border-slate-200 bg-white px-3 text-sm focus:border-indigo-500 focus:outline-none" %>
+<% block = @yard_area.yard_block %>
+<div class="mx-auto w-full max-w-5xl space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <%= link_to yard_areas_path, class: "inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800" do %>
+      <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+    <% end %>
+    <%= render "yard_areas/guide" %>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900"><%= @yard_area.code %> · <%= @yard_area.name %></h1>
+      <p class="text-sm text-slate-500"><%= block.code %> · <%= @yard_area.client&.name || t("yard_areas.index.no_client") %></p>
+    </div>
+    <% if policy(@yard_area).update? %>
+      <div class="flex gap-2">
+        <%= link_to edit_yard_area_path(@yard_area), class: "flex min-h-12 items-center gap-2 rounded-2xl px-5 font-medium text-indigo-600 hover:bg-indigo-50" do %>
+          <%= material_icon "edit" %> <%= t("shared.actions.edit") %>
+        <% end %>
+        <%= button_to yard_area_path(@yard_area), method: :delete, form: { data: { turbo_confirm: t("shared.actions.confirm_destroy", name: @yard_area.name) } },
+              class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-red-600 hover:bg-red-50" do %>
+          <%= material_icon "delete" %> <%= t("shared.actions.destroy") %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if policy(@yard_area).update? %>
+    <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+      <h2 class="mb-4 text-lg font-semibold text-slate-900"><%= t(".new_section") %></h2>
+      <%= form_with model: YardAreaSection.new, scope: :yard_area_section, url: yard_area_sections_path(@yard_area), class: "flex flex-col gap-3 sm:flex-row sm:items-end" do |f| %>
+        <div class="flex-1">
+          <%= f.label :name, YardAreaSection.human_attribute_name(:name), class: "mb-1 block text-sm font-medium text-slate-700" %>
+          <%= f.text_field :name, required: true, class: "#{input} w-full" %>
+        </div>
+        <div class="flex-1">
+          <%= f.label :master_bl_id, YardAreaSection.human_attribute_name(:master_bl), class: "mb-1 block text-sm font-medium text-slate-700" %>
+          <%= f.collection_select :master_bl_id, @master_bls, :id, :number, { include_blank: t(".no_master_bl") }, class: "#{input} w-full" %>
+        </div>
+        <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700" do %>
+          <%= material_icon "add" %> <%= t("shared.actions.create") %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if @sections.empty? %>
+    <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".no_sections") %></p>
+  <% end %>
+
+  <% @sections.each do |section| %>
+    <section class="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-slate-900"><%= section.name %></h3>
+          <p class="text-sm text-slate-500">
+            <%= section.master_bl ? "#{MasterBl.model_name.human} #{section.master_bl.number}" : t(".no_master_bl") %> ·
+            <%= t(".slots_count", count: @slot_counts.fetch(section.id, 0)) %> ·
+            <%= t(section.active ? "yard.states.enabled" : "yard.states.disabled") %>
+          </p>
+        </div>
+        <% if policy(@yard_area).update? %>
+          <div class="flex gap-2">
+            <%= button_to yard_area_section_path(@yard_area, section), method: :patch, params: { yard_area_section: { active: !section.active } },
+                  class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-4 text-sm font-medium text-slate-600 hover:bg-slate-100" do %>
+              <%= material_icon section.active ? "toggle_on" : "toggle_off" %> <%= t(section.active ? ".deactivate" : ".activate") %>
+            <% end %>
+            <%= button_to yard_area_section_path(@yard_area, section), method: :delete, form: { data: { turbo_confirm: t("shared.actions.confirm_destroy", name: section.name) } },
+                  class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 hover:bg-red-50 hover:text-red-600", title: t("shared.actions.destroy") do %>
+              <%= material_icon "delete" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% summary = @summaries.fetch(section.id, []) %>
+      <% if summary.any? %>
+        <ul class="mb-4 flex flex-wrap gap-2 text-sm">
+          <% summary.each do |level, row, bays| %>
+            <li class="rounded-lg bg-indigo-50 px-3 py-1 text-indigo-700"><%= t(".summary_item", level: level, row: row, bays: bays) %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <% if policy(@yard_area).update? %>
+        <%= form_with url: assign_slots_yard_area_section_path(@yard_area, section), class: "space-y-3 rounded-2xl bg-slate-50 p-4" do %>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+              <%= label_tag "bay_from_#{section.id}", t(".bay_from"), class: "mb-1 block text-sm text-slate-700" %>
+              <%= number_field_tag :bay_from, 1, id: "bay_from_#{section.id}", min: 1, max: block.bays, class: "#{input} w-full" %>
+            </div>
+            <div>
+              <%= label_tag "bay_to_#{section.id}", t(".bay_to"), class: "mb-1 block text-sm text-slate-700" %>
+              <%= number_field_tag :bay_to, block.bays, id: "bay_to_#{section.id}", min: 1, max: block.bays, class: "#{input} w-full" %>
+            </div>
+          </div>
+          <fieldset class="flex flex-wrap items-center gap-3">
+            <legend class="mb-1 text-sm text-slate-700"><%= YardSlot.human_attribute_name(:row) %></legend>
+            <% block.row_letters.each do |row| %>
+              <label class="flex min-h-12 items-center gap-1 text-sm"><%= check_box_tag "rows[]", row, true, id: "rows_#{section.id}_#{row}", class: "h-5 w-5" %> <%= row %></label>
+            <% end %>
+          </fieldset>
+          <fieldset class="flex flex-wrap items-center gap-3">
+            <legend class="mb-1 text-sm text-slate-700"><%= YardSlot.human_attribute_name(:level) %></legend>
+            <% (1..block.levels).each do |level| %>
+              <label class="flex min-h-12 items-center gap-1 text-sm"><%= check_box_tag "levels[]", level, true, id: "levels_#{section.id}_#{level}", class: "h-5 w-5" %> <%= level %></label>
+            <% end %>
+          </fieldset>
+          <div class="flex flex-wrap gap-2">
+            <%= button_tag class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700" do %>
+              <%= material_icon "add_location_alt" %> <%= t(".assign") %>
+            <% end %>
+            <%= button_tag formaction: release_slots_yard_area_section_path(@yard_area, section), formmethod: :post,
+                  class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl px-5 font-medium text-slate-600 hover:bg-slate-200" do %>
+              <%= material_icon "location_off" %> <%= t(".release") %>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+</div>

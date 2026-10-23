@@ -14,7 +14,7 @@ class MasterBlPolicy < ApplicationPolicy
     def resolve
       if user&.admin?
         scope.all
-      elsif user&.cliente? && user.client_id
+      elsif user&.client_member?
         scope.where(client_id: user.client_id)
       else
         scope.none
@@ -25,6 +25,6 @@ class MasterBlPolicy < ApplicationPolicy
   private
 
   def admin? = user&.admin?
-  def client_user? = user&.cliente? && user.client_id.present?
+  def client_user? = user&.client_member?
   def owner? = client_user? && record.is_a?(MasterBl) && record.client_id == user.client_id
 end

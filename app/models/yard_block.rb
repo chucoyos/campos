@@ -2,6 +2,7 @@ class YardBlock < ApplicationRecord
   CODE_FORMAT = /\A\d[A-Z]+\z/
 
   has_many :yard_slots, dependent: :restrict_with_error
+  has_many :yard_areas, dependent: :restrict_with_error
 
   normalizes :code, with: ->(code) { code.strip.upcase }
 

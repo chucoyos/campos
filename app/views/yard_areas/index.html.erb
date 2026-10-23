@@ -1,0 +1,61 @@
+<div class="w-full">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <%= material_icon "map" %>
+      </span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= YardArea.model_name.human(count: 2) %></h1>
+        <p class="text-sm text-slate-500"><%= t(".count", count: @pagy.count) %></p>
+      </div>
+    </div>
+    <div class="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+    <%= render "yard_areas/guide" %>
+    <% if policy(YardArea).create? %>
+      <%= link_to new_yard_area_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
+        <%= material_icon "add" %> <%= t(".new") %>
+      <% end %>
+    <% end %>
+    </div>
+  </div>
+
+  <%= render "shared/filters" %>
+
+  <ul class="space-y-3 md:hidden">
+    <% @yard_areas.each do |area| %>
+      <li class="rounded-3xl border border-slate-100 bg-white p-4 shadow-sm">
+        <%= link_to yard_area_path(area), class: "flex min-h-12 items-center justify-between gap-3" do %>
+          <span class="font-medium text-slate-800"><%= area.code %> · <%= area.name %></span>
+          <%= material_icon "chevron_right" %>
+        <% end %>
+        <p class="text-sm text-slate-500"><%= area.yard_block.code %> · <%= area.client&.name || t(".no_client") %></p>
+      </li>
+    <% end %>
+  </ul>
+
+  <div class="hidden overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm md:block">
+    <table class="w-full text-left">
+      <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="p-4"><%= YardArea.human_attribute_name(:code) %></th>
+          <th class="p-4"><%= YardArea.human_attribute_name(:name) %></th>
+          <th class="p-4"><%= YardArea.human_attribute_name(:yard_block) %></th>
+          <th class="p-4"><%= YardArea.human_attribute_name(:client) %></th>
+          <th class="p-4"><%= YardArea.human_attribute_name(:active) %></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        <% @yard_areas.each do |area| %>
+          <tr class="transition-colors hover:bg-slate-50">
+            <td class="p-4 font-medium"><%= link_to area.code, yard_area_path(area), class: "text-indigo-600 hover:underline" %></td>
+            <td class="p-4 text-slate-800"><%= area.name %></td>
+            <td class="p-4 text-slate-600"><%= area.yard_block.code %></td>
+            <td class="p-4 text-slate-600"><%= area.client&.name || t(".no_client") %></td>
+            <td class="p-4 text-slate-600"><%= t(area.active ? "yard.states.enabled" : "yard.states.disabled") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

@@ -1,0 +1,29 @@
+<%# Botón de guía rápida y modal; recibe title: y un bloque con el contenido. %>
+<div data-controller="modal" class="inline-block">
+  <button type="button" data-action="modal#open" aria-haspopup="dialog"
+          class="flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-4 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95">
+    <%= material_icon "help" %> <%= t("shared.quick_guide.button") %>
+  </button>
+
+  <dialog data-modal-target="dialog" data-action="click->modal#backdrop" aria-labelledby="quick-guide-title"
+          class="m-auto max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl overflow-hidden rounded-3xl bg-white p-0 shadow-xl backdrop:bg-slate-900/50">
+    <div class="flex max-h-[90vh] flex-col">
+      <div class="flex items-center justify-between gap-3 border-b border-slate-100 p-5">
+        <h2 id="quick-guide-title" class="flex items-center gap-2 text-xl font-bold text-slate-900">
+          <%= material_icon "help", classes: "text-indigo-600" %> <%= title %>
+        </h2>
+        <button type="button" data-action="modal#close" aria-label="<%= t("shared.quick_guide.close") %>"
+                class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full text-slate-600 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95">
+          <%= material_icon "close" %>
+        </button>
+      </div>
+      <div class="space-y-5 overflow-y-auto p-5 text-sm text-slate-700"><%= yield %></div>
+      <div class="border-t border-slate-100 p-4 text-right">
+        <button type="button" data-action="modal#close"
+                class="min-h-12 cursor-pointer rounded-full bg-indigo-600 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95">
+          <%= t("shared.quick_guide.understood") %>
+        </button>
+      </div>
+    </div>
+  </dialog>
+</div>

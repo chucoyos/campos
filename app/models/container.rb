@@ -13,6 +13,8 @@ class Container < ApplicationRecord
   MAX_PHOTOS_PER_UPLOAD = 30
 
   belongs_to :master_bl, optional: true
+  # Cliente propietario de un contenedor de resguardo (sin MBL).
+  belongs_to :client, optional: true
   has_one :cargo_manifest, dependent: :restrict_with_error
 
   has_many_attached :opening_photos
@@ -26,6 +28,7 @@ class Container < ApplicationRecord
   validates :number, presence: true, uniqueness: true, format: { with: NUMBER_FORMAT, allow_blank: true }
   validates :size, inclusion: { in: SIZES }
   validates :status, inclusion: { in: STANDALONE_STATUSES }, unless: :with_master_bl?
+  validates :client, presence: true, on: :create, unless: :with_master_bl?
   validate :master_bl_presence_unchanged, on: :update
   validate :photos_are_valid_images
 
@@ -49,6 +52,8 @@ class Container < ApplicationRecord
       transitions from: :vacio, to: :entregado, guard: :with_master_bl?
     end
   end
+
+  def owner_client_id = master_bl&.client_id || client_id
 
   def photos_zip_name(section)
     "#{number}_#{I18n.t("containers.photos.#{section}").parameterize}.zip"

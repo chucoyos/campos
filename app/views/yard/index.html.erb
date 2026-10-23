@@ -12,8 +12,9 @@
   <section class="mb-6 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" aria-label="<%= t(".map") %>"
            data-controller="yard-map"
            data-yard-map-blocks-value="<%= @blocks.map { |block| { code: block.code, bays: block.bays, rows: block.rows, levels: block.levels } }.to_json %>"
+           data-yard-map-sections-value="<%= @sections_map.to_json %>"
            data-yard-map-disabled-value="<%= @disabled_codes.to_json %>"
-           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), desycon: t(".desycon") }.to_json %>">
+           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), desycon: t(".desycon"), section: YardAreaSection.model_name.human }.to_json %>">
     <div class="flex flex-wrap items-end justify-between gap-3 p-4">
       <div>
         <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "view_in_ar" %> <%= t(".map") %></h2>
@@ -40,9 +41,24 @@
                 class="flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-4 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95">
           <%= material_icon "center_focus_strong" %> <%= t(".reset_view") %>
         </button>
+        <%= render "yard_areas/guide" %>
+        <button type="button" data-yard-map-target="areasToggle" data-action="yard-map#toggleAreas" aria-pressed="false"
+                class="flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 px-4 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95 aria-pressed:border-indigo-500 aria-pressed:bg-indigo-50 aria-pressed:text-indigo-700">
+          <%= material_icon "layers" %> <%= t(".areas") %>
+        </button>
       </div>
     </div>
     <div data-yard-map-target="canvas" class="h-[60vh] min-h-80 w-full touch-none"></div>
+    <ul data-yard-map-target="legend" hidden class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 p-4 text-sm text-slate-600">
+      <% @sections_map.each do |section| %>
+        <li class="flex items-center gap-2">
+          <span class="h-3 w-3 rounded-sm" style="background-color: <%= section[:color] %>"></span>
+          <%= section[:label] %><% if section[:detail].present? %> <span class="text-slate-400">(<%= section[:detail] %>)</span><% end %>
+        </li>
+      <% end %>
+      <li class="flex items-center gap-2"><span class="h-3 w-3 rounded-sm bg-slate-300"></span><%= t(".unassigned") %></li>
+      <% if @sections_map.empty? %><li class="text-slate-400"><%= t(".no_sections") %></li><% end %>
+    </ul>
     <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-4">
       <div data-yard-map-target="info" class="min-w-0"><p class="text-sm text-slate-500"><%= t(".map_hint") %></p></div>
       <ul class="flex flex-wrap items-center gap-4 text-sm text-slate-600">

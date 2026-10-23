@@ -66,11 +66,15 @@ RSpec.describe "Acceso del cliente", type: :request do
       expect(own_bl.containers.last.status).to eq("activo")
     end
 
-    it "no crea contenedores en MBL ajeno ni sin MBL" do
+    it "no crea contenedores en MBL ajeno" do
       expect {
         post containers_path, params: { container: { number: "MSKU1234567", size: 20, container_type: "standard", master_bl_id: other_bl.id } }
-        post containers_path, params: { container: { number: "MSKU7654321", size: 20, container_type: "standard", status: "lleno" } }
       }.not_to change(Container, :count)
+    end
+
+    it "crea contenedores de resguardo a su nombre sin aceptar otro cliente" do
+      post containers_path, params: { container: { number: "MSKU7654321", size: 20, container_type: "standard", status: "lleno", client_id: other_bl.client_id } }
+      expect(Container.find_by(number: "MSKU7654321").client_id).to eq(own_bl.client_id)
     end
 
     it "solo lista y ve contenedores de sus MBL" do

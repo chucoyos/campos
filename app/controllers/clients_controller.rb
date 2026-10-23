@@ -10,7 +10,7 @@ class ClientsController < ApplicationController
 
   def show
     @users = @client.users.order(:email)
-    @linkable_users = User.where(role: Client::USER_ROLE, client_id: nil).order(:email)
+    @linkable_users = User.where(role: User::EXTERNAL_ROLES, client_id: nil).order(:email)
   end
 
   def new

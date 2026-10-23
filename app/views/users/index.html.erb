@@ -27,9 +27,9 @@
           <div class="min-w-0">
             <p class="truncate font-medium text-slate-800"><%= user.email %></p>
             <%= role_badge(user.role) %>
-            <% if user.entity %>
+            <% user.entities.each do |icon, entity| %>
               <p class="mt-1 flex items-center gap-1 truncate text-sm text-slate-600">
-                <%= material_icon user.client ? "person_search" : "local_shipping", classes: "!text-base" %> <%= user.entity.name %>
+                <%= material_icon icon, classes: "!text-base" %> <%= entity.name %>
               </p>
             <% end %>
           </div>
@@ -65,13 +65,17 @@
             </td>
             <td class="p-4"><%= role_badge(user.role) %></td>
             <td class="p-4 text-slate-700">
-              <% if user.entity %>
-                <%= link_to user.entity, class: "inline-flex items-center gap-1 text-indigo-600 hover:underline" do %>
-                  <%= material_icon user.client ? "person_search" : "local_shipping", classes: "!text-base" %> <%= user.entity.name %>
-                <% end %>
-              <% else %>
+              <% entities = user.entities %>
+              <% if entities.empty? %>
                 <span class="text-slate-400">—</span>
               <% end %>
+              <div class="flex flex-col gap-1">
+                <% entities.each do |icon, entity| %>
+                  <%= link_to entity, class: "inline-flex items-center gap-1 text-indigo-600 hover:underline" do %>
+                    <%= material_icon icon, classes: "!text-base" %> <%= entity.name %>
+                  <% end %>
+                <% end %>
+              </div>
             </td>
             <td class="p-4">
               <div class="flex items-center justify-end gap-1">

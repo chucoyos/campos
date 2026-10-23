@@ -24,14 +24,15 @@
           class: input, data: { role_link_target: "role", action: "change->role-link#toggle" } %>
   </div>
 
-  <div data-role-link-target="field" data-role="cliente" class="hidden">
+  <div data-role-link-target="field" data-roles="cliente transporte" class="hidden">
     <%= f.label :client_id, class: label %>
     <%= f.collection_select :client_id, Client.order(:name), :id, :name, { include_blank: t(".no_link") }, class: input %>
   </div>
 
-  <div data-role-link-target="field" data-role="transporte" class="hidden">
+  <div data-role-link-target="field" data-roles="cliente transporte" class="hidden">
     <%= f.label :carrier_id, class: label %>
     <%= f.collection_select :carrier_id, Carrier.order(:name), :id, :name, { include_blank: t(".no_link") }, class: input %>
+    <p class="mt-1 text-xs text-slate-500"><%= t(".dual_hint") %></p>
   </div>
 
   <div class="grid gap-5 sm:grid-cols-2">

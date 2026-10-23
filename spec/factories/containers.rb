@@ -4,6 +4,7 @@ FactoryBot.define do
     size { 20 }
     container_type { "standard" }
     status { "lleno" }
+    client { master_bl ? nil : association(:client) }
 
     trait :with_master_bl do
       master_bl

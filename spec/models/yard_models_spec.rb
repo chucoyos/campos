@@ -4,6 +4,7 @@ RSpec.describe YardBlock, type: :model do
   subject { build(:yard_block) }
 
   it { is_expected.to have_many(:yard_slots).dependent(:restrict_with_error) }
+  it { is_expected.to have_many(:yard_areas).dependent(:restrict_with_error) }
   it { is_expected.to validate_presence_of(:code) }
   it { is_expected.to validate_uniqueness_of(:code).ignoring_case_sensitivity }
   it { is_expected.to validate_numericality_of(:bays).only_integer.is_greater_than(0) }

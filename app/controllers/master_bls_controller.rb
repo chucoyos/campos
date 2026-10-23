@@ -19,7 +19,7 @@ class MasterBlsController < ApplicationController
 
   def create
     @master_bl = MasterBl.new(master_bl_params)
-    @master_bl.client_id = current_user.client_id if current_user.cliente?
+    @master_bl.client_id = current_user.client_id if current_user.client_member?
     authorize @master_bl
 
     if @master_bl.save

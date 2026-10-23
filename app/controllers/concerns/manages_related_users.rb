@@ -22,6 +22,6 @@ module ManagesRelatedUsers
   def owner_foreign_key = :"#{owner.class.model_name.singular}_id"
 
   def linkable_users
-    User.where(role: owner.class::USER_ROLE, owner_foreign_key => nil)
+    User.where(role: User::EXTERNAL_ROLES, owner_foreign_key => nil)
   end
 end

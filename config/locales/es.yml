@@ -58,6 +58,17 @@ es:
       update: "Cliente actualizado."
       destroy: "Cliente eliminado."
       destroy_restricted: "No se puede eliminar el cliente porque tiene MBL asociados."
+    yard_areas:
+      create: "Área creada."
+      update: "Área actualizada."
+      destroy: "Área eliminada."
+      destroy_restricted: "No se puede eliminar el área porque tiene secciones. Elimina primero sus secciones."
+    yard_area_sections:
+      create: "Sección creada."
+      update: "Sección actualizada."
+      destroy: "Sección eliminada."
+      assigned: "Posiciones asignadas: %{count}. Omitidas por pertenecer a otra sección activa: %{conflicts}."
+      released: "Posiciones liberadas: %{count}."
     carriers:
       create: "Transportista creado."
       update: "Transportista actualizado."
@@ -93,9 +104,14 @@ es:
       warehouse: "Bodega"
       clients: "Clientes"
       carriers: "Transportistas"
+      yard_areas: "Áreas"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
+    quick_guide:
+      button: "Guía rápida"
+      close: "Cerrar"
+      understood: "Entendido"
     filters:
       title: "Filtros"
       apply: "Filtrar"
@@ -170,6 +186,8 @@ es:
       open_photo: "Abrir fotografía en una pestaña nueva"
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
+      client_prompt: "Selecciona un cliente"
+      client_hint: "Solo aplica sin MBL: cliente propietario del contenedor en resguardo."
       status_prompt: "Selecciona un estado"
       status_hint: "Solo aplica sin MBL. Con MBL el contenedor inicia como Activo y avanza en orden."
       number_hint: "4 letras y 7 números, por ejemplo MSKU1234567."
@@ -238,6 +256,9 @@ es:
       map_hint: "Toca una posición para ver su código. Arrastra para rotar, pellizca o usa la rueda para acercar."
       map_provisional: "Distribución según el diagrama del patio; las distancias entre bloques son aproximadas."
       reset_view: "Restablecer vista"
+      areas: "Áreas"
+      unassigned: "Sin sección"
+      no_sections: "Aún no hay secciones con posiciones asignadas."
       selected: "Seleccionada"
       subtitle: "Bloques y posiciones del patio de contenedores."
       slots:
@@ -428,6 +449,67 @@ es:
       subtitle: "Registra un cliente."
     edit:
       title: "Editar cliente"
+  yard_areas:
+    guide:
+      title: "Guía rápida: áreas y secciones"
+      intro: "Las áreas agrupan posiciones del patio para un cliente; dentro de cada área, las secciones separan sus posiciones (por ejemplo, por MBL)."
+      areas:
+        icon: "map"
+        title: "1. Crear un área"
+        steps:
+          - "Entra a Áreas y pulsa «Nueva área»."
+          - "Captura un código y un nombre, elige el bloque del patio y, si aplica, el cliente."
+          - "Guarda. El área queda activa; desactívala si dejas de usarla."
+      sections:
+        icon: "layers"
+        title: "2. Crear secciones"
+        steps:
+          - "Abre el área y, en «Nueva sección», escribe un nombre."
+          - "Opcional: elige un MBL del cliente del área. Un área puede tener varias secciones."
+      slots:
+        icon: "add_location_alt"
+        title: "3. Asignar posiciones a una sección"
+        steps:
+          - "En la sección, indica el rango de bahías (desde y hasta)."
+          - "Marca las filas y los niveles que quieras incluir."
+          - "Pulsa «Asignar posiciones». Las que ya pertenecen a otra sección activa se omiten y el mensaje te lo indica."
+          - "Para quitar posiciones, usa los mismos campos y pulsa «Liberar posiciones». Debajo del nombre de la sección verás un resumen de lo asignado."
+      map:
+        icon: "view_in_ar"
+        title: "4. Verlas en el mapa 3D"
+        steps:
+          - "Entra a Patio y pulsa el botón «Áreas» sobre el mapa."
+          - "Cada sección se colorea y la leyenda indica su área, cliente y MBL; las posiciones sin sección salen en gris."
+          - "Toca una posición para ver su código y su sección. Con el botón apagado el mapa vuelve a mostrar habilitadas y deshabilitadas."
+      tip: "Una posición solo puede pertenecer a una sección activa. Si desactivas una sección, sus posiciones quedan disponibles para otra."
+    index:
+      new: "Nueva área"
+      count:
+        one: "%{count} área"
+        other: "%{count} áreas"
+      no_client: "Sin cliente"
+    new:
+      title: "Nueva área"
+      subtitle: "Agrupa posiciones de un bloque para un cliente."
+    edit:
+      title: "Editar área"
+    form:
+      block_prompt: "Selecciona un bloque"
+      client_prompt: "Sin cliente"
+    show:
+      new_section: "Nueva sección"
+      no_master_bl: "Sin MBL"
+      no_sections: "Esta área aún no tiene secciones."
+      slots_count:
+        one: "%{count} posición"
+        other: "%{count} posiciones"
+      activate: "Activar"
+      deactivate: "Desactivar"
+      bay_from: "Bahía desde"
+      bay_to: "Bahía hasta"
+      summary_item: "Nivel %{level} · Fila %{row} · Bahías %{bays}"
+      assign: "Asignar posiciones"
+      release: "Liberar posiciones"
   carriers:
     index:
       new: "Nuevo transportista"
@@ -468,6 +550,7 @@ es:
     form:
       role_prompt: "Selecciona un rol"
       no_link: "Sin vincular"
+      dual_hint: "Una cuenta de cliente o transporte puede estar vinculada a ambos para operar como cliente y transportista."
       keep_password: "Déjala en blanco para conservar la contraseña actual."
       save: "Guardar cambios"
       create: "Crear usuario"
@@ -492,6 +575,12 @@ es:
       yard_block:
         one: "Bloque"
         other: "Bloques"
+      yard_area:
+        one: "Área"
+        other: "Áreas"
+      yard_area_section:
+        one: "Sección"
+        other: "Secciones"
       cargo_manifest:
         one: "Registro de mercancía"
         other: "Registros de mercancía"
@@ -573,6 +662,10 @@ es:
               too_large: "%{filename} no puede pesar más de %{max} MB"
             deconsolidation_photos: *photo_errors
             empty_photos: *photo_errors
+        yard_area_section:
+          attributes:
+            master_bl:
+              wrong_client: "debe pertenecer al cliente del área"
         yard_slot:
           attributes:
             bay:
@@ -587,6 +680,19 @@ es:
               invalid_type: "debe ser un archivo PDF"
               too_large: "no puede pesar más de %{max} MB"
     attributes:
+      yard_area:
+        code: "Código"
+        name: "Nombre"
+        yard_block: "Bloque"
+        yard_block_id: "Bloque"
+        client: "Cliente"
+        client_id: "Cliente"
+        active: "Activa"
+      yard_area_section:
+        name: "Nombre"
+        master_bl: "MBL"
+        master_bl_id: "MBL"
+        active: "Activa"
       yard_block:
         code: "Código"
         bays: "Bahías"
@@ -636,6 +742,7 @@ es:
         size: "Tamaño"
         container_type: "Tipo"
         status: "Estado"
+        client: "Cliente"
         master_bl: "MBL"
         master_bl_id: "MBL"
         created_at: "Creado"

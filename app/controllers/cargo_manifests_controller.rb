@@ -15,14 +15,14 @@ class CargoManifestsController < ApplicationController
 
   def new
     @cargo_manifest = CargoManifest.new
-    @cargo_manifest.client = current_user.client if current_user.cliente?
+    @cargo_manifest.client = current_user.client if current_user.client_member?
     authorize @cargo_manifest
     load_form_options
   end
 
   def create
     @cargo_manifest = CargoManifest.new(cargo_manifest_params)
-    @cargo_manifest.client_id = current_user.client_id if current_user.cliente?
+    @cargo_manifest.client_id = current_user.client_id if current_user.client_member?
     authorize @cargo_manifest
 
     if @cargo_manifest.save

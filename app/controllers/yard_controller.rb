@@ -4,10 +4,26 @@ class YardController < ApplicationController
     @blocks = YardBlock.order(:code)
     @slot_counts = YardSlot.group(:yard_block_id, :enabled).count
     @disabled_codes = YardSlot.where(enabled: false).pluck(:code)
+    @sections_map = sections_map
     @pagy, @slots = paginate(apply_filters(policy_scope(YardSlot)).eager_load(:yard_block).order("yard_blocks.code", :level, :row, :bay))
   end
 
   private
+
+  SECTION_COLORS = %w[#e11d48 #0ea5e9 #84cc16 #a855f7 #f97316 #14b8a6 #ec4899 #eab308 #3b82f6 #64748b].freeze
+
+  # Secciones activas con su color y las posiciones que agrupan, para el modo "Áreas" del mapa.
+  def sections_map
+    sections = YardAreaSection.active.joins(:yard_area).merge(YardArea.active)
+                              .includes(:master_bl, yard_area: :client).order("yard_areas.code", :name)
+    codes = YardSlot.where(yard_area_section_id: sections.map(&:id)).pluck(:yard_area_section_id, :code).group_by(&:first)
+    sections.each_with_index.map do |section, index|
+      area = section.yard_area
+      detail = [ area.client&.name, section.master_bl&.number ].compact.join(" · ")
+      { label: "#{area.code} · #{section.name}", detail: detail, color: SECTION_COLORS[index % SECTION_COLORS.size],
+        slots: codes.fetch(section.id, []).map(&:last) }
+    end
+  end
 
   def filter_fields
     [

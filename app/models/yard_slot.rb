@@ -1,5 +1,6 @@
 class YardSlot < ApplicationRecord
   belongs_to :yard_block
+  belongs_to :yard_area_section, optional: true
 
   before_validation :build_code
 

@@ -24,16 +24,19 @@ const FALLBACK_ORIGIN_STEP = 40
 
 const UPRIGHT = new THREE.Quaternion()
 const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, background: 0xf1f5f9 }
+const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, unassigned: 0xcbd5e1, background: 0xf1f5f9 }
 
 export default class extends Controller {
-  static targets = ["canvas", "info", "level", "block", "empty"]
-  static values = { blocks: Array, disabled: Array, labels: Object }
+  static targets = ["canvas", "info", "level", "block", "empty", "areasToggle", "legend"]
+  static values = { blocks: Array, disabled: Array, labels: Object, sections: Array }
 
   connect() {
     this.disabledCodes = new Set(this.disabledValue)
     this.slots = []
     this.selected = null
+    this.showAreas = false
+    this.sectionByCode = new Map()
+    this.sectionsValue.forEach((section) => section.slots.forEach((code) => this.sectionByCode.set(code, section)))
     this.setupScene()
     this.buildBlocks()
     this.buildDesycon()
@@ -229,12 +232,24 @@ export default class extends Controller {
       this.mesh.setMatrixAt(index, visible ? matrix.compose(unit.position, unit.rotated ? ROTATED : UPRIGHT, scale.set(unit.scale, 1, 1)) : hidden)
       const codes = unit.slots.map((slot) => slot.code)
       const state = codes.includes(this.selected) ? "selected" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
-      this.mesh.setColorAt(index, color.setHex(COLORS[state]))
+      if (this.showAreas && state !== "selected") {
+        const section = this.sectionByCode.get(codes[0])
+        this.mesh.setColorAt(index, section ? color.set(section.color) : color.setHex(COLORS.unassigned))
+      } else {
+        this.mesh.setColorAt(index, color.setHex(COLORS[state]))
+      }
     })
     this.mesh.instanceMatrix.needsUpdate = true
     this.mesh.instanceColor.needsUpdate = true
     this.mesh.computeBoundingSphere()
     this.render()
+  }
+
+  toggleAreas() {
+    this.showAreas = !this.showAreas
+    this.areasToggleTarget.setAttribute("aria-pressed", String(this.showAreas))
+    this.legendTarget.hidden = !this.showAreas
+    this.paint()
   }
 
   filterLevel() {
@@ -286,9 +301,16 @@ export default class extends Controller {
       const bays = unit.slots.map((slot) => slot.bay).join("-")
       html = `<p class="font-mono text-xl font-bold text-slate-900">${unit.slots.map((slot) => slot.code).join(" · ")}</p>
               <p class="text-sm text-slate-600">${labels.block} ${first.block} · ${labels.bay} ${bays} · ${labels.row} ${first.row} · ${labels.level} ${first.level}</p>
-              <p class="mt-1 text-sm font-medium text-slate-800">${state}</p>`
+              <p class="mt-1 text-sm font-medium text-slate-800">${state}</p>${this.sectionInfo(first)}`
     }
     this.infoTarget.innerHTML = html
+  }
+
+  sectionInfo(slot) {
+    const section = this.sectionByCode.get(slot.code)
+    if (!section) return ""
+    const detail = section.detail ? ` · ${section.detail}` : ""
+    return `<p class="text-sm text-slate-600">${this.labelsValue.section}: ${section.label}${detail}</p>`
   }
 
   frameView() {
