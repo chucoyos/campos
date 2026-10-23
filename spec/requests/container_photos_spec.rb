@@ -16,7 +16,8 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     get container_path(container)
 
     expect(response.body).to include("Apertura", "Desconsolidación", "Vacío")
-    expect(response.body.scan(/<details[^>]*>/).none? { |tag| tag.include?("open") }).to be(true)
+    main = response.body[/<main.*<\/main>/m]
+    expect(main.scan(/<details[^>]*>/).none? { |tag| tag.include?("open") }).to be(true)
     expect(response.body.scan('loading="lazy"').size).to eq(3)
     expect(response.body).to include("/containers/#{container.id}/photos?section=opening")
     expect(response.body).not_to include("foto.png")

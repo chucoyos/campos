@@ -1,18 +1,34 @@
-<% links = [] %>
-<% links << [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls"] if policy(MasterBl).index? %>
-<% links << [t(".cargo_manifests"), cargo_manifests_path, "package_2", controller_name.in?(%w[cargo_manifests cargo_items])] if policy(CargoManifest).index? %>
-<% links << [t(".containers"), containers_path, "inventory_2", controller_name == "containers"] if policy(Container).index? %>
-<% links << [t(".yard"), yard_path, "grid_view", controller_name == "yard"] if policy(YardSlot).index? %>
-<% links << [t(".container_assignments"), container_assignments_path, "assignment", controller_name == "container_assignments"] if policy(ContainerAssignment).index? %>
-<% links << [t(".movement_passes"), movement_passes_path, "qr_code_2", controller_name == "movement_passes"] if policy(MovementPass).index? %>
-<% links << [t(".yard_areas"), yard_areas_path, "map", controller_name.in?(%w[yard_areas yard_area_sections])] if policy(YardArea).index? %>
-<% links << [t(".warehouse"), warehouse_path, "warehouse", controller_name.in?(%w[warehouse warehouse_slots])] if policy(WarehouseSlot).index? %>
-<% catalogs = [] %>
-<% catalogs << [t(".clients"), clients_path, "person_search", controller_name == "clients"] if policy(Client).index? %>
-<% catalogs << [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers"] if policy(Carrier).index? %>
-<% catalogs << [t(".users"), users_path, "group", controller_name == "users"] if policy(User).index? %>
-<% catalogs << [t(".cargo_packagings"), cargo_packagings_path, "category", controller_name == "cargo_packagings"] if policy(CargoPackaging).index? %>
-<% catalogs_active = catalogs.any? { |*, active| active } %>
+<%
+  items = {
+    master_bls: [t(".master_bls"), master_bls_path, "description", controller_name == "master_bls", policy(MasterBl).index?],
+    cargo_manifests: [t(".cargo_manifests"), cargo_manifests_path, "package_2", controller_name.in?(%w[cargo_manifests cargo_items]), policy(CargoManifest).index?],
+    warehouse: [t(".warehouse"), warehouse_path, "warehouse", controller_name.in?(%w[warehouse warehouse_slots]), policy(WarehouseSlot).index?],
+    containers: [t(".containers"), containers_path, "inventory_2", controller_name == "containers", policy(Container).index?],
+    yard: [t(".yard"), yard_path, "grid_view", controller_name == "yard", policy(YardSlot).index?],
+    yard_areas: [t(".yard_areas"), yard_areas_path, "map", controller_name.in?(%w[yard_areas yard_area_sections]), policy(YardArea).index?],
+    container_assignments: [t(".container_assignments"), container_assignments_path, "assignment", controller_name == "container_assignments", policy(ContainerAssignment).index?],
+    movement_passes: [t(".movement_passes"), movement_passes_path, "qr_code_2", controller_name == "movement_passes", policy(MovementPass).index?],
+    clients: [t(".clients"), clients_path, "person_search", controller_name == "clients", policy(Client).index?],
+    carriers: [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers", policy(Carrier).index?],
+    users: [t(".users"), users_path, "group", controller_name == "users", policy(User).index?],
+    cargo_packagings: [t(".cargo_packagings"), cargo_packagings_path, "category", controller_name == "cargo_packagings", policy(CargoPackaging).index?]
+  }
+  group_defs = [
+    [t(".groups.deconsolidation"), "directions_boat", %i[master_bls cargo_manifests warehouse]],
+    [t(".groups.yard"), "grid_view", %i[containers yard yard_areas]],
+    [t(".groups.movements"), "swap_horiz", %i[container_assignments movement_passes]],
+    [t(".catalogs"), "folder_open", %i[clients carriers users cargo_packagings]]
+  ]
+  # Los grupos con un solo enlace visible se muestran como enlace directo.
+  nav = group_defs.flat_map do |label, icon, keys|
+    visible = items.values_at(*keys).select(&:last).map { |item| item[0..3] }
+    if visible.size > 1
+      [{ label: label, icon: icon, items: visible, active: visible.any? { |*, active| active } }]
+    else
+      visible.map { |item| { link: item } }
+    end
+  end
+%>
 
 <header class="sticky top-0 z-10 px-3 pt-3 sm:px-5" data-controller="navbar">
   <nav class="container mx-auto rounded-3xl border border-slate-200/60 bg-gradient-to-b from-slate-100/80 via-white/80 to-slate-200/80 px-3 py-2 shadow-sm backdrop-blur-md" aria-label="<%= t(".main_navigation") %>">
@@ -26,26 +42,27 @@
         <% end %>
 
         <div class="hidden items-center gap-2 md:flex">
-          <% links.each do |label, path, icon, active| %>
-            <%= link_to path, class: nav_link_classes(active), aria: { current: (active ? "page" : nil) } do %>
-              <%= material_icon icon %> <%= label %>
-            <% end %>
-          <% end %>
-
-          <% if catalogs.any? %>
-            <div class="relative" data-controller="dropdown">
-              <button type="button" data-dropdown-target="button" data-action="dropdown#toggle" aria-expanded="false" aria-haspopup="true"
-                      class="<%= nav_link_classes(catalogs_active) %> cursor-pointer">
-                <%= material_icon "folder_open" %> <%= t(".catalogs") %> <%= material_icon "expand_more" %>
-              </button>
-              <div data-dropdown-target="menu" class="absolute left-0 top-full z-20 mt-2 hidden w-56 space-y-1 rounded-2xl border border-slate-200/60 bg-white p-2 shadow-md">
-                <% catalogs.each do |label, path, icon, active| %>
-                  <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
-                    <%= material_icon icon %> <%= label %>
+          <% nav.each do |entry| %>
+            <% if entry[:link] %>
+              <% label, path, icon, active = entry[:link] %>
+              <%= link_to path, class: nav_link_classes(active), aria: { current: (active ? "page" : nil) } do %>
+                <%= material_icon icon %> <%= label %>
+              <% end %>
+            <% else %>
+              <div class="relative" data-controller="dropdown">
+                <button type="button" data-dropdown-target="button" data-action="dropdown#toggle" aria-expanded="false" aria-haspopup="true"
+                        class="<%= nav_link_classes(entry[:active]) %> cursor-pointer">
+                  <%= material_icon entry[:icon] %> <%= entry[:label] %> <%= material_icon "expand_more" %>
+                </button>
+                <div data-dropdown-target="menu" class="absolute left-0 top-full z-20 mt-2 hidden w-56 space-y-1 rounded-2xl border border-slate-200/60 bg-white p-2 shadow-md">
+                  <% entry[:items].each do |label, path, icon, active| %>
+                    <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+                      <%= material_icon icon %> <%= label %>
+                    <% end %>
                   <% end %>
-                <% end %>
+                </div>
               </div>
-            </div>
+            <% end %>
           <% end %>
         </div>
       </div>
@@ -76,25 +93,27 @@
     </div>
 
     <div id="mobile-menu" data-navbar-target="menu" class="hidden space-y-1 border-t border-slate-200/60 pt-2 mt-2 md:hidden">
-      <% links.each do |label, path, icon, active| %>
-        <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
-          <%= material_icon icon %> <%= label %>
-        <% end %>
-      <% end %>
-      <% if catalogs.any? %>
-        <details class="group" <%= "open" if catalogs_active %>>
-          <summary class="<%= nav_link_classes(catalogs_active) %> w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden">
-            <%= material_icon "folder_open" %> <%= t(".catalogs") %>
-            <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
-          </summary>
-          <div class="mt-1 space-y-1 pl-4">
-            <% catalogs.each do |label, path, icon, active| %>
-              <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
-                <%= material_icon icon %> <%= label %>
+      <% nav.each do |entry| %>
+        <% if entry[:link] %>
+          <% label, path, icon, active = entry[:link] %>
+          <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+            <%= material_icon icon %> <%= label %>
+          <% end %>
+        <% else %>
+          <details class="group" <%= "open" if entry[:active] %>>
+            <summary class="<%= nav_link_classes(entry[:active]) %> w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+              <%= material_icon entry[:icon] %> <%= entry[:label] %>
+              <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
+            </summary>
+            <div class="mt-1 space-y-1 pl-4">
+              <% entry[:items].each do |label, path, icon, active| %>
+                <%= link_to path, class: "#{nav_link_classes(active)} w-full", aria: { current: (active ? "page" : nil) } do %>
+                  <%= material_icon icon %> <%= label %>
+                <% end %>
               <% end %>
-            <% end %>
-          </div>
-        </details>
+            </div>
+          </details>
+        <% end %>
       <% end %>
       <div class="flex items-center gap-3 rounded-2xl bg-white/60 p-3">
         <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">

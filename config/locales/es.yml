@@ -106,6 +106,10 @@ es:
       link_failed: "No se pudo vincular el usuario."
     navbar:
       catalogs: "Catálogos"
+      groups:
+        deconsolidation: "Desconsolidación"
+        yard: "Patio y resguardo"
+        movements: "Movimientos"
       users: "Usuarios"
       master_bls: "MBL"
       containers: "Contenedores"
