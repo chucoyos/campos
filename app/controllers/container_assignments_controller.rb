@@ -1,8 +1,10 @@
 class ContainerAssignmentsController < ApplicationController
   def index
     authorize ContainerAssignment
-    scope = policy_scope(ContainerAssignment).includes(:carrier, :yard_area, :yard_area_section, container: { master_bl: :client })
+    scope = policy_scope(ContainerAssignment).includes(:carrier, container: :master_bl)
+    scope = scope.includes(:yard_area, :yard_area_section, container: { master_bl: :client }) if policy(ContainerAssignment).view_internal_details?
     @pagy, @assignments = paginate(apply_filters(scope.joins(container: :master_bl)).order("master_bls.number", "containers.number", :id))
+    @active_passes = MovementPass.active.where(container_assignment_id: @assignments.map(&:id)).index_by(&:container_assignment_id)
   end
 
   def new

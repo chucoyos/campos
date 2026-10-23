@@ -45,7 +45,7 @@ class MovementPassPdf
       [ Container.human_attribute_name(:size), "#{container.size}'" ]
     ]
     rows << [ MasterBl.model_name.human, container.master_bl.number ] if container.master_bl
-    rows << [ Client.model_name.human, @pass.client&.name ] if @pass.client
+    rows << [ Client.model_name.human, @pass.client&.name ] if @pass.client && !@pass.with_master_bl?
     rows << [ MovementPass.human_attribute_name(:load_status), I18n.t("movement_passes.load_statuses.#{@pass.load_status}") ] if @pass.load_status
     rows << [ t(:issued_at), time(@pass.issued_at) ]
     rows << [ t(:expires_at), time(@pass.expires_at) ]

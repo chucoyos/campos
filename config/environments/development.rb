@@ -32,6 +32,8 @@ Rails.application.configure do
     Bullet.rails_logger = true
     Bullet.add_footer = true
     Bullet.console = true
+    # El cliente solo se muestra a quien la política lo permite (p. ej. cuentas duales).
+    Bullet.add_safelist type: :unused_eager_loading, class_name: "MovementPass", association: :client
   end
 
   # Change to :null_store to avoid any caching.

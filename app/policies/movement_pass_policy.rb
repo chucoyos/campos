@@ -18,6 +18,11 @@ class MovementPassPolicy < ApplicationPolicy
   def download? = show?
   def cancel? = record.vigente? && manage?
 
+  # El cliente solo se muestra al personal interno y al propio cliente, no al transportista.
+  def view_client?
+    user.admin? || user.seguridad? || (user.client_member? && record.client_id == user.client_id)
+  end
+
   private
 
   # Admin gestiona todo; el transporte, las asignaciones de su carrier; el cliente, sus contenedores de resguardo.

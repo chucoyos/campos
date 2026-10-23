@@ -11,7 +11,7 @@
         <p class="text-sm text-slate-500">
           <%= @pass.container.size %>'
           <% if @pass.container.master_bl %>· <%= @pass.container.master_bl.number %><% end %>
-          <% if @pass.client %>· <%= @pass.client.name %><% end %>
+          <% if policy(@pass).view_client? && @pass.client %>· <%= @pass.client.name %><% end %>
         </p>
       </div>
       <%= render "movement_passes/status", pass: @pass %>

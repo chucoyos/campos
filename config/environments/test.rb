@@ -30,6 +30,7 @@ Rails.application.configure do
     # La sección es opcional: la precarga se usa solo cuando hay preferencia.
     Bullet.add_safelist type: :unused_eager_loading, class_name: "ContainerAssignment", association: :yard_area_section
     Bullet.add_safelist type: :unused_eager_loading, class_name: "Container", association: :master_bl
+    Bullet.add_safelist type: :unused_eager_loading, class_name: "MovementPass", association: :client
   end
 
   # Render exception templates for rescuable exceptions and raise for other exceptions.

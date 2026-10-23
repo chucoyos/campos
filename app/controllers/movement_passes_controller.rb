@@ -1,7 +1,8 @@
 class MovementPassesController < ApplicationController
   def index
     authorize MovementPass
-    scope = policy_scope(MovementPass).includes(:client, :vehicles, container: :master_bl).order(issued_at: :desc)
+    scope = policy_scope(MovementPass).includes(:vehicles, container: :master_bl).order(issued_at: :desc)
+    scope = scope.includes(:client) if current_user.admin? || current_user.seguridad? || current_user.client_member?
     @pagy, @passes = paginate(apply_filters(scope.joins(:container)))
   end
 
@@ -83,8 +84,9 @@ class MovementPassesController < ApplicationController
   end
 
   def load_options
-    @assignments = policy_scope(ContainerAssignment).pendiente.includes(container: :master_bl, carrier: [])
+    @assignments = policy_scope(ContainerAssignment).pendiente.includes(:carrier, container: :master_bl)
                      .where.not(id: MovementPass.active.where.not(container_assignment_id: nil).select(:container_assignment_id)).order(:id)
+    @assignments = @assignments.includes(container: { master_bl: :client }) if current_user.admin?
     @assignments = @assignments.none unless current_user.admin? || current_user.carrier_member?
     @containers = standalone_containers.includes(:client).order(:number)
   end

@@ -86,7 +86,7 @@
               <li class="flex flex-wrap items-center justify-between gap-3 p-3">
                 <div>
                   <p class="font-mono font-medium"><%= assignment.container.number %></p>
-                  <p class="text-sm text-slate-500"><%= t("movement_passes.types.#{assignment.operation}") %> · <%= assignment.container.master_bl.number %> · <%= assignment.carrier.name %></p>
+                  <p class="text-sm text-slate-500"><%= t("movement_passes.types.#{assignment.operation}") %> · <%= assignment.container.master_bl.number %><% if policy(MovementPass.new(container_assignment: assignment)).view_client? %> · <%= assignment.container.master_bl.client.name %><% end %> · <%= assignment.carrier.name %></p>
                 </div>
                 <%= link_to new_movement_pass_path(assignment_id: assignment.id), class: "flex min-h-12 items-center gap-1 rounded-2xl bg-indigo-600 px-4 text-sm font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
                   <%= material_icon "qr_code_2" %> <%= t(".request") %>

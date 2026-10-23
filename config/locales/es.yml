@@ -470,8 +470,55 @@ es:
       pendiente: "Pendiente"
       utilizada: "Utilizada"
       cancelada: "Cancelada"
+    guide:
+      title: "Guía rápida: asignaciones"
+      internal:
+        intro: "Una asignación autoriza a un transportista a ingresar o sacar un contenedor con MBL. Sin asignación no se puede tramitar el pase."
+        sections:
+          - icon: "assignment"
+            title: "1. Crear la asignación"
+            steps:
+              - "Pulsa «Nueva asignación» y elige el MBL; se cargan sus contenedores no entregados."
+              - "Marca uno o varios contenedores, el transportista y la operación (ingreso o salida)."
+              - "Si alguno no es válido, no se guarda ninguno y el mensaje indica cuál."
+          - icon: "map"
+            title: "2. Preasignar ubicación (opcional)"
+            steps:
+              - "Elige un área o sección del cliente del MBL; solo aparecen las activas y las no reservadas a otro MBL."
+              - "Opcionalmente indica la estiba preferida."
+              - "El transportista no ve esta información. Garita la usa como sugerencia y puede elegir otra posición libre."
+          - icon: "qr_code_2"
+            title: "3. Seguir el pase"
+            steps:
+              - "Cuando el transportista tramita el pase, la fila muestra «Ver pase» en lugar de «Tramitar pase»."
+              - "Si el pase se cancela o vence, el transportista puede tramitar uno nuevo."
+              - "La asignación pasa a «Utilizada» cuando Garita completa el pase. Mientras esté pendiente puedes cancelarla."
+        tip: "Los filtros por contenedor, MBL, operación y estado ayudan a localizar asignaciones; todas se agrupan por MBL."
+      carrier:
+        intro: "Aquí ves los contenedores que se te asignaron. Para entrar o sacar uno debes tramitar su pase con QR."
+        sections:
+          - icon: "qr_code_2"
+            title: "1. Tramitar el pase"
+            steps:
+              - "Pulsa «Tramitar pase» en el contenedor que vas a mover."
+              - "Captura tu empresa, el operador, las placas y si la unidad es sencillo o full."
+              - "Al guardar se emite el pase con su QR."
+          - icon: "picture_as_pdf"
+            title: "2. Descargar y presentar"
+            steps:
+              - "Abre el pase con «Ver pase» y descarga el PDF."
+              - "Muéstralo en garita impreso o en pantalla. El QR es de un solo uso."
+          - icon: "autorenew"
+            title: "3. Si el pase ya no sirve"
+            steps:
+              - "Un pase vence 48 horas después de emitirse o puede cancelarse."
+              - "En ambos casos, la asignación sigue pendiente y puedes tramitar un pase nuevo desde esta lista."
+        tip: "Solo ves tus asignaciones. Si algo no coincide, avisa a personal interno para que la corrija."
     index:
       title: "Asignaciones a transporte"
+      description:
+        internal: "Asigna contenedores con MBL a un transportista para su ingreso o salida y consulta el avance de cada asignación y de su pase."
+        carrier: "Contenedores que se te asignaron para ingreso o salida. Tramita el pase con los datos de tu unidad y descárgalo en PDF para mostrarlo en garita."
       new: "Nueva asignación"
       search: "Contenedor o MBL"
       empty: "No hay asignaciones."
@@ -480,6 +527,7 @@ es:
       cancel: "Cancelar"
       confirm_cancel: "¿Cancelar esta asignación?"
       request_pass: "Tramitar pase"
+      view_pass: "Ver pase"
       count:
         one: "%{count} asignación"
         other: "%{count} asignaciones"

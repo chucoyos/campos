@@ -29,7 +29,7 @@
             <p class="text-sm text-slate-600">
               <%= t("movement_passes.types.#{pass.movement_type}") %>
               <% if pass.container.master_bl %>· <%= pass.container.master_bl.number %><% end %>
-              <% if pass.client %>· <%= pass.client.name %><% end %>
+              <% if policy(pass).view_client? && pass.client %>· <%= pass.client.name %><% end %>
             </p>
             <p class="text-sm text-slate-500">
               <%= t(".expires") %>: <%= l(pass.expires_at, format: :short) %>

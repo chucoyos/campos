@@ -1,17 +1,23 @@
 <div class="w-full">
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "assignment" %></span>
-      <div>
-        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
-        <p class="text-sm text-slate-500"><%= t(".count", count: @pagy.count) %></p>
+  <div class="mb-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "assignment" %></span>
+        <div>
+          <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+          <p class="text-sm text-slate-500"><%= t(".count", count: @pagy.count) %></p>
+        </div>
+      </div>
+      <div class="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+        <%= render "container_assignments/guide" %>
+        <% if policy(ContainerAssignment).create? %>
+          <%= link_to new_container_assignment_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
+            <%= material_icon "add" %> <%= t(".new") %>
+          <% end %>
+        <% end %>
       </div>
     </div>
-    <% if policy(ContainerAssignment).create? %>
-      <%= link_to new_container_assignment_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700 sm:w-auto" do %>
-        <%= material_icon "add" %> <%= t(".new") %>
-      <% end %>
-    <% end %>
+    <p class="mt-4 max-w-3xl text-sm text-slate-600"><%= t(".description.#{policy(ContainerAssignment).view_internal_details? ? 'internal' : 'carrier'}") %></p>
   </div>
 
   <%= render "shared/filters" %>
@@ -20,11 +26,12 @@
     <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".empty") %></p>
   <% end %>
 
+  <% internal = policy(ContainerAssignment).view_internal_details? %>
   <% @assignments.group_by { |assignment| assignment.container.master_bl }.each do |master_bl, assignments| %>
     <section class="mb-4 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
       <h2 class="flex flex-wrap items-center gap-2 bg-slate-50 p-4 font-semibold text-slate-900">
         <%= material_icon "description", classes: "text-indigo-600" %> <%= master_bl.number %>
-        <span class="text-sm font-normal text-slate-500">· <%= master_bl.client.name %></span>
+        <% if internal %><span class="text-sm font-normal text-slate-500">· <%= master_bl.client.name %></span><% end %>
       </h2>
       <ul class="divide-y divide-slate-100">
         <% assignments.each do |assignment| %>
@@ -35,7 +42,7 @@
                 <%= material_icon "local_shipping", classes: "!text-base align-middle" %> <%= assignment.carrier.name %> ·
                 <%= t("container_assignments.operations.#{assignment.operation}") %>
               </p>
-              <% if assignment.yard_area %>
+              <% if internal && assignment.yard_area %>
                 <p class="text-sm text-slate-500">
                   <%= t(".preferred") %>: <%= assignment.yard_area.code %><%= " · #{assignment.yard_area_section.name}" if assignment.yard_area_section %><%= " · #{t('.level', level: assignment.preferred_level)}" if assignment.preferred_level %>
                 </p>
@@ -45,7 +52,12 @@
               <span class="rounded-full px-3 py-1 text-xs font-medium <%= { "pendiente" => "bg-amber-100 text-amber-800", "utilizada" => "bg-emerald-100 text-emerald-800", "cancelada" => "bg-slate-100 text-slate-600" }[assignment.status] %>">
                 <%= t("container_assignments.statuses.#{assignment.status}") %>
               </span>
-              <% if assignment.pendiente? && policy(MovementPass.new(container: assignment.container, container_assignment: assignment)).create? %>
+              <% active_pass = @active_passes[assignment.id] %>
+              <% if active_pass && assignment.pendiente? && policy(active_pass).show? %>
+                <%= link_to movement_pass_path(active_pass), class: "flex min-h-12 items-center gap-1 rounded-2xl bg-emerald-50 px-4 text-sm font-medium text-emerald-700 transition-all duration-200 ease-out hover:bg-emerald-100 active:scale-95" do %>
+                  <%= material_icon "qr_code_2" %> <%= t(".view_pass") %>
+                <% end %>
+              <% elsif assignment.pendiente? && policy(MovementPass.new(container: assignment.container, container_assignment: assignment)).create? %>
                 <%= link_to new_movement_pass_path(assignment_id: assignment.id), class: "flex min-h-12 items-center gap-1 rounded-2xl bg-indigo-50 px-4 text-sm font-medium text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-100 active:scale-95" do %>
                   <%= material_icon "qr_code_2" %> <%= t(".request_pass") %>
                 <% end %>

@@ -3,6 +3,8 @@ class ContainerAssignmentPolicy < ApplicationPolicy
   def show? = index?
   def create? = user&.admin?
   def cancel? = user&.admin?
+  # El transportista no ve el cliente ni la ubicación preasignada en el patio.
+  def view_internal_details? = user&.admin? || user&.seguridad?
 
   class Scope < Scope
     def resolve
