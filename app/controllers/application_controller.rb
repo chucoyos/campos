@@ -5,6 +5,7 @@ class ApplicationController < ActionController::Base
   PER_PAGE_OPTIONS = [ 10, 25, 50, 100 ].freeze
 
   before_action :authenticate_user!
+  layout :resolve_layout
   helper_method :per_page_options, :per_page, :filter_fields, :active_filters
 
   rescue_from Pundit::NotAuthorizedError do
@@ -23,6 +24,11 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   private
+
+  # El inicio de sesión usa un diseño a pantalla completa, sin navbar.
+  def resolve_layout
+    devise_controller? && controller_name == "sessions" ? "auth" : "application"
+  end
 
   def per_page_options = PER_PAGE_OPTIONS
 

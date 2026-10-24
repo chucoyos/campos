@@ -702,8 +702,28 @@ es:
   devise:
     sessions:
       new:
+        title: "Bienvenido"
         subtitle: "Inicia sesión para continuar"
         submit: "Iniciar sesión"
+        hero:
+          label: "Presentación de la plataforma"
+          brand: "Soluciones Campos"
+          headline_html: "Control total de tu carga, del buque al %{accent}"
+          accent: "patio"
+          description: "Desconsolidación, despacho de carga suelta y patio de maniobras en una sola plataforma, con trazabilidad en cada movimiento."
+          features:
+            deconsolidation:
+              icon: "inventory_2"
+              title: "Desconsolidación"
+              text: "Contenedores y mercancías al detalle."
+            yard:
+              icon: "map"
+              title: "Patio de maniobras"
+              text: "Ubicación y resguardo en tiempo real."
+            gate:
+              icon: "qr_code_scanner"
+              title: "Garita con QR"
+              text: "Ingresos y salidas validados."
         forgot_password: "¿Olvidaste tu contraseña?"
     passwords:
       new:
