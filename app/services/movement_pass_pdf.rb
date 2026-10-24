@@ -31,6 +31,9 @@ class MovementPassPdf
   def time(value) = I18n.l(value.in_time_zone, format: :long)
 
   def header(pdf)
+    logo_path = Rails.root.join("app/assets/images/logo_full.png")
+    pdf.image logo_path.to_s, width: 170, position: :left
+    pdf.move_down 14
     pdf.fill_color "0B3C5D"
     pdf.text safe(t(:title)), size: 24, style: :bold
     pdf.fill_color "000000"
