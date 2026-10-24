@@ -44,8 +44,8 @@ es:
       reopen: "Captura reabierta. El registro volvió a borrador y debe confirmarse de nuevo."
       invalid_transition: "El registro ya cambió de estado. Actualiza la página e inténtalo de nuevo."
       import:
-        one: "Se importó 1 línea de mercancía."
-        other: "Se importaron %{count} líneas de mercancía."
+        one: "Se importó 1 mercancía."
+        other: "Se importaron %{count} mercancías."
       item_created: "Mercancía agregada."
       item_updated: "Mercancía actualizada."
       item_destroyed: "Mercancía eliminada."
@@ -238,8 +238,8 @@ es:
       bay: "Nave %{number}"
       empty: "Vacía"
       items:
-        one: "%{count} línea"
-        other: "%{count} líneas"
+        one: "%{count} mercancía"
+        other: "%{count} mercancías"
       free_space: "Espacio libre"
       map: "Mapa 3D"
       map_hint: "Toca una ubicación para ver su detalle. Arrastra para rotar, pellizca o usa la rueda para acercar."
@@ -366,12 +366,37 @@ es:
       empty: "Aún no hay registros de mercancía."
       general_cargo: "Carga general"
       item_count:
-        one: "1 línea"
-        other: "%{count} líneas"
+        one: "1 mercancía"
+        other: "%{count} mercancías"
     new:
       title: "Nuevo registro de mercancía"
+      description: "Crea el registro que agrupa la mercancía de un cliente, ya sea de un contenedor o de carga general. Después de guardarlo capturarás las mercancías."
     edit:
       title: "Editar registro de mercancía"
+      description: "Ajusta el cliente o el contenedor del registro. Solo se puede editar mientras la captura sigue en borrador."
+    guide:
+      title: "Guía rápida: registro de mercancía"
+      intro: "Un registro de mercancía agrupa las mercancías de un cliente, vinculadas a un contenedor o como carga general."
+      sections:
+        - icon: "add_box"
+          title: "1. Crear el registro"
+          steps:
+            - "Pulsa «Nuevo registro» y elige el cliente (si eres personal interno)."
+            - "Selecciona el tipo: «Contenedor» para vincularlo a uno con MBL, o «Carga general»."
+            - "Guarda. El registro queda en borrador."
+        - icon: "inventory_2"
+          title: "2. Capturar las mercancías"
+          steps:
+            - "Abre el registro y agrega cada mercancía con su embalaje, cantidad y peso."
+            - "También puedes importar varias mercancías desde un archivo Excel con la plantilla descargable."
+            - "Cada mercancía genera una etiqueta con QR que puedes imprimir."
+        - icon: "task_alt"
+          title: "3. Confirmar la captura"
+          steps:
+            - "Cuando termines, pulsa «Confirmar captura»."
+            - "Una vez confirmada no se pueden agregar, editar ni eliminar mercancías."
+            - "Si hace falta corregir algo, un administrador puede reabrir la captura."
+      tip: "Lo habitual es crear el registro desde el detalle del contenedor; así queda ligado a él automáticamente."
     form:
       client_prompt: "Selecciona un cliente"
       scope_title: "Tipo de registro"
@@ -383,25 +408,25 @@ es:
       general_cargo: "Carga general"
       confirm_destroy: "¿Eliminar este registro y sus mercancías?"
       items_title: "Mercancía capturada"
-      items_empty: "Aún no se han capturado líneas de mercancía."
+      items_empty: "Aún no se han capturado mercancías."
       quantity:
         one: "1 unidad"
         other: "%{count} unidades"
       weight: "%{weight} kg"
       origin_identifier: "Identificador de origen: %{value}"
       qr_label: "Ver etiqueta QR"
-      import_failed: "No se importó ninguna línea. Corrige estos errores e inténtalo de nuevo:"
+      import_failed: "No se importó ninguna mercancía. Corrige estos errores e inténtalo de nuevo:"
       confirm_action: "Confirmar captura"
       history_title: "Historial de captura"
       unknown_user: "Usuario eliminado"
       reopen_action: "Reabrir captura"
       reopen_manifest: "¿Reabrir la captura? El registro volverá a borrador y deberás confirmarlo de nuevo al terminar los cambios."
-      confirm_notice: "Agrega todas las mercancías antes de confirmar la captura. Una vez confirmada, no podrás agregar, editar ni eliminar líneas."
-      confirm_manifest: "¿Ya agregaste todas las mercancías? Al confirmar, la captura se cierra y ya no podrás agregar, editar ni eliminar líneas."
+      confirm_notice: "Agrega todas las mercancías antes de confirmar la captura. Una vez confirmada, no podrás agregar, editar ni eliminar mercancías."
+      confirm_manifest: "¿Ya agregaste todas las mercancías? Al confirmar, la captura se cierra y ya no podrás agregar, editar ni eliminar mercancías."
       new_item: "Agregar mercancía"
       edit_item: "Editar"
-      save_item: "Guardar línea"
-      confirm_item_destroy: "¿Eliminar esta línea de mercancía?"
+      save_item: "Guardar mercancía"
+      confirm_item_destroy: "¿Eliminar esta mercancía?"
       import_title: "Carga desde Excel"
       import_hint: "Usa una fila por pallet o rollo y agrupa cajas iguales en una sola fila."
       download_template: "Descargar plantilla"
@@ -443,7 +468,7 @@ es:
       weight: "Captura un peso en kg mayor a 0."
       yes_no: "Elige Sí o No."
     instructions:
-      - "Llena una fila por línea de mercancía en la hoja Mercancías, empezando en la fila 2."
+      - "Llena una fila por mercancía en la hoja Mercancías, empezando en la fila 2."
       - "Descripción: escribe libremente la mercancía, por ejemplo Acero."
       - "Embalaje: elige un valor de la lista desplegable (consulta la hoja Catálogo de embalajes)."
       - "Pallet y rollo se capturan individualmente: cantidad 1 y peso en kg obligatorio."
@@ -455,7 +480,7 @@ es:
       no_file: "Selecciona un archivo Excel."
       invalid_file: "El archivo debe ser un Excel (.xlsx) válido de máximo 5 MB."
       empty: "El archivo no contiene mercancías."
-      closed: "No se pueden importar líneas porque el registro está confirmado."
+      closed: "No se pueden importar mercancías porque el registro está confirmado."
       too_many: "El archivo supera el máximo de %{max} filas."
       row: "Fila %{row}: %{messages}"
   clients:
@@ -762,8 +787,8 @@ es:
         one: "Evento de captura"
         other: "Eventos de captura"
       cargo_item:
-        one: "Línea de mercancía"
-        other: "Líneas de mercancía"
+        one: "Mercancía"
+        other: "Mercancías"
       cargo_packaging:
         one: "Embalaje"
         other: "Embalajes"
@@ -810,7 +835,7 @@ es:
             container:
               wrong_client: "debe pertenecer a un MBL del mismo cliente"
             base:
-              cannot_confirm: "agrega al menos una línea y deja el registro en borrador antes de confirmarlo"
+              cannot_confirm: "agrega al menos una mercancía y deja el registro en borrador antes de confirmarlo"
         cargo_item:
           attributes:
             cargo_manifest:
@@ -819,7 +844,7 @@ es:
             warehouse_slot:
               disabled: "está deshabilitada"
             cargo_packaging:
-              inactive: "está desactivado y no se puede usar en una línea nueva"
+              inactive: "está desactivado y no se puede usar en una mercancía nueva"
             quantity:
               individual_quantity: "debe ser 1 para pallets y rollos, que se registran individualmente"
             weight_kg:

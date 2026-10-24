@@ -1,0 +1,14 @@
+<%# Encabezado con ícono, título, texto descriptivo y guía rápida. Recibe title: y description:. %>
+<div class="mb-6">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "package_2" %></span>
+      <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= title %></h1>
+    </div>
+    <div class="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+      <%= render "cargo_manifests/guide" %>
+      <%= yield if block_given? %>
+    </div>
+  </div>
+  <p class="mt-4 max-w-3xl text-sm text-slate-600"><%= description %></p>
+</div>

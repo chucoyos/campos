@@ -1,0 +1,17 @@
+<% scope = "cargo_manifests.guide" %>
+<%= render "shared/quick_guide", title: t("#{scope}.title") do %>
+  <p><%= t("#{scope}.intro") %></p>
+
+  <% I18n.t("#{scope}.sections").each do |section| %>
+    <section>
+      <h3 class="mb-1 flex items-center gap-2 font-semibold text-slate-900">
+        <%= material_icon section[:icon], classes: "!text-xl text-indigo-600" %> <%= section[:title] %>
+      </h3>
+      <ol class="list-decimal space-y-1 pl-6">
+        <% section[:steps].each do |step| %><li><%= step %></li><% end %>
+      </ol>
+    </section>
+  <% end %>
+
+  <p class="rounded-2xl bg-amber-50 p-3 text-amber-800"><%= t("#{scope}.tip") %></p>
+<% end %>

@@ -5,7 +5,7 @@
     </div>
   <% end %>
 
-  <% with_container = @cargo_manifest.container_id.present? %>
+  <% with_container = params[:cargo_scope].present? ? params[:cargo_scope] == "container" : (@cargo_manifest.container_id.present? || @cargo_manifest.new_record?) %>
   <% if @clients %>
     <div>
       <%= f.label :client_id, class: "mb-1 block text-sm font-medium text-slate-700" %>
@@ -18,8 +18,8 @@
   <fieldset>
     <legend class="mb-2 text-sm font-medium text-slate-700"><%= t(".scope_title") %></legend>
     <div class="grid gap-3 sm:grid-cols-2">
-      <% [ [ "general", "inventory_2", t(".scope_general"), !with_container ],
-           [ "container", "directions_boat", t(".scope_container"), with_container ] ].each do |value, icon, label, checked| %>
+      <% [ [ "container", "directions_boat", t(".scope_container"), with_container ],
+           [ "general", "inventory_2", t(".scope_general"), !with_container ] ].each do |value, icon, label, checked| %>
         <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 px-4 py-3 text-slate-700 transition-all duration-200 ease-out hover:bg-slate-50 has-[:checked]:border-indigo-600 has-[:checked]:bg-indigo-50 has-[:checked]:text-indigo-700">
           <%= radio_button_tag :cargo_scope, value, checked, class: "h-5 w-5 text-indigo-600",
                 data: { cargo_scope_target: "scope", action: "change->cargo-scope#toggle" } %>

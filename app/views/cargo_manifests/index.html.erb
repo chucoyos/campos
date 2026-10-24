@@ -1,13 +1,10 @@
 <div class="mx-auto w-full max-w-6xl">
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold text-slate-900"><%= t(".title") %></h1>
-      <p class="text-sm text-slate-500"><%= t(".subtitle") %></p>
-    </div>
-    <%= link_to new_cargo_manifest_path, class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+  <% header_action = capture do %>
+    <%= link_to new_cargo_manifest_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 sm:w-auto" do %>
       <%= material_icon "add" %> <%= t(".new") %>
     <% end %>
-  </div>
+  <% end %>
+  <%= render("cargo_manifests/header", title: t(".title"), description: t(".subtitle")) { header_action } %>
 
   <% if @cargo_manifests.empty? %>
     <p class="rounded-2xl bg-white p-6 text-sm text-slate-500 shadow-sm"><%= t(".empty") %></p>

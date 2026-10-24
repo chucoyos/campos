@@ -166,8 +166,8 @@ RSpec.describe "Cargo capture", type: :request do
 
       get cargo_manifests_path
 
-      expect(response.body).to include("2 líneas")
-      expect(response.body).to include("0 líneas")
+      expect(response.body).to include("2 mercancías")
+      expect(response.body).to include("0 mercancías")
     end
   end
 
@@ -181,10 +181,11 @@ RSpec.describe "Cargo capture", type: :request do
       sign_in create(:user, :admin)
     end
 
-    it "preselects general cargo and lists only containers without a record, with their MBL" do
+    it "preselects container scope and lists only containers without a record, with their MBL" do
       get new_cargo_manifest_path
 
-      expect(response.body).to match(/value="general"[^>]*checked/)
+      expect(response.body).to match(/value="container"[^>]*checked/)
+      expect(response.body.index('value="container"')).to be < response.body.index('value="general"')
       expect(response.body).to include("#{free.number} · #{master_bl.number}")
       expect(response.body).not_to include(taken.number)
     end
