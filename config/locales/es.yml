@@ -292,6 +292,7 @@ es:
       map_provisional: "Distribución según el diagrama del patio; las distancias entre bloques son aproximadas."
       reset_view: "Restablecer vista"
       areas: "Áreas"
+      occupied: "Ocupada · contenedor"
       unassigned: "Sin sección"
       no_sections: "Aún no hay secciones con posiciones asignadas."
       selected: "Seleccionada"

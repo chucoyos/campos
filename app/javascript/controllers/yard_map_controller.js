@@ -24,14 +24,21 @@ const FALLBACK_ORIGIN_STEP = 40
 
 const UPRIGHT = new THREE.Quaternion()
 const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, unassigned: 0xcbd5e1, background: 0xf1f5f9 }
+const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, occupied: 0x075985, containerRib: 0x38bdf8, corner: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, unassigned: 0xcbd5e1, background: 0xf1f5f9 }
 
 export default class extends Controller {
   static targets = ["canvas", "info", "level", "block", "empty", "areasToggle", "legend"]
-  static values = { blocks: Array, disabled: Array, labels: Object, sections: Array }
+  static values = { blocks: Array, disabled: Array, labels: Object, occupied: Array, sections: Array }
 
   connect() {
     this.disabledCodes = new Set(this.disabledValue)
+    this.occupiedByCode = new Map()
+    this.occupiedValue.forEach((container) => {
+      this.occupiedByCode.set(container.code, container)
+      if (Number(container.size) === 40) {
+        this.occupiedByCode.set(`${container.block}${Number(container.bay) + 1}${container.row}${container.level}`, container)
+      }
+    })
     this.slots = []
     this.selected = null
     this.showAreas = false
@@ -39,6 +46,7 @@ export default class extends Controller {
     this.sectionsValue.forEach((section) => section.slots.forEach((code) => this.sectionByCode.set(code, section)))
     this.setupScene()
     this.buildBlocks()
+    this.buildOccupiedContainers()
     this.buildDesycon()
     this.paint()
     this.frameView()
@@ -142,8 +150,8 @@ export default class extends Controller {
     this.paint()
   }
 
-  // Cada par de bahías (impar + siguiente) se dibuja como un contenedor de 40 pies,
-  // salvo que alguna de las dos bahías esté deshabilitada u ocupada por uno de 20: entonces se muestran separadas.
+  // Cada par libre de bahías (impar + siguiente) se dibuja como un contenedor de 40 pies.
+  // Las bahías ocupadas por contenedores de 20 pies se mantienen separadas.
   buildUnits(placed) {
     const byKey = new Map(placed.map((slot) => [`${slot.block}|${slot.row}|${slot.level}|${slot.bay}`, slot]))
     const partnerOf = (slot) => slot.bay % 2 === 1 ? byKey.get(`${slot.block}|${slot.row}|${slot.level}|${slot.bay + 1}`) : null
@@ -169,7 +177,112 @@ export default class extends Controller {
   }
 
   isSplit(slot) {
-    return this.disabledCodes.has(slot.code)
+    return this.disabledCodes.has(slot.code) || Number(this.occupiedByCode.get(slot.code)?.size) === 20
+  }
+
+  buildOccupiedContainers() {
+    const slotsByCode = new Map(this.slots.map((slot) => [slot.code, slot]))
+    this.occupiedContainers = this.occupiedValue.flatMap((record) => {
+      const anchor = slotsByCode.get(record.code)
+      if (!anchor) return []
+
+      const slots = [anchor]
+      if (Number(record.size) === 40) {
+        const companion = slotsByCode.get(`${record.block}${Number(record.bay) + 1}${record.row}${record.level}`)
+        if (companion) slots.push(companion)
+      }
+      const position = slots.length === 2
+        ? slots[0].position.clone().add(slots[1].position).multiplyScalar(0.5)
+        : anchor.position.clone()
+      return [{
+        ...record,
+        slots,
+        position,
+        block: anchor.block,
+        level: anchor.level,
+        rotated: anchor.rotated
+      }]
+    })
+
+    this.containerMeshes = []
+    const sizes = [20, 40]
+    sizes.forEach((size) => {
+      const containers = this.occupiedContainers.filter((container) => Number(container.size) === size)
+      if (!containers.length) return
+
+      const length = size === 40 ? 2 * SLOT.length + GAP.bay : SLOT.length
+      const width = SLOT.width * 0.9
+      const height = SLOT.height * 0.92
+      const scale = new THREE.Vector3(1, 1, 1)
+      const transform = new THREE.Matrix4()
+      const body = new THREE.InstancedMesh(
+        new THREE.BoxGeometry(length * 0.94, height, width),
+        new THREE.MeshStandardMaterial({ color: COLORS.occupied, roughness: 0.72, metalness: 0.25 }),
+        containers.length
+      )
+      const bodyMatrices = []
+      const ribMatrices = []
+      const ribOwners = []
+      const cornerMatrices = []
+      const cornerOwners = []
+      const ribCount = Math.max(12, Math.floor(length / 0.3))
+      const ribs = new THREE.InstancedMesh(
+        new THREE.BoxGeometry(0.045, height * 0.9, 0.035),
+        new THREE.MeshStandardMaterial({ color: COLORS.containerRib, roughness: 0.65, metalness: 0.2 }),
+        containers.length * ribCount * 2
+      )
+      const corners = new THREE.InstancedMesh(
+        new THREE.BoxGeometry(0.14, height * 0.96, 0.14),
+        new THREE.MeshStandardMaterial({ color: COLORS.corner, roughness: 0.65, metalness: 0.15 }),
+        containers.length * 4
+      )
+
+      containers.forEach((container, index) => {
+        const rotation = container.rotated ? ROTATED : UPRIGHT
+        const bodyMatrix = transform.compose(container.position, rotation, scale).clone()
+        body.setMatrixAt(index, bodyMatrix)
+        bodyMatrices.push(bodyMatrix)
+
+        for (let rib = 0; rib < ribCount; rib++) {
+          const x = -length / 2 + ((rib + 0.5) * length) / ribCount
+          for (const side of [-1, 1]) {
+            const localPosition = new THREE.Vector3(x, 0, side * width * 0.49).applyQuaternion(rotation).add(container.position)
+            const ribMatrix = transform.compose(localPosition, rotation, scale).clone()
+            ribs.setMatrixAt(ribMatrices.length, ribMatrix)
+            ribMatrices.push(ribMatrix)
+            ribOwners.push(index)
+          }
+        }
+
+        for (const [corner, [x, z]] of [
+          [0, [-length / 2, -width / 2]], [1, [-length / 2, width / 2]],
+          [2, [length / 2, -width / 2]], [3, [length / 2, width / 2]]
+        ]) {
+          const localPosition = new THREE.Vector3(x, 0, z).applyQuaternion(rotation).add(container.position)
+          const cornerMatrix = transform.compose(localPosition, rotation, scale).clone()
+          corners.setMatrixAt(cornerMatrices.length, cornerMatrix)
+          cornerMatrices.push(cornerMatrix)
+          cornerOwners.push(index)
+        }
+      })
+
+      for (const [mesh, matrices, owners, kind] of [
+        [body, bodyMatrices, containers.map((_container, index) => index), "body"],
+        [ribs, ribMatrices, ribOwners, "detail"],
+        [corners, cornerMatrices, cornerOwners, "detail"]
+      ]) {
+        mesh.instanceMatrix.needsUpdate = true
+        mesh.computeBoundingSphere()
+        this.scene.add(mesh)
+        this.containerMeshes.push({ mesh, containers, matrices, owners, kind })
+      }
+    })
+  }
+
+  visibleOccupiedContainer(container) {
+    const level = this.hasLevelTarget ? this.levelTarget.value : ""
+    const block = this.currentBlock()
+    return (!level || container.level === Number(level)) && (!block || container.block === block)
   }
 
   // Fondo y etiqueta que agrupan los bloques CFS bajo el nombre de DesyCon.
@@ -231,13 +344,26 @@ export default class extends Controller {
       const visible = (!level || unit.level === Number(level)) && (!block || unit.block === block)
       this.mesh.setMatrixAt(index, visible ? matrix.compose(unit.position, unit.rotated ? ROTATED : UPRIGHT, scale.set(unit.scale, 1, 1)) : hidden)
       const codes = unit.slots.map((slot) => slot.code)
-      const state = codes.includes(this.selected) ? "selected" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
-      if (this.showAreas && state !== "selected") {
+      const occupant = codes.map((code) => this.occupiedByCode.get(code)).find(Boolean)
+      const state = codes.includes(this.selected) ? "selected" : occupant ? "occupied" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
+      if (this.showAreas && state !== "selected" && state !== "occupied") {
         const section = this.sectionByCode.get(codes[0])
         this.mesh.setColorAt(index, section ? color.set(section.color) : color.setHex(COLORS.unassigned))
       } else {
         this.mesh.setColorAt(index, color.setHex(COLORS[state]))
       }
+    })
+    this.containerMeshes?.forEach(({ mesh, containers, matrices, owners, kind }) => {
+      owners.forEach((containerIndex, instanceIndex) => {
+        const container = containers[containerIndex]
+        mesh.setMatrixAt(instanceIndex, this.visibleOccupiedContainer(container) ? matrices[instanceIndex] : hidden)
+        if (kind === "body") {
+          mesh.setColorAt(instanceIndex, color.setHex(container.slots.some((slot) => slot.code === this.selected) ? COLORS.selected : COLORS.occupied))
+        }
+      })
+      mesh.instanceMatrix.needsUpdate = true
+      if (kind === "body") mesh.instanceColor.needsUpdate = true
+      mesh.computeBoundingSphere()
     })
     this.mesh.instanceMatrix.needsUpdate = true
     this.mesh.instanceColor.needsUpdate = true
@@ -273,8 +399,13 @@ export default class extends Controller {
     const pointer = new THREE.Vector2(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1)
     this.raycaster.setFromCamera(pointer, this.camera)
 
-    const hits = this.raycaster.intersectObject(this.mesh).filter((hit) => this.visibleInstance(hit.instanceId))
-    const unit = hits.length ? this.units[hits[0].instanceId] : null
+    const occupiedHit = this.containerMeshes.filter(({ kind }) => kind === "body").flatMap(({ mesh, containers }) =>
+      this.raycaster.intersectObject(mesh)
+        .filter((hit) => this.visibleOccupiedContainer(containers[hit.instanceId]))
+        .map((hit) => containers[hit.instanceId])
+    )[0]
+    const hits = occupiedHit ? [] : this.raycaster.intersectObject(this.mesh).filter((hit) => this.visibleInstance(hit.instanceId))
+    const unit = occupiedHit || (hits.length ? this.units[hits[0].instanceId] : null)
     if (unit) {
       this.selected = unit.slots[0].code
       this.showInfo(unit)
@@ -297,11 +428,12 @@ export default class extends Controller {
     let html = `<p class="text-sm text-slate-500">${labels.hint}</p>`
     if (unit) {
       const [first] = unit.slots
-      const state = unit.slots.some((slot) => this.disabledCodes.has(slot.code)) ? labels.disabled : labels.enabled
+      const occupant = unit.container || unit.slots.map((slot) => this.occupiedByCode.get(slot.code)).find(Boolean)
+      const state = occupant ? labels.occupied : unit.slots.some((slot) => this.disabledCodes.has(slot.code)) ? labels.disabled : labels.enabled
       const bays = unit.slots.map((slot) => slot.bay).join("-")
       html = `<p class="font-mono text-xl font-bold text-slate-900">${unit.slots.map((slot) => slot.code).join(" · ")}</p>
               <p class="text-sm text-slate-600">${labels.block} ${first.block} · ${labels.bay} ${bays} · ${labels.row} ${first.row} · ${labels.level} ${first.level}</p>
-              <p class="mt-1 text-sm font-medium text-slate-800">${state}</p>${this.sectionInfo(first)}`
+              <p class="mt-1 text-sm font-medium text-slate-800">${state}${occupant ? ` · ${labels.container} ${occupant.number} · ${labels.size} ${occupant.size}'` : ""}</p>${this.sectionInfo(first)}`
     }
     this.infoTarget.innerHTML = html
   }

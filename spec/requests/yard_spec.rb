@@ -27,6 +27,17 @@ RSpec.describe "Patio", type: :request do
     expect(response.body).to include('data-yard-map-target="block"')
   end
 
+  it "includes the containers currently occupying positions in the 3D map data" do
+    sign_in create(:user, :admin)
+    occupied_20 = create(:container, current_yard_slot: slot)
+    occupied_40 = create(:container, :with_master_bl, size: 40, current_yard_slot: YardSlot.find_by!(code: "1A3A1"))
+
+    get yard_path
+
+    expect(response.body).to include('data-yard-map-occupied-value=', occupied_20.number, occupied_40.number)
+    expect(response.body).to include("Ocupada · contenedor")
+  end
+
   it "filters by level and state" do
     sign_in create(:user, :admin)
     slot.update!(enabled: false)
