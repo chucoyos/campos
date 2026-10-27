@@ -5,7 +5,7 @@ class GateController < ApplicationController
   end
 
   def scan
-    @token = params[:token].to_s.strip
+    @token = extract_token(params[:token])
     if @token.blank?
       @error = t("gate.errors.token_required")
       return render :index, status: :unprocessable_entity
@@ -102,6 +102,15 @@ class GateController < ApplicationController
   end
 
   private
+
+  # El QR codifica la URL del pase; también se acepta el token solo.
+  def extract_token(raw)
+    value = raw.to_s.strip
+    path = value.match?(%r{\Ahttps?://}i) ? URI.parse(value).path.to_s : value
+    path.split("/").reject(&:blank?).last.to_s
+  rescue URI::InvalidURIError
+    value
+  end
 
   def authorize_gate
     authorize MovementPass, :gate?

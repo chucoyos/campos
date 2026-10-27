@@ -51,6 +51,12 @@ RSpec.describe "Garita", type: :request do
     expect(pass.reload).to be_vencido
   end
 
+  it "acepta la URL completa del QR como token escaneado" do
+    post scan_gate_pass_path, params: { token: gate_pass_url(pass.token) }
+
+    expect(response).to redirect_to(gate_movement_path(pass))
+  end
+
   it "rechaza un token desconocido con un mensaje visible" do
     post scan_gate_pass_path, params: { token: "unknown-token" }
 
