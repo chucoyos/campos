@@ -691,6 +691,8 @@ es:
       location_required: "Selecciona una posición para registrar el ingreso."
       location_unavailable: "La posición seleccionada no está disponible o no es compatible con el contenedor."
       location_occupied: "La posición seleccionada, o parte de la huella del contenedor, ya está ocupada."
+      location_unsupported: "No se puede apilar: falta un contenedor en el nivel inferior que soporte esta posición."
+      supports_other_container: "El contenedor soporta a otro en un nivel superior; retira primero el de arriba."
       not_in_yard: "El contenedor no tiene una posición registrada en el patio para salir."
       immutable: "El movimiento registrado no se puede modificar ni eliminar."
       photos_missing: "Selecciona al menos una fotografía."

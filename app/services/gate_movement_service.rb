@@ -42,7 +42,7 @@ class GateMovementService
 
     available = ordered.select do |slot|
       footprint = footprint_for(container, slot, slots_by_position:)
-      footprint && (footprint & occupied_by_block[slot.yard_block_id].to_a).empty?
+      footprint && free_and_supported?(footprint, occupied_by_block[slot.yard_block_id])
     end
     available.map do |slot|
       { slot: slot, source: sources[slot.id] || "yard" }
@@ -101,12 +101,44 @@ class GateMovementService
     footprint = footprint_for(container, slot)
     return false unless footprint
 
-    occupied = Container.where.not(current_yard_slot_id: nil)
+    occupied = occupied_positions(slot.yard_block_id)
+    footprint.none? { |position| occupied.include?(position) }
+  end
+
+  def self.supported?(container, slot)
+    footprint = footprint_for(container, slot)
+    footprint.present? && supported_footprint?(footprint, occupied_positions(slot.yard_block_id))
+  end
+
+  def self.occupied_positions(block_id)
+    Container.where.not(current_yard_slot_id: nil)
       .joins(:current_yard_slot)
-      .where(yard_slots: { yard_block_id: slot.yard_block_id })
+      .where(yard_slots: { yard_block_id: block_id })
       .includes(:current_yard_slot)
       .flat_map { |occupant| occupied_footprint(occupant) }.to_set
-    (footprint & occupied.to_a).empty?
+  end
+
+  # Un nivel superior solo es válido si cada posición de la huella tiene un contenedor debajo.
+  def self.supported_footprint?(footprint, occupied)
+    footprint.all? do |block_id, bay, row, level|
+      level <= 1 || occupied.include?([ block_id, bay, row, level - 1 ])
+    end
+  end
+
+  def self.free_and_supported?(footprint, occupied)
+    footprint.none? { |position| occupied.include?(position) } && supported_footprint?(footprint, occupied)
+  end
+
+  def self.supporting_other?(container)
+    anchor = container.current_yard_slot
+    return false unless anchor
+
+    above = occupied_footprint(container).map { |block_id, bay, row, level| [ block_id, bay, row, level + 1 ] }
+    Container.where.not(id: container.id).where.not(current_yard_slot_id: nil)
+      .joins(:current_yard_slot).where(yard_slots: { yard_block_id: anchor.yard_block_id })
+      .includes(:current_yard_slot).any? do |other|
+        (occupied_footprint(other) & above).any?
+      end
   end
 
   def self.footprint_for(container, anchor, require_enabled: true, slots_by_position: nil)
@@ -188,6 +220,7 @@ class GateMovementService
     footprint = lock_footprint(slot)
     raise Error, :location_unavailable unless footprint
     raise Error, :location_occupied unless self.class.compatible_and_free?(@container, slot)
+    raise Error, :location_unsupported unless self.class.supported?(@container, slot)
 
     @container.current_yard_slot = slot
     update_standalone_load_status
@@ -205,6 +238,7 @@ class GateMovementService
   def record_exit
     slot = @container.current_yard_slot
     raise Error, :not_in_yard unless slot
+    raise Error, :supports_other_container if self.class.supporting_other?(@container)
 
     footprint = lock_footprint(slot, require_enabled: false)
     raise Error, :location_unavailable unless footprint

@@ -40,6 +40,33 @@ RSpec.describe GateMovementService do
       expect(container.reload.current_yard_slot).to be_nil
     end
 
+    it "no permite apilar sin un contenedor en el nivel inferior ni lo ofrece como opción" do
+      upper = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+      slot
+
+      expect(described_class.available_slots(container)).not_to include(upper)
+      expect {
+        described_class.call(pass: pass, user: security_user, yard_slot_id: upper.id)
+      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.location_unsupported"))
+      expect(pass.reload).to be_vigente
+    end
+
+    it "permite apilar sobre un contenedor y bloquea la salida del que soporta" do
+      upper = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+      base = create(:container, client: client)
+      base_pass = create(:movement_pass, :standalone, container: base)
+      described_class.call(pass: base_pass, user: security_user, yard_slot_id: slot.id)
+
+      expect(described_class.available_slots(container)).to include(upper)
+      described_class.call(pass: pass, user: security_user, yard_slot_id: upper.id)
+      expect(container.reload.current_yard_slot).to eq(upper)
+
+      exit_pass = create(:movement_pass, :standalone, container: base.reload, movement_type: "salida")
+      expect {
+        described_class.call(pass: exit_pass, user: security_user)
+      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.supports_other_container"))
+    end
+
     it "reserva las dos bahías de un contenedor de 40 pies" do
       forty_foot = create(:container, :with_master_bl, size: 40)
       forty_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: forty_foot))
