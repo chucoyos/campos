@@ -58,6 +58,7 @@ Rails.application.routes.draw do
   end
   get "gate", to: "gate#index", as: :gate
   post "gate/scan", to: "gate#scan", as: :scan_gate_pass
+  get "gate/passes/:token", to: "gate#open_pass", as: :gate_pass
   get "gate/movements/:id", to: "gate#show", as: :gate_movement
   post "gate/movements/:id/photos", to: "gate#upload_photos", as: :gate_movement_photos
   delete "gate/movements/:id/photos/:photo_id", to: "gate#remove_photo", as: :remove_gate_movement_photo

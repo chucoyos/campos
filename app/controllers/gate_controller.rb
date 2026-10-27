@@ -27,6 +27,17 @@ class GateController < ApplicationController
     redirect_to gate_movement_path(@pass)
   end
 
+  def open_pass
+    @pass = MovementPass.find_by(token: params[:token])
+    return redirect_to gate_path, alert: t("gate.errors.pass_not_found") unless @pass
+
+    authorize @pass, :gate?
+    @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
+    return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless @pass.usable?
+
+    redirect_to gate_movement_path(@pass)
+  end
+
   def show
     @pass = MovementPass.find(params[:id])
     authorize @pass, :gate?

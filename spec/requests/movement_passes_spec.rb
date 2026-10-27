@@ -38,13 +38,17 @@ RSpec.describe "Pases de movimiento", type: :request do
       expect(pass).to have_attributes(movement_type: "ingreso", carrier: carrier, requested_by: User.last)
       expect(pass.vehicle("principal")).to have_attributes(operator_name: "Ana López", plate: "XYZ123", unit_type: "full")
 
+      expect(RQRCode::QRCode).to receive(:new).with(a_string_matching(%r{\Ahttps?://[^/]+#{Regexp.escape(gate_pass_path(pass.token))}\z}), level: :m).and_call_original
       follow_redirect!
       expect(response.body).to include(pass.token, "data:image/svg+xml;base64")
     end
 
     it "descarga el PDF del pase vigente" do
       pass = create(:movement_pass, container_assignment: assignment)
+      expect(RQRCode::QRCode).to receive(:new).with(a_string_matching(%r{\Ahttps?://[^/]+#{Regexp.escape(gate_pass_path(pass.token))}\z}), level: :m).and_call_original
+
       get movement_pass_path(pass, format: :pdf)
+
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("application/pdf")
       expect(response.body).to start_with("%PDF")

@@ -65,7 +65,7 @@ es:
       cancel: "Asignación cancelada."
       not_cancelable: "Solo se pueden cancelar asignaciones pendientes sin un pase vigente."
     movement_passes:
-      create: "Pase emitido. Ya puedes descargar el PDF con el QR."
+      create: "Pase emitido. El QR abre Garita directamente; también puedes descargar el PDF."
       cancel: "Pase cancelado."
       not_cancelable: "Solo se pueden cancelar pases vigentes."
       not_downloadable: "Este pase ya no está vigente; no se puede descargar."
@@ -627,7 +627,7 @@ es:
       submit: "Emitir pase"
     show:
       download: "Descargar PDF"
-      qr_alt: "Código QR del pase"
+      qr_alt: "Código QR para abrir el pase en Garita"
       cancel: "Cancelar pase"
       confirm_cancel: "¿Cancelar este pase? El QR dejará de ser válido."
     pdf:

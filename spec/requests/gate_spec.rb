@@ -24,11 +24,47 @@ RSpec.describe "Garita", type: :request do
     expect(response.body).to include(container.number, slot.code, "yard-slot-search", "Evidencia fotográfica")
   end
 
+  it "abre el detalle del pase desde el enlace escaneado por la cámara nativa" do
+    get gate_pass_path(pass.token)
+
+    expect(response).to redirect_to(gate_movement_path(pass))
+
+    follow_redirect!
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(container.number, "Evidencia fotográfica")
+  end
+
+  it "rechaza un enlace QR desconocido y vuelve a Garita" do
+    get gate_pass_path("unknown-token")
+
+    expect(response).to redirect_to(gate_path)
+    follow_redirect!
+    expect(response.body).to include(I18n.t("gate.errors.pass_not_found"))
+  end
+
+  it "vence y rechaza el pase cuando se abre un enlace QR vencido" do
+    pass.update_columns(expires_at: 1.minute.ago)
+
+    get gate_pass_path(pass.token)
+
+    expect(response).to redirect_to(gate_path)
+    expect(pass.reload).to be_vencido
+  end
+
   it "rechaza un token desconocido con un mensaje visible" do
     post scan_gate_pass_path, params: { token: "unknown-token" }
 
     expect(response).to have_http_status(:not_found)
     expect(response.body).to include(I18n.t("gate.errors.pass_not_found"))
+  end
+
+  it "requiere iniciar sesión y conserva el enlace QR como destino" do
+    sign_out user
+
+    get gate_pass_path(pass.token)
+
+    expect(response).to redirect_to(new_user_session_path)
+    expect(session["user_return_to"]).to eq(gate_pass_path(pass.token))
   end
 
   it "completa el movimiento y no permite reutilizar el pase" do
@@ -83,10 +119,15 @@ RSpec.describe "Garita", type: :request do
   end
 
   it "no permite operar la consola a clientes ni transportistas" do
+    pass
     sign_out user
     sign_in create(:user, :transporte, carrier: create(:carrier))
 
     get gate_path
+
+    expect(response).to redirect_to(root_path)
+
+    get gate_pass_path(pass.token)
 
     expect(response).to redirect_to(root_path)
   end

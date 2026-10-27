@@ -3,12 +3,13 @@ require "rqrcode"
 
 Prawn::Fonts::AFM.hide_m17n_warning = true
 
-# PDF imprimible del pase: datos del movimiento, vehículos y un QR que contiene solo el token opaco.
+# PDF imprimible del pase: datos del movimiento, vehículos y un QR directo a Garita.
 class MovementPassPdf
   QR_SIZE = 220
 
-  def initialize(pass)
+  def initialize(pass, gate_url:)
     @pass = pass
+    @gate_url = gate_url
   end
 
   def render
@@ -75,7 +76,7 @@ class MovementPassPdf
   end
 
   def qr_code(pdf)
-    modules = RQRCode::QRCode.new(@pass.token, level: :m).modules
+    modules = RQRCode::QRCode.new(@gate_url, level: :m).modules
     quiet = 4
     cell = QR_SIZE.to_f / (modules.size + (quiet * 2))
     pdf.move_down 16

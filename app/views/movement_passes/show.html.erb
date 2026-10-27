@@ -20,7 +20,7 @@
     <% if @pass.usable? %>
       <div class="flex flex-col items-center gap-3 rounded-2xl bg-slate-50 p-6">
         <div class="rounded-2xl bg-white p-3 shadow-sm [&_svg]:h-56 [&_svg]:w-56">
-          <%= image_tag "data:image/svg+xml;base64,#{Base64.strict_encode64(RQRCode::QRCode.new(@pass.token, level: :m).as_svg(module_size: 4, viewbox: true, use_path: true))}", alt: t(".qr_alt"), class: "h-56 w-56" %>
+          <%= image_tag "data:image/svg+xml;base64,#{Base64.strict_encode64(RQRCode::QRCode.new(@gate_url, level: :m).as_svg(module_size: 4, viewbox: true, use_path: true))}", alt: t(".qr_alt"), class: "h-56 w-56" %>
         </div>
         <p class="break-all text-center font-mono text-xs text-slate-500"><%= @pass.token %></p>
         <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">

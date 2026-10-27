@@ -31,6 +31,7 @@ class MovementPassesController < ApplicationController
     @pass = MovementPass.find(params[:id])
     authorize @pass
     @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
+    @gate_url = gate_pass_url(@pass.token) if @pass.usable?
 
     respond_to do |format|
       format.html
@@ -57,7 +58,7 @@ class MovementPassesController < ApplicationController
   def send_pdf
     return redirect_to(movement_pass_path(@pass), alert: t("flash.movement_passes.not_downloadable")) unless @pass.usable?
 
-    send_data MovementPassPdf.new(@pass).render, filename: "pase-#{@pass.container.number}-#{@pass.movement_type}.pdf",
+    send_data MovementPassPdf.new(@pass, gate_url: @gate_url).render, filename: "pase-#{@pass.container.number}-#{@pass.movement_type}.pdf",
                                                   type: "application/pdf", disposition: "inline"
   end
 
