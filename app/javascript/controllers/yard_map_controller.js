@@ -24,7 +24,7 @@ const FALLBACK_ORIGIN_STEP = 40
 
 const UPRIGHT = new THREE.Quaternion()
 const ROTATED = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2)
-const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, occupied: 0x075985, containerRib: 0x38bdf8, corner: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, unassigned: 0xcbd5e1, background: 0xf1f5f9 }
+const COLORS = { enabled: 0x6366f1, disabled: 0xf59e0b, occupied: 0xdc2626, containerRib: 0xfca5a5, corner: 0xf59e0b, selected: 0x10b981, ground: 0xe2e8f0, area: 0xa7f3d0, unassigned: 0xcbd5e1, background: 0xf1f5f9 }
 
 export default class extends Controller {
   static targets = ["canvas", "info", "level", "block", "empty", "areasToggle", "legend"]
