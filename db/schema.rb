@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_030000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_26_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -156,6 +156,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_030000) do
     t.check_constraint "preferred_level IS NULL OR preferred_level > 0", name: "container_assignments_level_positive"
   end
 
+  create_table "container_movements", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "movement_pass_id"
+    t.bigint "from_yard_slot_id"
+    t.bigint "to_yard_slot_id"
+    t.bigint "user_id"
+    t.string "movement_type", null: false
+    t.string "load_status"
+    t.datetime "created_at", null: false
+    t.index ["container_id", "created_at"], name: "index_container_movements_on_container_id_and_created_at"
+    t.index ["container_id"], name: "index_container_movements_on_container_id"
+    t.index ["from_yard_slot_id"], name: "index_container_movements_on_from_yard_slot_id"
+    t.index ["movement_pass_id"], name: "index_container_movements_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
+    t.index ["to_yard_slot_id"], name: "index_container_movements_on_to_yard_slot_id"
+    t.index ["user_id"], name: "index_container_movements_on_user_id"
+    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying, 'vacio'::character varying]::text[]))", name: "container_movements_load_status_valid"
+    t.check_constraint "movement_type::text = 'ingreso'::text AND from_yard_slot_id IS NULL AND to_yard_slot_id IS NOT NULL OR movement_type::text = 'salida'::text AND from_yard_slot_id IS NOT NULL AND to_yard_slot_id IS NULL OR movement_type::text = 'traspaleo'::text AND from_yard_slot_id IS NULL AND to_yard_slot_id IS NULL OR movement_type::text = 'reacomodo'::text AND from_yard_slot_id IS NOT NULL AND to_yard_slot_id IS NOT NULL", name: "container_movements_slots_valid"
+    t.check_constraint "movement_type::text = 'reacomodo'::text AND movement_pass_id IS NULL OR movement_type::text <> 'reacomodo'::text AND movement_pass_id IS NOT NULL", name: "container_movements_pass_valid"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying, 'reacomodo'::character varying]::text[])", name: "container_movements_type_valid"
+  end
+
   create_table "containers", force: :cascade do |t|
     t.string "number", null: false
     t.integer "size", null: false
@@ -165,7 +186,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_030000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "client_id"
+    t.bigint "current_yard_slot_id"
     t.index ["client_id"], name: "index_containers_on_client_id"
+    t.index ["current_yard_slot_id"], name: "index_containers_on_current_yard_slot_id", unique: true, where: "(current_yard_slot_id IS NOT NULL)"
     t.index ["master_bl_id"], name: "index_containers_on_master_bl_id"
     t.index ["number"], name: "index_containers_on_number"
     t.index ["status"], name: "index_containers_on_status"
@@ -338,8 +361,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_030000) do
   add_foreign_key "container_assignments", "users", column: "assigned_by_id", on_delete: :nullify
   add_foreign_key "container_assignments", "yard_area_sections"
   add_foreign_key "container_assignments", "yard_areas"
+  add_foreign_key "container_movements", "containers", on_delete: :restrict
+  add_foreign_key "container_movements", "movement_passes", on_delete: :restrict
+  add_foreign_key "container_movements", "users", on_delete: :nullify
+  add_foreign_key "container_movements", "yard_slots", column: "from_yard_slot_id", on_delete: :restrict
+  add_foreign_key "container_movements", "yard_slots", column: "to_yard_slot_id", on_delete: :restrict
   add_foreign_key "containers", "clients"
   add_foreign_key "containers", "master_bls"
+  add_foreign_key "containers", "yard_slots", column: "current_yard_slot_id"
   add_foreign_key "master_bls", "clients"
   add_foreign_key "movement_pass_vehicles", "movement_passes", on_delete: :cascade
   add_foreign_key "movement_passes", "carriers"

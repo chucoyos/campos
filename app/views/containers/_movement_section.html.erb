@@ -1,0 +1,44 @@
+<% photo_count = movement.photos_attachments.length %>
+<details data-movement-id="<%= movement.id %>" class="group rounded-2xl border border-slate-200 bg-slate-50">
+  <summary class="flex min-h-12 cursor-pointer list-none flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3 font-medium text-slate-800 transition-colors hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
+    <span class="flex flex-wrap items-center gap-2">
+      <%= material_icon "local_shipping", classes: "text-indigo-600" %>
+      <span><%= t("containers.movements.types.#{movement.movement_type}") %></span>
+      <span class="text-sm text-slate-500"><%= l(movement.created_at, format: :long) %></span>
+      <span class="rounded-lg bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"><%= t("containers.photos.count", count: photo_count) %></span>
+    </span>
+    <%= material_icon "expand_more", classes: "transition-transform duration-200 ease-out group-open:rotate-180" %>
+  </summary>
+
+  <div class="space-y-4 p-4">
+    <dl class="grid gap-3 rounded-2xl bg-white p-4 text-sm sm:grid-cols-2">
+      <% if movement.from_yard_slot %>
+        <div><dt class="text-slate-500"><%= t("containers.movements.from") %></dt><dd class="font-medium text-slate-900"><%= movement.from_yard_slot.code %></dd></div>
+      <% end %>
+      <% if movement.to_yard_slot %>
+        <div><dt class="text-slate-500"><%= t("containers.movements.to") %></dt><dd class="font-medium text-slate-900"><%= movement.to_yard_slot.code %></dd></div>
+      <% end %>
+      <% if movement.load_status %>
+        <div><dt class="text-slate-500"><%= Container.human_attribute_name(:status) %></dt><dd class="font-medium text-slate-900"><%= t("movement_passes.load_statuses.#{movement.load_status}") %></dd></div>
+      <% end %>
+      <% if movement.user %>
+        <div><dt class="text-slate-500"><%= t("containers.movements.operator") %></dt><dd class="font-medium text-slate-900"><%= movement.user.email %></dd></div>
+      <% end %>
+    </dl>
+
+    <% if movement.movement_pass&.vehicles&.any? %>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <% movement.movement_pass.vehicles.each do |vehicle| %>
+          <div class="rounded-2xl bg-white p-4 text-sm">
+            <p class="font-semibold text-slate-900"><%= t("movement_passes.pdf.vehicle_#{vehicle.role}") %></p>
+            <p class="mt-1 text-slate-700"><%= vehicle.operator_name %> · <%= vehicle.plate %></p>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= turbo_frame_tag "movement_photos_#{movement.id}", src: container_movement_photos_path(movement.container_id, movement), loading: :lazy do %>
+      <p class="flex items-center gap-2 text-sm text-slate-500"><%= material_icon "hourglass_top" %> <%= t("containers.photos.loading") %></p>
+    <% end %>
+  </div>
+</details>

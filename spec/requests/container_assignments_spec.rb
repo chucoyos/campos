@@ -74,6 +74,16 @@ RSpec.describe "Asignaciones a transporte", type: :request do
       expect(flash[:alert]).to eq(I18n.t("flash.container_assignments.not_cancelable"))
     end
 
+    it "no cancela una asignación mientras su pase esté vigente" do
+      assignment = create(:container_assignment, container: containers.first, carrier: carrier)
+      create(:movement_pass, container_assignment: assignment)
+
+      patch cancel_container_assignment_path(assignment)
+
+      expect(assignment.reload).to be_pendiente
+      expect(flash[:alert]).to eq(I18n.t("flash.container_assignments.not_cancelable"))
+    end
+
     it "muestra la descripción y la guía interna" do
       get container_assignments_path
       expect(response.body).to include(I18n.t("container_assignments.index.description.internal"), I18n.t("container_assignments.guide.internal.intro"))

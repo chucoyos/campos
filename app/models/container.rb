@@ -15,9 +15,11 @@ class Container < ApplicationRecord
   belongs_to :master_bl, optional: true
   # Cliente propietario de un contenedor de resguardo (sin MBL).
   belongs_to :client, optional: true
+  belongs_to :current_yard_slot, class_name: "YardSlot", optional: true
   has_one :cargo_manifest, dependent: :restrict_with_error
   has_many :assignments, class_name: "ContainerAssignment", dependent: :restrict_with_error
   has_many :movement_passes, dependent: :restrict_with_error
+  has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos
@@ -56,6 +58,13 @@ class Container < ApplicationRecord
   end
 
   def owner_client_id = master_bl&.client_id || client_id
+
+  def declare_load_status!(value)
+    raise ArgumentError, "Load status can only be declared for standalone containers" if with_master_bl?
+    raise ArgumentError, "Invalid standalone load status" unless STANDALONE_STATUSES.include?(value)
+
+    update!(status: value)
+  end
 
   def photos_zip_name(section)
     "#{number}_#{I18n.t("containers.photos.#{section}").parameterize}.zip"

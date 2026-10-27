@@ -1,0 +1,16 @@
+<%= turbo_frame_tag "movement_photos_#{@movement.id}" do %>
+  <% if @photos.empty? %>
+    <p class="text-sm text-slate-500"><%= t("containers.movements.photos_empty") %></p>
+  <% else %>
+    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <% @photos.each do |photo| %>
+        <li class="group/photo relative aspect-square overflow-hidden rounded-2xl bg-slate-200 shadow-sm">
+          <%= link_to rails_blob_url(photo, expires_in: 1.hour), target: "_blank", rel: "noopener", aria: { label: t("containers.photos.open_photo") }, data: { turbo: false }, class: "block h-full w-full" do %>
+            <img src="<%= rails_blob_url(photo, expires_in: 1.hour) %>" alt="<%= photo.filename %>" loading="lazy" decoding="async"
+                 class="h-full w-full object-cover transition-transform duration-200 ease-out group-hover/photo:scale-105">
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% end %>

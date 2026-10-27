@@ -33,8 +33,7 @@ class ContainerAssignmentsController < ApplicationController
     assignment = ContainerAssignment.find(params[:id])
     authorize assignment
 
-    if assignment.may_cancelar?
-      assignment.cancelar!
+    if assignment.with_lock { assignment.cancelar! if assignment.may_cancelar? }
       redirect_to container_assignments_path, notice: t("flash.container_assignments.cancel")
     else
       redirect_to container_assignments_path, alert: t("flash.container_assignments.not_cancelable")

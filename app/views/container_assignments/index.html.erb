@@ -62,7 +62,7 @@
                   <%= material_icon "qr_code_2" %> <%= t(".request_pass") %>
                 <% end %>
               <% end %>
-              <% if policy(assignment).cancel? && assignment.may_cancelar? %>
+              <% if policy(assignment).cancel? && assignment.may_cancelar? && !@active_passes.key?(assignment.id) %>
                 <%= button_to cancel_container_assignment_path(assignment), method: :patch, form: { data: { turbo_confirm: t(".confirm_cancel") } },
                       class: "flex min-h-12 cursor-pointer items-center gap-1 rounded-2xl px-4 text-sm font-medium text-red-600 transition-all duration-200 ease-out hover:bg-red-50 active:scale-95" do %>
                   <%= material_icon "cancel" %> <%= t(".cancel") %>

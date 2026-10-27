@@ -10,10 +10,15 @@ RSpec.describe MovementPassPolicy do
   def policy_for(user, record) = described_class.new(user, record)
 
   it "el admin lo administra todo y Seguridad solo consulta" do
-    expect(policy_for(create(:user, :admin), mbl_pass)).to be_create.and be_cancel.and be_show
+    expect(policy_for(create(:user, :admin), mbl_pass)).to be_create.and be_cancel.and be_show.and be_gate
     seguridad = policy_for(create(:user, :seguridad), mbl_pass)
-    expect(seguridad).to be_show.and be_index
+    expect(seguridad).to be_show.and be_index.and be_gate
     expect(seguridad).not_to be_create
+  end
+
+  it "solo permite usar Garita a admin y Seguridad" do
+    expect(policy_for(create(:user, :transporte, carrier: carrier), MovementPass)).not_to be_gate
+    expect(policy_for(create(:user, :cliente, client: client), MovementPass)).not_to be_gate
   end
 
   it "el transporte tramita solo asignaciones de su carrier" do

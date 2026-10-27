@@ -33,7 +33,7 @@ class ContainerAssignment < ApplicationRecord
     end
 
     event :cancelar do
-      transitions from: :pendiente, to: :cancelada
+      transitions from: :pendiente, to: :cancelada, guard: :without_active_pass?
     end
   end
 
@@ -41,6 +41,10 @@ class ContainerAssignment < ApplicationRecord
 
   def derive_area_from_section
     self.yard_area ||= yard_area_section&.yard_area
+  end
+
+  def without_active_pass?
+    !MovementPass.active.exists?(container_assignment_id: id) if persisted?
   end
 
   def container_has_master_bl

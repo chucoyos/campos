@@ -13,6 +13,8 @@ class MovementPass < ApplicationRecord
   belongs_to :client, optional: true
   belongs_to :requested_by, class_name: "User", optional: true
   has_many :vehicles, class_name: "MovementPassVehicle", dependent: :destroy, inverse_of: :movement_pass
+  has_one :movement, class_name: "ContainerMovement", dependent: :restrict_with_error
+  has_many_attached :photos
 
   accepts_nested_attributes_for :vehicles
 
@@ -22,6 +24,7 @@ class MovementPass < ApplicationRecord
 
   before_validation :set_defaults, on: :create
   before_validation :expire_overdue_for_container, on: :create
+  after_commit :purge_photos_when_inactive, on: :update
 
   validates :load_status, inclusion: { in: Container::STANDALONE_STATUSES }, allow_nil: true
   validates :load_status, absence: true, if: -> { container&.with_master_bl? }
@@ -31,6 +34,7 @@ class MovementPass < ApplicationRecord
   validate :standalone_requires_no_assignment
   validate :movement_allowed_for_container
   validate :vehicles_match_movement
+  validate :photos_are_valid_images
 
   scope :active, -> { vigente.where(expires_at: Time.current..) }
   scope :overdue, -> { vigente.where(expires_at: ...Time.current) }
@@ -106,5 +110,19 @@ class MovementPass < ApplicationRecord
     roles = active_vehicles.map(&:role)
     expected = movement_type == "traspaleo" ? MovementPassVehicle::ROLES : %w[principal]
     errors.add(:vehicles, :incomplete) unless roles.sort == expected.sort
+  end
+
+  def purge_photos_when_inactive
+    photos.purge_later if saved_change_to_status? && (cancelado? || vencido?) && photos.attached?
+  end
+
+  def photos_are_valid_images
+    return unless photos.attached?
+
+    photos.each do |photo|
+      errors.add(:photos, :invalid_type, filename: photo.filename) unless Container::PHOTO_CONTENT_TYPES.include?(photo.blob.content_type)
+      errors.add(:photos, :too_large, filename: photo.filename, max: Container::PHOTO_MAX_SIZE / 1.megabyte) if photo.blob.byte_size > Container::PHOTO_MAX_SIZE
+    end
+    errors.add(:photos, :too_many, max: Container::MAX_PHOTOS_PER_UPLOAD) if photos.count > Container::MAX_PHOTOS_PER_UPLOAD
   end
 end

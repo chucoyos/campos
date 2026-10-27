@@ -91,6 +91,11 @@ Este módulo opera de forma **independiente** del flujo de desconsolidación:
 
 *   **Servicios prestados:** Resguardo, almacenaje temporal, traspaleo de contenedor a contenedor y reubicaciones.
 *   **Gestión por Cliente:** El cliente solicita desde el portal el ingreso, salida o traspaleo de contenedores, generando sus respectivos pases QR.
+*   **Control en Garita:** Seguridad o administración escanea con la cámara trasera del dispositivo desde `/gate` o captura manualmente el token opaco del QR. El uso de cámara requiere un navegador compatible, permiso explícito y HTTPS fuera de localhost; si no está disponible, el formulario manual permanece visible. La validación lleva al detalle del pase.
+*   **Evidencia antes de confirmar:** En el detalle del pase, Garita puede cargar hasta 30 fotos JPG, PNG o WebP (10 MB máximo cada una). Las fotos quedan temporalmente en el pase vigente y solo se transfieren al historial inmutable del movimiento al confirmar; si el pase vence o se cancela, las fotos temporales se eliminan.
+*   **Ingreso a patio:** Garita busca y elige una posición exacta habilitada y libre, no usa un menú desplegable. La búsqueda prioriza la sección/área de la asignación; después, las secciones activas del MBL y, por último, las áreas activas del cliente, sin ocultar otras posiciones libres compatibles. Un contenedor de 40 pies reserva su bahía ancla impar y la contigua en la misma fila y nivel.
+*   **Salida y traspaleo:** La salida requiere una ubicación actual y la libera en la misma transacción. El traspaleo registra el cambio entre vehículos sin ocupar una posición de patio.
+*   **Historial y ocupación:** Cada operación conserva un movimiento inmutable con contenedor, pase, usuario, tipo, origen/destino, fotos y estado de carga cuando aplica. En el detalle del contenedor, cada operación aparece en una sección colapsable cerrada por defecto; la galería se carga de forma diferida al abrirla. La ubicación física actual se mantiene separada del estado de carga.
 *   **Cobro Operativo:**
     *   Generación **automática** de un registro de servicio cobrable por cada movimiento individual:
         *   *Camión $\rightarrow$ Piso*

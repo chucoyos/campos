@@ -1,5 +1,6 @@
 class MovementPassPolicy < ApplicationPolicy
   def index? = user.present? && (user.admin? || user.seguridad? || user.carrier_member? || user.client_member?)
+  def gate? = user&.admin? || user&.seguridad?
 
   def show?
     return false unless index?

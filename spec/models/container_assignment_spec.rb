@@ -68,4 +68,11 @@ RSpec.describe ContainerAssignment, type: :model do
     expect(assignment).to be_utilizada
     expect(assignment.may_cancelar?).to be(false)
   end
+
+  it "no permite cancelar una asignación con un pase vigente" do
+    assignment = create(:container_assignment)
+    create(:movement_pass, container_assignment: assignment)
+
+    expect(assignment).not_to be_may_cancelar
+  end
 end

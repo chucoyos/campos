@@ -1,0 +1,55 @@
+<div class="mx-auto w-full max-w-3xl">
+  <div class="mb-6 flex items-center gap-3">
+    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "qr_code_scanner" %></span>
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+      <p class="text-sm text-slate-600"><%= t(".description") %></p>
+    </div>
+  </div>
+
+  <% if @error.present? %>
+    <div class="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800" role="alert">
+      <%= material_icon "error" %><p><%= @error %></p>
+    </div>
+  <% end %>
+
+  <section data-controller="qr-camera"
+           data-qr-camera-unsupported-value="<%= t(".camera_unsupported") %>"
+           data-qr-camera-denied-value="<%= t(".camera_denied") %>"
+           data-qr-camera-reading-value="<%= t(".camera_reading") %>"
+           class="space-y-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+    <div class="flex flex-wrap gap-3">
+      <button type="button" data-qr-camera-target="start" data-action="qr-camera#start"
+              class="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-indigo-700 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-indigo-800 active:scale-95">
+        <%= material_icon "photo_camera" %> <%= t(".open_camera") %>
+      </button>
+      <button type="button" data-qr-camera-target="stop" data-action="qr-camera#stop"
+              class="hidden min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full border border-slate-300 px-5 font-medium text-slate-700 hover:bg-slate-100">
+        <%= material_icon "stop_circle" %> <%= t(".stop_camera") %>
+      </button>
+    </div>
+
+    <div data-qr-camera-target="preview" class="hidden overflow-hidden rounded-2xl bg-slate-950">
+      <video data-qr-camera-target="video" class="max-h-[55vh] w-full object-contain" autoplay playsinline muted></video>
+    </div>
+    <p data-qr-camera-target="status" role="status" aria-live="polite" class="hidden rounded-xl bg-indigo-50 p-3 text-sm text-indigo-800"></p>
+
+    <div class="border-t border-slate-200 pt-5">
+      <h2 class="flex items-center gap-2 font-semibold text-slate-900">
+        <%= material_icon "keyboard" %> <%= t(".manual_title") %>
+      </h2>
+      <p class="mb-3 mt-1 text-sm text-slate-600"><%= t(".manual_hint") %></p>
+      <%= form_with url: scan_gate_pass_path, data: { turbo: false, qr_camera_target: "form" }, class: "space-y-3" do |f| %>
+        <div>
+          <%= f.label :token, t(".token"), class: "sr-only" %>
+          <%= f.text_field :token, value: @token, autocomplete: "off", required: true,
+                data: { qr_camera_target: "token" },
+                class: "min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-mono focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20" %>
+        </div>
+        <%= f.button class: "flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-indigo-600 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+          <%= material_icon "search" %> <%= t(".validate") %>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+</div>

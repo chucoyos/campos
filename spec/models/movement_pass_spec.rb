@@ -110,6 +110,25 @@ RSpec.describe MovementPass, type: :model do
       expect(pass.may_completar?).to be(false)
     end
 
+    it "elimina la evidencia temporal al cancelar o vencer el pase" do
+      photo = ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new("image"), filename: "evidencia.png", content_type: "image/png"
+      )
+      pass = create(:movement_pass, :standalone)
+      pass.photos.attach(photo)
+
+      pass.cancelar!
+
+      expect(pass.photos).not_to be_attached
+
+      expired_pass = create(:movement_pass, :standalone)
+      expired_pass.photos.attach(photo)
+      expired_pass.update_column(:expires_at, 1.minute.ago)
+      expired_pass.vencer!
+
+      expect(expired_pass.photos).not_to be_attached
+    end
+
     it "no cambia el estado de carga del contenedor" do
       pass = create(:movement_pass)
       expect { pass.completar! }.not_to(change { pass.container.reload.status })

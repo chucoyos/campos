@@ -40,10 +40,10 @@ RSpec.describe "Homes", type: :request do
       expect(response).to redirect_to(container_assignments_path)
     end
 
-    it "sends security to the yard" do
+    it "sends security to the gate console" do
       sign_in create(:user, :seguridad)
       get root_path
-      expect(response).to redirect_to(yard_path)
+      expect(response).to redirect_to(gate_path)
     end
 
     it "keeps transport accounts without a carrier on the welcome page" do

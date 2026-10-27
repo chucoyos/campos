@@ -56,6 +56,13 @@ Rails.application.routes.draw do
   resources :movement_passes, only: %i[index new create show] do
     patch :cancel, on: :member
   end
+  get "gate", to: "gate#index", as: :gate
+  post "gate/scan", to: "gate#scan", as: :scan_gate_pass
+  get "gate/movements/:id", to: "gate#show", as: :gate_movement
+  post "gate/movements/:id/photos", to: "gate#upload_photos", as: :gate_movement_photos
+  delete "gate/movements/:id/photos/:photo_id", to: "gate#remove_photo", as: :remove_gate_movement_photo
+  post "gate/complete/:id", to: "gate#complete", as: :complete_gate_movement
+  get "containers/:container_id/movements/:id/photos", to: "containers#movement_photos", as: :container_movement_photos
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do
     patch :toggle, on: :member

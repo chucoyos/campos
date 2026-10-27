@@ -8,6 +8,7 @@
     yard_areas: [t(".yard_areas"), yard_areas_path, "map", controller_name.in?(%w[yard_areas yard_area_sections]), policy(YardArea).index?],
     container_assignments: [t(".container_assignments"), container_assignments_path, "assignment", controller_name == "container_assignments", policy(ContainerAssignment).index?],
     movement_passes: [t(".movement_passes"), movement_passes_path, "qr_code_2", controller_name == "movement_passes", policy(MovementPass).index?],
+    gate: [t(".gate"), gate_path, "qr_code_scanner", controller_name == "gate", policy(MovementPass).gate?],
     clients: [t(".clients"), clients_path, "person_search", controller_name == "clients", policy(Client).index?],
     carriers: [t(".carriers"), carriers_path, "local_shipping", controller_name == "carriers", policy(Carrier).index?],
     users: [t(".users"), users_path, "group", controller_name == "users", policy(User).index?],
@@ -16,7 +17,7 @@
   group_defs = [
     [t(".groups.deconsolidation"), "directions_boat", %i[master_bls cargo_manifests warehouse]],
     [t(".groups.yard"), "grid_view", %i[containers yard yard_areas]],
-    [t(".groups.movements"), "swap_horiz", %i[container_assignments movement_passes]],
+    [t(".groups.movements"), "swap_horiz", %i[container_assignments movement_passes gate]],
     [t(".catalogs"), "folder_open", %i[clients carriers users cargo_packagings]]
   ]
   # Los grupos con un solo enlace visible se muestran como enlace directo.

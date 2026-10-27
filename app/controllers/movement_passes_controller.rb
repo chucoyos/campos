@@ -30,7 +30,7 @@ class MovementPassesController < ApplicationController
   def show
     @pass = MovementPass.find(params[:id])
     authorize @pass
-    @pass.vencer! if @pass.may_vencer?
+    @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
 
     respond_to do |format|
       format.html
@@ -42,8 +42,10 @@ class MovementPassesController < ApplicationController
     pass = MovementPass.find(params[:id])
     authorize pass
 
-    if pass.may_cancelar?
-      pass.cancelar!
+    cancelled = pass.with_lock do
+      pass.cancelar! if pass.may_cancelar?
+    end
+    if cancelled
       redirect_to movement_pass_path(pass), notice: t("flash.movement_passes.cancel")
     else
       redirect_to movement_pass_path(pass), alert: t("flash.movement_passes.not_cancelable")

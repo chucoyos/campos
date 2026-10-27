@@ -63,12 +63,18 @@ es:
         one: "Se asignó 1 contenedor al transportista."
         other: "Se asignaron %{count} contenedores al transportista."
       cancel: "Asignación cancelada."
-      not_cancelable: "Solo se pueden cancelar asignaciones pendientes."
+      not_cancelable: "Solo se pueden cancelar asignaciones pendientes sin un pase vigente."
     movement_passes:
       create: "Pase emitido. Ya puedes descargar el PDF con el QR."
       cancel: "Pase cancelado."
       not_cancelable: "Solo se pueden cancelar pases vigentes."
       not_downloadable: "Este pase ya no está vigente; no se puede descargar."
+    gate:
+      completed: "Movimiento registrado y pase completado."
+      photos_uploaded:
+        one: "Se cargó 1 fotografía para el movimiento."
+        other: "Se cargaron %{count} fotografías para el movimiento."
+      photo_removed: "Fotografía eliminada del pase."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -122,6 +128,7 @@ es:
       yard_areas: "Áreas"
       container_assignments: "Asignaciones"
       movement_passes: "Pases"
+      gate: "Garita"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
@@ -201,6 +208,16 @@ es:
           - "Revisando que todo esté completo…"
           - "Ya casi está listo…"
       open_photo: "Abrir fotografía en una pestaña nueva"
+    movements:
+      types:
+        ingreso: "Ingreso"
+        salida: "Salida"
+        traspaleo: "Traspaleo"
+        reacomodo: "Reacomodo"
+      from: "Posición de origen"
+      to: "Posición de destino"
+      operator: "Registrado por"
+      photos_empty: "Este movimiento no tiene fotografías."
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
       client_prompt: "Selecciona un cliente"
@@ -212,6 +229,7 @@ es:
     show:
       photos_title: "Fotografías"
       photos_hint: "Evidencia fotográfica por etapa. Se cargan al abrir cada sección."
+      movement_history: "Historial de movimientos"
       change_status: "Cambiar estado"
       no_master_bl: "Sin MBL"
       cargo_empty: "Este contenedor aún no tiene un registro de mercancía."
@@ -619,6 +637,64 @@ es:
       vehicle_principal: "Vehículo"
       vehicle_destino: "Vehículo destino"
       single_use: "Pase de un solo uso, válido %{hours} horas. Preséntalo en garita."
+  gate:
+    index:
+      title: "Garita"
+      description: "Escanea el QR con la cámara del dispositivo o captura el token del pase."
+      open_camera: "Escanear con cámara"
+      stop_camera: "Detener cámara"
+      camera_unsupported: "Este navegador no permite escanear QR con la cámara. Captura el token manualmente; verifica también que la página use HTTPS."
+      camera_denied: "No se concedió permiso para usar la cámara. Habilítalo en el navegador o captura el token manualmente."
+      camera_reading: "Apunta la cámara al código QR del pase."
+      manual_title: "Captura manual"
+      manual_hint: "Si la cámara no está disponible, escribe el token del pase."
+      token: "Token del pase"
+      validate: "Validar pase"
+    show:
+      title: "Confirmar movimiento"
+      description: "Revisa los datos, agrega evidencia fotográfica y confirma el movimiento del contenedor."
+      scan_another: "Escanear otro pase"
+      container: "Contenedor"
+      operator: "Operador"
+      plate: "Placas"
+      client: "Cliente"
+      load_status: "Estado de carga"
+      destination: "Posición de ingreso"
+      select_location: "Selecciona una posición"
+      suggested: "Sugerencia: %{location}. Puedes elegir otra posición disponible."
+      photos_title: "Evidencia fotográfica"
+      photos_hint: "Las imágenes se guardarán en el historial del contenedor al confirmar el movimiento. Máximo 30 fotografías, JPG, PNG o WebP de hasta 10 MB cada una."
+      photos_input: "Selecciona fotografías"
+      upload_photos: "Subir fotografías"
+      photos_empty: "Aún no se han agregado fotografías a este movimiento."
+      confirm_remove_photo: "¿Quitar esta fotografía del pase?"
+      search_location: "Buscar posición disponible"
+      search_placeholder: "Código, bloque, área o sección"
+      selected_location: "Posición seleccionada"
+      location_hint: "Escribe para buscar; las posiciones del área o sección preasignada aparecen primero."
+      location_no_match: "No se encontraron posiciones disponibles con ese texto."
+      no_locations: "No hay posiciones disponibles compatibles con este contenedor. Habilita una posición o libera espacio antes de confirmar."
+      location_sources:
+        assignment: "Preasignada"
+        master_bl: "Área del MBL"
+        client: "Área del cliente"
+        yard: "Otras posiciones"
+      complete: "Confirmar movimiento"
+    errors:
+      token_required: "Captura o escanea el token del pase."
+      pass_not_found: "No se encontró un pase con ese token."
+      pass_unusable: "El pase ya venció, fue cancelado o ya se utilizó."
+      assignment_not_pending: "La asignación ya no está pendiente; este pase no puede completarse."
+      invalid_movement: "El tipo de movimiento no es válido."
+      already_in_yard: "El contenedor ya se encuentra en el patio y no puede ingresar ni traspalearse desde un camión."
+      location_required: "Selecciona una posición para registrar el ingreso."
+      location_unavailable: "La posición seleccionada no está disponible o no es compatible con el contenedor."
+      location_occupied: "La posición seleccionada, o parte de la huella del contenedor, ya está ocupada."
+      not_in_yard: "El contenedor no tiene una posición registrada en el patio para salir."
+      immutable: "El movimiento registrado no se puede modificar ni eliminar."
+      photos_missing: "Selecciona al menos una fotografía."
+      photos_invalid: "No se pudieron adjuntar las fotografías. Inténtalo de nuevo."
+      photos_too_many: "El pase puede tener como máximo %{max} fotografías."
   yard_areas:
     guide:
       title: "Guía rápida: áreas y secciones"
@@ -795,6 +871,9 @@ es:
       yard_slot:
         one: "Posición"
         other: "Posiciones"
+      container_movement:
+        one: "Movimiento de contenedor"
+        other: "Movimientos de contenedor"
       container:
         one: "Contenedor"
         other: "Contenedores"
@@ -830,6 +909,13 @@ es:
               not_allowed: "no está disponible para este contenedor"
             vehicles:
               incomplete: "faltan los datos del vehículo requerido para este movimiento"
+        container_movement:
+          attributes:
+            base:
+              invalid_positions: "no son compatibles con el tipo de movimiento"
+            movement_pass:
+              mismatch: "no corresponde al contenedor ni al tipo de movimiento"
+              required: "es obligatorio para este tipo de movimiento"
         cargo_manifest:
           attributes:
             container:
@@ -873,6 +959,15 @@ es:
               too_large: "%{filename} no puede pesar más de %{max} MB"
             deconsolidation_photos: *photo_errors
             empty_photos: *photo_errors
+        movement_pass:
+          attributes:
+            photos: &movement_photo_errors
+              invalid_type: "%{filename} debe ser una imagen JPG, PNG o WebP"
+              too_large: "%{filename} no puede pesar más de %{max} MB"
+              too_many: "No se pueden adjuntar más de %{max} fotografías"
+        container_movement:
+          attributes:
+            photos: *movement_photo_errors
         container_assignment:
           attributes:
             container:
@@ -928,6 +1023,17 @@ es:
         expires_at: "Vence"
         consumed_at: "Utilizado"
         vehicles: "Vehículo"
+      container_movement:
+        container: "Contenedor"
+        movement_pass: "Pase"
+        movement_type: "Movimiento"
+        from_yard_slot: "Posición de origen"
+        to_yard_slot: "Posición de destino"
+        load_status: "Estado de carga"
+        user: "Registrado por"
+        created_at: "Fecha del movimiento"
+      container:
+        current_yard_slot: "Posición actual"
       movement_pass_vehicle:
         company_name: "Empresa transportista"
         operator_name: "Operador"

@@ -2,7 +2,7 @@ class ContainersController < ApplicationController
   include ActiveStorage::SetCurrent
   include CargoManifestData
 
-  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo remove_photos zip_photos]
+  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo remove_photos zip_photos movement_photos]
   before_action :set_photo_section, only: %i[photos upload_photos remove_photos zip_photos]
 
   def index
@@ -12,6 +12,9 @@ class ContainersController < ApplicationController
 
   def show
     @photo_counts = policy(@container).photos? ? ActiveStorage::Attachment.where(record: @container).group(:name).count : {}
+    @movements = @container.movements.includes(
+      :from_yard_slot, :to_yard_slot, :user, :photos_attachments, movement_pass: :vehicles
+    ).order(created_at: :desc)
     load_container_cargo
   end
 
@@ -105,6 +108,11 @@ class ContainersController < ApplicationController
     )
   end
 
+  def movement_photos
+    @movement = @container.movements.find(params[:id])
+    @photos = @movement.photos_attachments.includes(:blob).order(:id)
+  end
+
   private
 
   def load_container_cargo
@@ -144,7 +152,7 @@ class ContainersController < ApplicationController
   TRANSITION_EVENTS = %w[llenar vaciar entregar].freeze
 
   def set_container
-    @container = policy_scope(Container).find(params[:id])
+    @container = policy_scope(Container).find(params[:container_id] || params[:id])
     authorize @container
   end
 
