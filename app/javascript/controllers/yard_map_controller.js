@@ -438,7 +438,7 @@ export default class extends Controller {
       const bays = unit.slots.map((slot) => slot.bay).join("-")
       html = `<p class="font-mono text-xl font-bold text-slate-900">${unit.slots.map((slot) => slot.code).join(" · ")}</p>
               <p class="text-sm text-slate-600">${labels.block} ${first.block} · ${labels.bay} ${bays} · ${labels.row} ${first.row} · ${labels.level} ${first.level}</p>
-              <p class="mt-1 text-sm font-medium text-slate-800">${state}${occupant ? ` · ${labels.container} ${occupant.number} · ${labels.size} ${occupant.size}'` : ""}</p>${this.sectionInfo(first)}`
+              <p class="mt-1 text-sm font-medium text-slate-800">${state}${occupant ? ` · ${occupant.number} · ${occupant.size}'${occupant.status ? ` · ${occupant.status}` : ""}` : ""}</p>${this.sectionInfo(first)}`
     }
     this.infoTarget.innerHTML = html
   }

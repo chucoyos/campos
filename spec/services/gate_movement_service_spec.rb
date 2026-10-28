@@ -93,6 +93,20 @@ RSpec.describe GateMovementService do
       expect(pass.reload).to be_vigente
     end
 
+    it "cambia automáticamente el estatus de un contenedor con MBL: lleno al ingresar y entregado al salir vacío" do
+      mbl_container = create(:container, :with_master_bl)
+      entry_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: mbl_container))
+      expect(mbl_container.status).to eq("activo")
+
+      described_class.call(pass: entry_pass, user: security_user, yard_slot_id: slot.id)
+      expect(mbl_container.reload.status).to eq("lleno")
+
+      mbl_container.vaciar!
+      exit_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: mbl_container, operation: "salida"), movement_type: "salida")
+      described_class.call(pass: exit_pass, user: security_user)
+      expect(mbl_container.reload.status).to eq("entregado")
+    end
+
     it "registra la salida y libera la posición en patio" do
       container.update!(current_yard_slot: slot)
       exit_pass = create(:movement_pass, :standalone, container: container, movement_type: "salida", load_status: nil)

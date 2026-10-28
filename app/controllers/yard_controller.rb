@@ -13,7 +13,8 @@ class YardController < ApplicationController
     @occupied_containers = occupied.map do |container|
       slot = container.current_yard_slot
       { number: container.number, size: container.size, code: slot.code, block: slot.yard_block.code,
-        bay: slot.bay, row: slot.row, level: slot.level, color: colors[container.owner_client_id] }
+          bay: slot.bay, row: slot.row, level: slot.level, color: colors[container.owner_client_id],
+          status: I18n.t("containers.statuses.#{container.status}", default: container.status.to_s) }
     end
     @sections_map = sections_map
     @pagy, @slots = paginate(apply_filters(policy_scope(YardSlot)).eager_load(:yard_block).order("yard_blocks.code", :level, :row, :bay))

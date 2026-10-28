@@ -224,6 +224,7 @@ class GateMovementService
 
     @container.current_yard_slot = slot
     update_standalone_load_status
+    @container.llenar! if @container.may_llenar?
     @container.save!
     create_movement(from: nil, to: slot)
   end
@@ -244,6 +245,7 @@ class GateMovementService
     raise Error, :location_unavailable unless footprint
     @container.current_yard_slot = nil
     update_standalone_load_status
+    @container.entregar! if @container.may_entregar?
     @container.save!
     create_movement(from: slot, to: nil)
   end

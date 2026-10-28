@@ -15,7 +15,7 @@
            data-yard-map-sections-value="<%= @sections_map.to_json %>"
            data-yard-map-disabled-value="<%= @disabled_codes.to_json %>"
            data-yard-map-occupied-value="<%= @occupied_containers.to_json %>"
-           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), occupied: t(".occupied"), container: Container.model_name.human, size: Container.human_attribute_name(:size), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), desycon: t(".desycon"), section: YardAreaSection.model_name.human }.to_json %>">
+           data-yard-map-labels-value="<%= { hint: t(".map_hint"), enabled: t("yard.states.enabled"), disabled: t("yard.states.disabled"), occupied: t("yard.states.occupied"), container: Container.model_name.human, size: Container.human_attribute_name(:size), block: YardBlock.model_name.human, bay: YardSlot.human_attribute_name(:bay), row: YardSlot.human_attribute_name(:row), level: YardSlot.human_attribute_name(:level), desycon: t(".desycon"), section: YardAreaSection.model_name.human }.to_json %>">
     <div class="flex flex-wrap items-end justify-between gap-3 p-4">
       <div>
         <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "view_in_ar" %> <%= t(".map") %></h2>

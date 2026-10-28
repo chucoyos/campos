@@ -21,6 +21,17 @@ RSpec.describe "Clients", type: :request do
       expect(flash[:notice]).to eq(I18n.t("flash.clients.create"))
     end
 
+    it "crea un cliente con color y lo muestra en el listado" do
+      get new_client_path
+      expect(response.body).to include("client[container_color]")
+
+      post clients_path, params: { client: { name: "Coloreado", container_color: "#16A34A" } }
+      expect(Client.find_by!(name: "Coloreado").container_color).to eq("#16a34a")
+
+      get clients_path
+      expect(response.body).to include("background-color: #16a34a")
+    end
+
     it "rejects a blank name" do
       expect { post clients_path, params: { client: { name: "" } } }.not_to change(Client, :count)
       expect(response).to have_http_status(:unprocessable_entity)

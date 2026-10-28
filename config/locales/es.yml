@@ -285,6 +285,7 @@ es:
     states:
       enabled: "Habilitada"
       disabled: "Deshabilitada"
+      occupied: "Ocupada"
     index:
       title: "Patio"
       map: "Mapa 3D"
