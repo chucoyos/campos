@@ -766,9 +766,10 @@ es:
   carriers:
     index:
       new: "Nuevo transportista"
+      description: "Proveedores de transporte"
     new:
       title: "Nuevo transportista"
-      subtitle: "Registra un transportista."
+      subtitle: "Registra un proveedor de transporte"
     edit:
       title: "Editar transportista"
   users:

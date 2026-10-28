@@ -6,6 +6,7 @@
       </span>
       <div>
         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= Carrier.model_name.human(count: 2) %></h1>
+        <p class="text-sm text-slate-600"><%= t(".description") %></p>
         <p class="text-sm text-slate-500"><%= "#{@pagy.count} #{Carrier.model_name.human(count: @pagy.count).downcase}" %></p>
       </div>
     </div>

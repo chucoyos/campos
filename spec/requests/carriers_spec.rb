@@ -8,7 +8,12 @@ RSpec.describe "Carriers", type: :request do
 
     it "lists records" do
       get carriers_path
-      expect(response.body).to include(record.name, carrier_path(record))
+      expect(response.body).to include(record.name, carrier_path(record), I18n.t("carriers.index.description"))
+    end
+
+    it "explica en el formulario nuevo que son proveedores de transporte" do
+      get new_carrier_path
+      expect(response.body).to include(I18n.t("carriers.new.subtitle"))
     end
 
     it "shows a record" do
