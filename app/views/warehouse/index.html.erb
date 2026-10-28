@@ -14,7 +14,7 @@
 
   <section class="mb-6 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm" aria-label="<%= t(".map") %>"
            data-controller="warehouse-map"
-           data-warehouse-map-bays-value="<%= warehouse_map_data(@bays, @section_counts).to_json %>"
+           data-warehouse-map-bays-value="<%= warehouse_map_data(@bays, @section_counts, @slot_clients).to_json %>"
            data-warehouse-map-labels-value="<%= { hint: t(".map_hint"), open: t(".open_slot") }.to_json %>">
     <div class="flex flex-wrap items-end justify-between gap-3 p-4">
       <div>

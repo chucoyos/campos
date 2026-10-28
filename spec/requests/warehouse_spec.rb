@@ -64,6 +64,22 @@ RSpec.describe "Warehouse", type: :request do
 end
 
 RSpec.describe "Warehouse map data", type: :request do
+  it "incluye el color del cliente solo cuando la ubicación guarda mercancía de un único cliente" do
+    sign_in create(:user, :admin)
+    item = create(:cargo_item)
+    slot = create(:warehouse_slot, number: 4)
+    item.cargo_manifest.client.update!(container_color: "#16a34a")
+    item.update_columns(warehouse_slot_id: slot.id, slot_section: "A", status: "stored")
+
+    get warehouse_path
+    expect(response.body).to include("&quot;color&quot;:&quot;#16a34a&quot;")
+
+    other = create(:cargo_item)
+    other.update_columns(warehouse_slot_id: slot.id, slot_section: "B", status: "stored")
+    get warehouse_path
+    expect(response.body).not_to include("&quot;color&quot;:&quot;#16a34a&quot;")
+  end
+
   it "embeds the map with sections and the free space of bay 1" do
     WarehouseCatalog.new.call
     sign_in create(:user, :admin)

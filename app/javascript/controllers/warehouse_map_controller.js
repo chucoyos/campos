@@ -114,6 +114,7 @@ export default class extends Controller {
   colorFor(slot) {
     if (this.selected === slot.code) return COLORS.selected
     if (!slot.enabled) return COLORS.disabled
+    if (slot.items > 0 && /^#[0-9a-f]{6}$/i.test(slot.color || "")) return parseInt(slot.color.slice(1), 16)
     return slot.items > 0 ? COLORS.stored : COLORS.empty
   }
 
@@ -156,6 +157,7 @@ export default class extends Controller {
       const sections = Object.entries(slot.sections).map(([section, count]) => `${section}: ${count}`).join(" · ")
       html = `<p class="font-mono text-xl font-bold text-slate-900">${slot.code}</p>
               <p class="text-sm text-slate-600">${sections}</p>
+              ${slot.clients.length ? `<p class="text-sm text-slate-600">${slot.clients.join(" · ")}</p>` : ""}
               <a href="${slot.url}" class="mt-2 inline-flex min-h-12 items-center rounded-full bg-sky-800 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-sky-900 active:scale-95">${labels.open}</a>`
     }
     this.infoTarget.innerHTML = html
