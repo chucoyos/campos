@@ -503,6 +503,9 @@ es:
       too_many: "El archivo supera el máximo de %{max} filas."
       row: "Fila %{row}: %{messages}"
   clients:
+    show:
+      clear_color: "Quitar color"
+      color_hint: "Sus contenedores se mostrarán con este color en el mapa 3D del patio. Sin color, se usa el rojo predeterminado."
     index:
       new: "Nuevo cliente"
     new:
@@ -1119,6 +1122,7 @@ es:
         updated_at: "Última actualización"
       client: &named
         name: "Nombre"
+        container_color: "Color de contenedores"
         created_at: "Creado"
         updated_at: "Última actualización"
       carrier: *named

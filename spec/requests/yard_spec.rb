@@ -38,6 +38,16 @@ RSpec.describe "Patio", type: :request do
     expect(response.body).to include("Ocupada · contenedor")
   end
 
+  it "incluye el color del cliente en los datos del mapa 3D" do
+    sign_in create(:user, :admin)
+    colored = create(:client, container_color: "#0ea5e9")
+    create(:container, client: colored, current_yard_slot: slot)
+
+    get yard_path
+
+    expect(response.body).to include("&quot;color&quot;:&quot;#0ea5e9&quot;")
+  end
+
   it "filters by level and state" do
     sign_in create(:user, :admin)
     slot.update!(enabled: false)

@@ -34,7 +34,7 @@ class ClientsController < ApplicationController
 
   def update
     if @client.update(client_params)
-      redirect_to clients_path, notice: t("flash.clients.update")
+      redirect_to(params[:from] == "show" ? @client : clients_path, notice: t("flash.clients.update"))
     else
       render :edit, status: :unprocessable_entity
     end
@@ -65,6 +65,6 @@ class ClientsController < ApplicationController
   end
 
   def client_params
-    params.expect(client: %i[name])
+    params.expect(client: %i[name container_color])
   end
 end

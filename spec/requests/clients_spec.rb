@@ -31,6 +31,23 @@ RSpec.describe "Clients", type: :request do
       expect(record.reload.name).to eq("Renombrado")
     end
 
+    it "asigna el color de contenedores desde el detalle y vuelve al detalle" do
+      get client_path(record)
+      expect(response.body).to include("client[container_color]")
+
+      patch client_path(record), params: { from: "show", client: { container_color: "#16A34A" } }
+      expect(response).to redirect_to(client_path(record))
+      expect(record.reload.container_color).to eq("#16a34a")
+
+      patch client_path(record), params: { from: "show", client: { container_color: "" } }
+      expect(record.reload.container_color).to be_nil
+    end
+
+    it "rechaza un color inválido" do
+      patch client_path(record), params: { client: { container_color: "rojo" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+    end
+
     it "does not delete a client that has MBLs" do
       create(:master_bl, client: record)
       expect { delete client_path(record) }.not_to change(Client, :count)

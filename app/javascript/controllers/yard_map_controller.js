@@ -180,6 +180,10 @@ export default class extends Controller {
     return this.disabledCodes.has(slot.code) || Number(this.occupiedByCode.get(slot.code)?.size) === 20
   }
 
+  containerColor(container) {
+    return /^#[0-9a-f]{6}$/i.test(container.color || "") ? parseInt(container.color.slice(1), 16) : COLORS.occupied
+  }
+
   buildOccupiedContainers() {
     const slotsByCode = new Map(this.slots.map((slot) => [slot.code, slot]))
     this.occupiedContainers = this.occupiedValue.flatMap((record) => {
@@ -217,7 +221,7 @@ export default class extends Controller {
       const transform = new THREE.Matrix4()
       const body = new THREE.InstancedMesh(
         new THREE.BoxGeometry(length * 0.94, height, width),
-        new THREE.MeshStandardMaterial({ color: COLORS.occupied, roughness: 0.72, metalness: 0.25 }),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 }),
         containers.length
       )
       const bodyMatrices = []
@@ -342,9 +346,10 @@ export default class extends Controller {
 
     this.units.forEach((unit, index) => {
       const visible = (!level || unit.level === Number(level)) && (!block || unit.block === block)
-      this.mesh.setMatrixAt(index, visible ? matrix.compose(unit.position, unit.rotated ? ROTATED : UPRIGHT, scale.set(unit.scale, 1, 1)) : hidden)
       const codes = unit.slots.map((slot) => slot.code)
       const occupant = codes.map((code) => this.occupiedByCode.get(code)).find(Boolean)
+      // El contenedor ya ocupa la posición; el cubo translúcido alteraría su color.
+      this.mesh.setMatrixAt(index, visible && !occupant ? matrix.compose(unit.position, unit.rotated ? ROTATED : UPRIGHT, scale.set(unit.scale, 1, 1)) : hidden)
       const state = codes.includes(this.selected) ? "selected" : occupant ? "occupied" : codes.some((code) => this.disabledCodes.has(code)) ? "disabled" : "enabled"
       if (this.showAreas && state !== "selected" && state !== "occupied") {
         const section = this.sectionByCode.get(codes[0])
@@ -358,7 +363,7 @@ export default class extends Controller {
         const container = containers[containerIndex]
         mesh.setMatrixAt(instanceIndex, this.visibleOccupiedContainer(container) ? matrices[instanceIndex] : hidden)
         if (kind === "body") {
-          mesh.setColorAt(instanceIndex, color.setHex(container.slots.some((slot) => slot.code === this.selected) ? COLORS.selected : COLORS.occupied))
+          mesh.setColorAt(instanceIndex, color.setHex(container.slots.some((slot) => slot.code === this.selected) ? COLORS.selected : this.containerColor(container)))
         }
       })
       mesh.instanceMatrix.needsUpdate = true

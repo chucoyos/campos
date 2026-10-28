@@ -4,16 +4,17 @@ class YardController < ApplicationController
     @blocks = YardBlock.order(:code)
     @slot_counts = YardSlot.group(:yard_block_id, :enabled).count
     @disabled_codes = YardSlot.where(enabled: false).pluck(:code)
-    @occupied_containers = Container.where.not(current_yard_slot_id: nil)
+    occupied = Container.where.not(current_yard_slot_id: nil)
       .joins(:current_yard_slot)
       .where(yard_slots: { yard_block_id: @blocks.select(:id) })
-      .includes(current_yard_slot: :yard_block)
-      .order(:number)
-      .map do |container|
-        slot = container.current_yard_slot
-        { number: container.number, size: container.size, code: slot.code, block: slot.yard_block.code,
-          bay: slot.bay, row: slot.row, level: slot.level }
-      end
+      .includes(:master_bl, current_yard_slot: :yard_block)
+      .order(:number).to_a
+    colors = Client.where(id: occupied.filter_map(&:owner_client_id).uniq).pluck(:id, :container_color).to_h
+    @occupied_containers = occupied.map do |container|
+      slot = container.current_yard_slot
+      { number: container.number, size: container.size, code: slot.code, block: slot.yard_block.code,
+        bay: slot.bay, row: slot.row, level: slot.level, color: colors[container.owner_client_id] }
+    end
     @sections_map = sections_map
     @pagy, @slots = paginate(apply_filters(policy_scope(YardSlot)).eager_load(:yard_block).order("yard_blocks.code", :level, :row, :bay))
   end
