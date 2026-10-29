@@ -21,6 +21,7 @@ class Container < ApplicationRecord
   has_many :movement_passes, dependent: :restrict_with_error
   has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
   has_many :work_orders, dependent: :restrict_with_error
+  has_many :rehandling_requests, dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos

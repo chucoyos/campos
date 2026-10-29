@@ -17,7 +17,7 @@ class MovementPassPolicy < ApplicationPolicy
 
   def new? = create?
   def download? = show?
-  def cancel? = record.vigente? && manage?
+  def cancel? = record.vigente? && !record.entered_at? && manage?
 
   # El cliente solo se muestra al personal interno y al propio cliente, no al transportista.
   def view_client?

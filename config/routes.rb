@@ -64,8 +64,12 @@ Rails.application.routes.draw do
   delete "gate/movements/:id/photos/:photo_id", to: "gate#remove_photo", as: :remove_gate_movement_photo
   post "gate/complete/:id", to: "gate#complete", as: :complete_gate_movement
   get "crane", to: "crane#index", as: :crane
+  get "crane/rehandles/search", to: "crane#search_rehandles", as: :search_crane_rehandles
+  get "crane/rehandles/new", to: "crane#new_rehandle", as: :new_crane_rehandle
+  post "crane/rehandles", to: "crane#create_rehandle", as: :create_crane_rehandle
   patch "crane/work_orders/:id/complete", to: "crane#complete", as: :complete_crane_work_order
   patch "crane/work_orders/:id/cancel", to: "crane#cancel", as: :cancel_crane_work_order
+  patch "crane/rehandling_requests/:id/cancel", to: "crane#cancel_request", as: :cancel_crane_rehandling_request
   get "containers/:container_id/movements/:id/photos", to: "containers#movement_photos", as: :container_movement_photos
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do

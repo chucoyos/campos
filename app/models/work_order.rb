@@ -1,4 +1,4 @@
-# Tarea operativa para la grúa; hoy solo se genera al ingresar un contenedor por Garita.
+# Tarea operativa de patio para la grúa, creada al ingresar, salir o reacomodar un contenedor.
 class WorkOrder < ApplicationRecord
   include AASM
 
@@ -6,6 +6,7 @@ class WorkOrder < ApplicationRecord
 
   belongs_to :container
   belongs_to :movement_pass, optional: true
+  belongs_to :rehandling_request, optional: true
   belongs_to :from_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :to_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :created_by, class_name: "User", optional: true
@@ -15,6 +16,10 @@ class WorkOrder < ApplicationRecord
 
   validates :container_id, uniqueness: { conditions: -> { where(status: "pendiente") } }, if: :pendiente?
   validates :to_yard_slot, presence: true, if: :ingreso?
+  validates :from_yard_slot, presence: true, if: :salida?
+  validates :from_yard_slot, :to_yard_slot, presence: true, if: :reacomodo?
+  validates :movement_pass, presence: true, if: -> { ingreso? || salida? }
+  validates :movement_pass, absence: true, if: :reacomodo?
 
   after_commit :broadcast_changed, on: %i[create update]
 

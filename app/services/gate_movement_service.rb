@@ -18,11 +18,11 @@ class GateMovementService
     available_slots(pass.container, pass:).first
   end
 
-  def self.available_slots(container, pass: nil)
-    available_slot_records(container, pass:).map { |slot| slot[:slot] }
+  def self.available_slots(container, pass: nil, except_work_order_id: nil)
+    available_slot_records(container, pass:, except_work_order_id:).map { |slot| slot[:slot] }
   end
 
-  def self.available_slot_records(container, pass: nil)
+  def self.available_slot_records(container, pass: nil, except_work_order_id: nil)
     sources = preferred_slot_sources(container, pass)
     preferred = sources.keys
     enabled_slots = YardSlot.enabled.joins(:yard_block).merge(YardBlock.enabled)
@@ -41,7 +41,7 @@ class GateMovementService
       end
 
     reserved_by_block = Hash.new { |hash, key| hash[key] = Set.new }
-    reserved_positions(block_ids).each { |position| reserved_by_block[position.first] << position }
+    reserved_positions(block_ids, except_work_order_id:).each { |position| reserved_by_block[position.first] << position }
 
     available = ordered.select do |slot|
       footprint = footprint_for(container, slot, slots_by_position:)
@@ -122,8 +122,10 @@ class GateMovementService
   end
 
   # Destinos de órdenes de grúa pendientes: bloquean la posición, pero aún no sirven de soporte.
-  def self.reserved_positions(block_ids)
-    WorkOrder.where(status: "pendiente").where.not(to_yard_slot_id: nil)
+  def self.reserved_positions(block_ids, except_work_order_id: nil)
+    scope = WorkOrder.where(status: "pendiente").where.not(to_yard_slot_id: nil)
+    scope = scope.where.not(id: except_work_order_id) if except_work_order_id
+    scope
       .joins(:to_yard_slot).where(yard_slots: { yard_block_id: block_ids })
       .includes(:container, :to_yard_slot).flat_map do |order|
         footprint_for(order.container, order.to_yard_slot, require_enabled: false) || []
@@ -142,18 +144,40 @@ class GateMovementService
       supported_footprint?(footprint, occupied)
   end
 
-  def self.supporting_other?(container)
+  def self.supporting_other?(container, except_work_order_id: nil)
     anchor = container.current_yard_slot
     return false unless anchor
 
     above = occupied_footprint(container).map { |block_id, bay, row, level| [ block_id, bay, row, level + 1 ] }
-    return true if (reserved_positions(anchor.yard_block_id).to_a & above).any?
+    return true if (reserved_positions(anchor.yard_block_id, except_work_order_id:).to_a & above).any?
 
     Container.where.not(id: container.id).where.not(current_yard_slot_id: nil)
       .joins(:current_yard_slot).where(yard_slots: { yard_block_id: anchor.yard_block_id })
       .includes(:current_yard_slot).any? do |other|
         (occupied_footprint(other) & above).any?
       end
+  end
+
+  def self.blocking_containers(container)
+    anchor = container.current_yard_slot
+    return [] unless anchor
+
+    target_footprint = occupied_footprint(container)
+    target_columns = target_footprint.map { |block_id, bay, row, _level| [ block_id, bay, row ] }.to_set
+    candidates = Container.where.not(id: container.id).where.not(current_yard_slot_id: nil)
+      .joins(:current_yard_slot).where(yard_slots: { yard_block_id: anchor.yard_block_id })
+      .includes(:current_yard_slot).to_a
+    candidates.select do |occupant|
+      occupied_footprint(occupant).any? do |block_id, bay, row, level|
+        level > anchor.level && target_columns.include?([ block_id, bay, row ])
+      end
+    end
+  end
+
+  def self.next_rehandle_candidate(container)
+    blocking_containers(container)
+      .reject { |blocker| supporting_other?(blocker) }
+      .max_by { |blocker| blocker.current_yard_slot.level }
   end
 
   def self.footprint_for(container, anchor, require_enabled: true, slots_by_position: nil)
@@ -202,18 +226,27 @@ class GateMovementService
       @pass = MovementPass.lock.find(@pass.id)
       @container = Container.lock.find(@pass.container_id)
       raise Error, :pass_unusable unless @pass.usable?
-      raise Error, :entry_pending if WorkOrder.where(container_id: @container.id, status: "pendiente").exists?
-      validate_assignment
 
-      case @pass.movement_type
-      when "ingreso" then record_entry
-      when "salida" then record_exit
-      when "traspaleo" then record_transfer
-      else raise Error, :invalid_movement
+      if @pass.entered_at?
+        complete_gate_exit
+      else
+        raise Error, :entry_pending if WorkOrder.where(container_id: @container.id, status: "pendiente").exists?
+        validate_assignment
+
+        case @pass.movement_type
+        when "ingreso" then record_entry
+        when "salida" then RehandlingRequestService.start_exit(pass: @pass, user: @user)
+        when "traspaleo" then record_transfer
+        else raise Error, :invalid_movement
+        end
+
+        if @pass.traspaleo?
+          @pass.consumed_at ||= Time.current
+          @pass.completar!
+        else
+          @pass.update!(entered_at: Time.current)
+        end
       end
-
-      @pass.consumed_at ||= Time.current
-      @pass.completar!
       @pass
     end
   end
@@ -254,18 +287,15 @@ class GateMovementService
     raise Error, :assignment_not_pending unless assignment.pendiente?
   end
 
-  def record_exit
-    slot = @container.current_yard_slot
-    raise Error, :not_in_yard unless slot
-    raise Error, :supports_other_container if self.class.supporting_other?(@container)
+  def complete_gate_exit
+    raise Error, :exit_scan_required unless @pass.exit_scanned_at?
 
-    footprint = lock_footprint(slot, require_enabled: false)
-    raise Error, :location_unavailable unless footprint
-    @container.current_yard_slot = nil
-    update_standalone_load_status
-    @container.entregar! if @container.may_entregar?
-    @container.save!
-    create_movement(from: slot, to: nil)
+    pass_canceled_without_load = @pass.rehandling_request&.cancelada? && @pass.movement.nil?
+    raise Error, :movement_not_completed unless @pass.movement || pass_canceled_without_load
+
+    @pass.consumed_at ||= Time.current
+    @pass.completar!
+    @pass
   end
 
   def record_transfer

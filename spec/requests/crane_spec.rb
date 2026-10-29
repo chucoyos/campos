@@ -26,6 +26,33 @@ RSpec.describe "Grúa", type: :request do
     expect(response.body).to include(I18n.t("crane.index.empty"))
   end
 
+  it "permite buscar y programar un reacomodo para un contenedor que está en patio" do
+    block = create(:yard_block, bays: 4, rows: 1, levels: 1)
+    source = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
+    destination = create(:yard_slot, yard_block: block, bay: 2, row: "A", level: 1)
+    candidate = create(:container, current_yard_slot: source)
+    elsewhere = create(:container)
+    sign_in crane_user
+
+    get search_crane_rehandles_path, params: { q: candidate.number }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(candidate.number)
+    expect(response.body).not_to include(elsewhere.number)
+
+    get new_crane_rehandle_path, params: { container_id: candidate.id }
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(source.code, destination.code)
+
+    expect {
+      post create_crane_rehandle_path, params: { container_id: candidate.id, yard_slot_id: destination.id }
+    }.to change(WorkOrder, :count).by(1)
+
+    expect(response).to redirect_to(crane_path)
+    expect(WorkOrder.last).to have_attributes(
+      container: candidate, movement_type: "reacomodo", from_yard_slot: source, to_yard_slot: destination
+    )
+  end
+
   it "concluye la tarea" do
     sign_in crane_user
 

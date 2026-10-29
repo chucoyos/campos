@@ -101,6 +101,21 @@ RSpec.describe MovementPass, type: :model do
       expect { pass.vencer! }.to change { pass.reload.status }.to("vencido")
     end
 
+    it "mantiene vigente un pase después de la entrada aunque pasen más de 48 horas" do
+      pass = create(:movement_pass, entered_at: 49.hours.ago, expires_at: 1.minute.ago)
+
+      expect(pass).to be_usable
+      expect(pass.display_status).to eq("en_patio")
+      expect(MovementPass.overdue).not_to include(pass)
+      expect(MovementPass.active).to include(pass)
+    end
+
+    it "no permite cancelar un pase después de que entró el camión" do
+      pass = create(:movement_pass, entered_at: Time.current)
+
+      expect(pass.may_cancelar?).to be(false)
+    end
+
     it "cancela solo si está vigente" do
       pass = create(:movement_pass, :standalone)
       pass.cancelar!

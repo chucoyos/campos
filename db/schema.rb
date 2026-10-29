@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -235,6 +235,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
     t.datetime "cancelled_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "entered_at"
+    t.datetime "exit_scanned_at"
     t.index ["carrier_id"], name: "index_movement_passes_on_carrier_id"
     t.index ["client_id"], name: "index_movement_passes_on_client_id"
     t.index ["container_assignment_id"], name: "index_movement_passes_on_container_assignment_id"
@@ -246,6 +248,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
     t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying::text, 'vacio'::character varying::text]))", name: "movement_passes_load_status_check"
     t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text, 'traspaleo'::character varying::text])", name: "movement_passes_type_check"
     t.check_constraint "status::text = ANY (ARRAY['vigente'::character varying::text, 'completado'::character varying::text, 'cancelado'::character varying::text, 'vencido'::character varying::text])", name: "movement_passes_status_check"
+  end
+
+  create_table "rehandling_requests", force: :cascade do |t|
+    t.bigint "movement_pass_id", null: false
+    t.bigint "container_id", null: false
+    t.bigint "created_by_id"
+    t.string "status", default: "pendiente", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["container_id"], name: "index_rehandling_requests_on_container_id"
+    t.index ["created_by_id"], name: "index_rehandling_requests_on_created_by_id"
+    t.index ["movement_pass_id"], name: "index_rehandling_requests_on_movement_pass_id"
+    t.index ["movement_pass_id"], name: "index_rehandling_requests_on_pending_pass", unique: true, where: "((status)::text = 'pendiente'::text)"
+    t.index ["status"], name: "index_rehandling_requests_on_status"
+    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "rehandling_requests_status_valid"
   end
 
   create_table "users", force: :cascade do |t|
@@ -302,16 +319,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "rehandling_request_id"
     t.index ["completed_by_id"], name: "index_work_orders_on_completed_by_id"
     t.index ["container_id"], name: "index_work_orders_on_container_id"
     t.index ["container_id"], name: "index_work_orders_on_container_id_pending", unique: true, where: "((status)::text = 'pendiente'::text)"
     t.index ["created_by_id"], name: "index_work_orders_on_created_by_id"
     t.index ["from_yard_slot_id"], name: "index_work_orders_on_from_yard_slot_id"
     t.index ["movement_pass_id"], name: "index_work_orders_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
+    t.index ["rehandling_request_id"], name: "index_work_orders_on_rehandling_request_id"
     t.index ["status"], name: "index_work_orders_on_status"
     t.index ["to_yard_slot_id"], name: "index_work_orders_on_to_yard_slot_id"
-    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying, 'reacomodo'::character varying]::text[])", name: "work_orders_type_valid"
-    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "work_orders_status_valid"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text, 'traspaleo'::character varying::text, 'reacomodo'::character varying::text])", name: "work_orders_type_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying::text, 'completada'::character varying::text, 'cancelada'::character varying::text])", name: "work_orders_status_valid"
   end
 
   create_table "yard_area_sections", force: :cascade do |t|
@@ -401,11 +420,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
   add_foreign_key "movement_passes", "container_assignments"
   add_foreign_key "movement_passes", "containers"
   add_foreign_key "movement_passes", "users", column: "requested_by_id", on_delete: :nullify
+  add_foreign_key "rehandling_requests", "containers", on_delete: :restrict
+  add_foreign_key "rehandling_requests", "movement_passes", on_delete: :restrict
+  add_foreign_key "rehandling_requests", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
   add_foreign_key "warehouse_slots", "warehouse_bays"
   add_foreign_key "work_orders", "containers", on_delete: :restrict
   add_foreign_key "work_orders", "movement_passes", on_delete: :restrict
+  add_foreign_key "work_orders", "rehandling_requests", on_delete: :restrict
   add_foreign_key "work_orders", "users", column: "completed_by_id", on_delete: :nullify
   add_foreign_key "work_orders", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "work_orders", "yard_slots", column: "from_yard_slot_id", on_delete: :restrict

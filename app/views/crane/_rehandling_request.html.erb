@@ -1,0 +1,25 @@
+<% completed_moves = request.work_orders.select { |order| order.reacomodo? && order.completada? }.size %>
+<% pending_order = request.work_orders.find(&:pendiente?) %>
+<article id="<%= dom_id(request) %>" class="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm sm:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="text-sm font-semibold text-amber-900"><%= t(".title") %></p>
+      <h3 class="mt-1 text-xl font-bold text-slate-900"><%= request.container.number %></h3>
+      <p class="mt-1 text-sm text-slate-700"><%= t(".details", plate: request.movement_pass.vehicle("principal")&.plate, count: completed_moves) %></p>
+      <% if pending_order %>
+        <p class="mt-2 text-sm font-medium text-amber-900">
+          <%= t(".next_task", container: pending_order.container.number) %>
+        </p>
+      <% else %>
+        <p class="mt-2 text-sm font-medium text-amber-900"><%= t(".no_destination") %></p>
+      <% end %>
+    </div>
+    <% if policy(request).cancel? %>
+      <%= button_to cancel_crane_rehandling_request_path(request), method: :patch,
+            form: { data: { turbo_confirm: t(".confirm_cancel") } },
+            class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
+        <%= material_icon "close" %> <%= t(".cancel") %>
+      <% end %>
+    <% end %>
+  </div>
+</article>

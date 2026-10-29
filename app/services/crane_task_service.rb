@@ -5,13 +5,14 @@ class CraneTaskService
     end
   end
 
-  def self.complete(work_order:, user:)
-    new(work_order, user).complete
+  def self.complete(work_order:, user:, yard_slot_id: nil)
+    new(work_order, user, yard_slot_id).complete
   end
 
-  def initialize(work_order, user)
+  def initialize(work_order, user, yard_slot_id)
     @work_order = work_order
     @user = user
+    @yard_slot_id = yard_slot_id
   end
 
   def complete
@@ -21,54 +22,123 @@ class CraneTaskService
 
       @container = Container.lock.find(@work_order.container_id)
       @pass = @work_order.movement_pass
-      slot = @work_order.to_yard_slot
-      raise Error, :already_in_yard if @container.current_yard_slot_id.present?
 
-      validate_destination(slot)
-      @container.current_yard_slot = slot
-      @container.declare_load_status!(@pass.load_status) if standalone_load_status?
-      @container.llenar! if @container.may_llenar?
-      @container.save!
-      create_movement(slot)
+      case @work_order.movement_type
+      when "ingreso" then complete_entry
+      when "salida" then complete_exit
+      when "reacomodo" then complete_rehandle
+      else raise Error, :invalid_movement
+      end
 
       @work_order.completed_by = @user
       @work_order.completed_at = Time.current
       @work_order.completar!
+
+      complete_rehandling_request if @work_order.salida? && @work_order.rehandling_request
+      RehandlingRequestService.advance_pending if @work_order.salida? || @work_order.reacomodo?
       @work_order
     end
   end
 
   private
 
-  def standalone_load_status?
-    !@container.with_master_bl? && @pass&.load_status.present?
+  def complete_entry
+    slot = @work_order.to_yard_slot
+    raise Error, :already_in_yard if @container.current_yard_slot_id.present?
+
+    validate_destination(slot)
+    @container.current_yard_slot = slot
+    @container.declare_load_status!(@pass.load_status) if standalone_load_status?
+    @container.llenar! if @container.may_llenar?
+    @container.save!
+    create_movement(from: nil, to: slot)
+  end
+
+  def complete_exit
+    slot = @container.current_yard_slot
+    raise Error, :not_in_yard unless slot
+    raise Error, :origin_changed unless @work_order.from_yard_slot_id == slot.id
+    lock_block_slots(slot)
+    raise Error, :supports_other_container if GateMovementService.supporting_other?(@container)
+    if @work_order.rehandling_request && GateMovementService.blocking_containers(@container).any?
+      raise Error, :container_still_blocked
+    end
+
+    @container.current_yard_slot = nil
+    update_standalone_load_status
+    @container.entregar! if @container.may_entregar?
+    @container.save!
+    create_movement(from: slot, to: nil)
+  end
+
+  def complete_rehandle
+    origin = @container.current_yard_slot
+    raise Error, :not_in_yard unless origin
+    raise Error, :origin_changed unless @work_order.from_yard_slot_id == origin.id
+
+    destination = YardSlot.find_by(id: @yard_slot_id.presence || @work_order.to_yard_slot_id)
+    raise Error, :destination_unavailable unless destination
+    raise Error, :destination_unchanged if destination.id == origin.id
+
+    lock_block_slots(origin, destination)
+    raise Error, :supports_other_container if GateMovementService.supporting_other?(
+      @container, except_work_order_id: @work_order.id
+    )
+    validate_destination(destination)
+    @container.current_yard_slot = destination
+    @container.save!
+    create_movement(from: origin, to: destination)
+    @work_order.to_yard_slot = destination
   end
 
   def validate_destination(slot)
     footprint = GateMovementService.footprint_for(@container, slot)
     raise Error, :destination_unavailable unless footprint
 
-    YardSlot.where(yard_block_id: slot.yard_block_id).order(:id).lock.pluck(:id)
+    lock_block_slots(slot)
     occupied = GateMovementService.occupied_positions(slot.yard_block_id)
     raise Error, :destination_occupied if footprint.any? { |position| occupied.include?(position) }
+    reserved = GateMovementService.reserved_positions(slot.yard_block_id, except_work_order_id: @work_order.id)
+    raise Error, :destination_occupied if footprint.any? { |position| reserved.include?(position) }
     raise Error, :destination_unsupported unless GateMovementService.supported_footprint?(footprint, occupied)
   end
 
-  def create_movement(slot)
+  def lock_block_slots(*slots)
+    YardSlot.where(yard_block_id: slots.map(&:yard_block_id).uniq).order(:id).lock.pluck(:id)
+  end
+
+  def standalone_load_status?
+    !@container.with_master_bl? && @pass&.load_status.present?
+  end
+
+  def update_standalone_load_status
+    return if @container.with_master_bl? || @pass&.load_status.blank?
+
+    @container.declare_load_status!(@pass.load_status)
+  end
+
+  def create_movement(from:, to:)
     movement = ContainerMovement.create!(
       container: @container,
       movement_pass: @pass,
-      from_yard_slot: nil,
-      to_yard_slot: slot,
+      from_yard_slot: from,
+      to_yard_slot: to,
       user: @user,
       movement_type: @work_order.movement_type,
-      load_status: @pass.load_status,
+      load_status: @pass&.load_status,
       created_at: Time.current
     )
+    return movement unless @pass&.photos&.attached?
+
     @pass.photos.blobs.each do |blob|
       ActiveStorage::Attachment.create!(name: "photos", record: movement, blob:)
     end
-    @pass.photos.detach if @pass.photos.attached?
+    @pass.photos.detach
     movement
+  end
+
+  def complete_rehandling_request
+    request = @work_order.rehandling_request
+    request.completar! if request.pendiente?
   end
 end

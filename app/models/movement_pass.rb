@@ -1,4 +1,4 @@
-# Solicitud de ingreso, salida o traspaleo de un contenedor; su QR de un solo uso se valida en garita.
+# Solicitud de ingreso, salida o traspaleo de un contenedor; los pases de ingreso y salida se validan en dos escaneos.
 class MovementPass < ApplicationRecord
   include AASM
 
@@ -14,6 +14,7 @@ class MovementPass < ApplicationRecord
   belongs_to :requested_by, class_name: "User", optional: true
   has_many :vehicles, class_name: "MovementPassVehicle", dependent: :destroy, inverse_of: :movement_pass
   has_one :movement, class_name: "ContainerMovement", dependent: :restrict_with_error
+  has_one :rehandling_request, dependent: :restrict_with_error
   has_many_attached :photos
 
   accepts_nested_attributes_for :vehicles
@@ -36,8 +37,8 @@ class MovementPass < ApplicationRecord
   validate :vehicles_match_movement
   validate :photos_are_valid_images
 
-  scope :active, -> { vigente.where(expires_at: Time.current..) }
-  scope :overdue, -> { vigente.where(expires_at: ...Time.current) }
+  scope :active, -> { vigente.where("expires_at >= ? OR entered_at IS NOT NULL", Time.current) }
+  scope :overdue, -> { vigente.where(entered_at: nil).where(expires_at: ...Time.current) }
 
   aasm column: :status do
     state :vigente, initial: true
@@ -50,7 +51,8 @@ class MovementPass < ApplicationRecord
     end
 
     event :cancelar do
-      transitions from: :vigente, to: :cancelado, after: -> { self.cancelled_at = Time.current }
+      transitions from: :vigente, to: :cancelado, guard: -> { entered_at.nil? },
+        after: -> { self.cancelled_at = Time.current }
     end
 
     event :vencer do
@@ -58,12 +60,12 @@ class MovementPass < ApplicationRecord
     end
   end
 
-  def expired? = expires_at <= Time.current
+  def expired? = entered_at.nil? && expires_at <= Time.current
 
-  def usable? = vigente? && !expired?
+  def usable? = vigente? && (entered_at.present? || !expired?)
 
   # Estado vigente en pantalla aunque nadie haya persistido aún el vencimiento.
-  def display_status = vigente? && expired? ? "vencido" : status
+  def display_status = vigente? && expired? ? "vencido" : (entered_at? ? "en_patio" : status)
 
   def vehicle(role) = vehicles.find { |item| item.role == role }
 

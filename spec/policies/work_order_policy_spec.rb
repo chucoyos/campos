@@ -15,7 +15,14 @@ RSpec.describe WorkOrderPolicy do
   context "con admin" do
     let(:user) { build_stubbed(:user, :admin) }
 
-    it { is_expected.to permit_actions(%i[index complete cancel]) }
+    it { is_expected.to permit_actions(%i[index complete]) }
+
+    it "permite cancelar una tarea no vinculada a una salida bloqueada" do
+      independent = build_stubbed(:work_order, movement_type: "reacomodo", rehandling_request: nil)
+      blocked = build_stubbed(:work_order, movement_type: "reacomodo", rehandling_request: build_stubbed(:rehandling_request))
+      expect(described_class.new(user, independent)).to permit_action(:cancel)
+      expect(described_class.new(user, blocked)).to forbid_action(:cancel)
+    end
   end
 
   %i[seguridad montacargas cliente transporte].each do |role|

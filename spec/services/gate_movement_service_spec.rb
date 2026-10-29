@@ -14,15 +14,24 @@ RSpec.describe GateMovementService do
     CraneTaskService.complete(work_order: WorkOrder.find_by!(movement_pass: entry_pass), user: crane_user)
   end
 
+  def exit_container(exit_pass)
+    described_class.call(pass: exit_pass, user: security_user)
+    order = WorkOrder.find_by!(movement_pass: exit_pass)
+    CraneTaskService.complete(work_order: order, user: crane_user)
+    exit_pass.update!(exit_scanned_at: Time.current)
+    described_class.call(pass: exit_pass, user: security_user)
+  end
+
   describe ".call" do
-    it "registra el ingreso como tarea de grúa pendiente y consume el pase" do
+    it "registra la entrada del camión, crea la tarea y mantiene el pase abierto" do
       expect {
         described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
       }.to change(WorkOrder, :count).by(1)
 
       expect(ContainerMovement.count).to eq(0)
 
-      expect(pass.reload).to be_completado
+      expect(pass.reload).to be_vigente
+      expect(pass.entered_at).to be_present
       expect(container.reload.current_yard_slot).to be_nil
       expect(WorkOrder.last).to have_attributes(
         container: container, movement_pass: pass, to_yard_slot: slot,
@@ -52,7 +61,7 @@ RSpec.describe GateMovementService do
 
     it "bloquea otro movimiento mientras el contenedor espera a la grúa" do
       described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
-      another_pass = create(:movement_pass, :standalone, container: container)
+      another_pass = create(:movement_pass, :standalone, container: container, movement_type: "salida", load_status: nil)
 
       expect {
         described_class.call(pass: another_pass, user: security_user, yard_slot_id: slot.id)
@@ -85,6 +94,7 @@ RSpec.describe GateMovementService do
 
     it "permite apilar sobre un contenedor y bloquea la salida del que soporta" do
       upper = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+      create(:yard_slot, yard_block: block, bay: 3, row: "A", level: 1)
       base = create(:container, client: client)
       base_pass = create(:movement_pass, :standalone, container: base)
       enter(base_pass, slot)
@@ -94,9 +104,13 @@ RSpec.describe GateMovementService do
       expect(container.reload.current_yard_slot).to eq(upper)
 
       exit_pass = create(:movement_pass, :standalone, container: base.reload, movement_type: "salida")
-      expect {
-        described_class.call(pass: exit_pass, user: security_user)
-      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.supports_other_container"))
+      described_class.call(pass: exit_pass, user: security_user)
+
+      request = RehandlingRequest.find_by!(movement_pass: exit_pass)
+      expect(request).to be_pendiente
+      expect(exit_pass.reload).to be_vigente
+      expect(exit_pass.entered_at).to be_present
+      expect(WorkOrder.where(rehandling_request: request, movement_type: "reacomodo", status: "pendiente").count).to eq(1)
     end
 
     it "reserva las dos bahías de un contenedor de 40 pies" do
@@ -135,7 +149,7 @@ RSpec.describe GateMovementService do
 
       mbl_container.vaciar!
       exit_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: mbl_container, operation: "salida"), movement_type: "salida")
-      described_class.call(pass: exit_pass, user: security_user)
+      exit_container(exit_pass)
       expect(mbl_container.reload.status).to eq("entregado")
     end
 
@@ -143,7 +157,7 @@ RSpec.describe GateMovementService do
       container.update!(current_yard_slot: slot)
       exit_pass = create(:movement_pass, :standalone, container: container, movement_type: "salida", load_status: nil)
 
-      described_class.call(pass: exit_pass, user: security_user)
+      exit_container(exit_pass)
 
       expect(container.reload.current_yard_slot).to be_nil
       expect(exit_pass.reload).to be_completado
@@ -172,7 +186,7 @@ RSpec.describe GateMovementService do
 
       expect {
         described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
-      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.pass_unusable"))
+      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.exit_scan_required"))
     end
   end
 

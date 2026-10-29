@@ -1,6 +1,6 @@
 <% container = work_order.container %>
 <% vehicle = work_order.movement_pass&.vehicle("principal") %>
-<% destination = work_order.to_yard_slot&.code %>
+<% destination = work_order.to_yard_slot&.code || (work_order.salida? ? t(".truck") : nil) %>
 <article id="<%= dom_id(work_order) %>" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
@@ -10,6 +10,12 @@
     </div>
     <span class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800"><%= t("crane.types.#{work_order.movement_type}") %></span>
   </div>
+
+  <% if work_order.rehandling_request %>
+    <p class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+      <%= t(".blocking_exit", container: work_order.rehandling_request.container.number) %>
+    </p>
+  <% end %>
 
   <div class="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-slate-50 p-4 text-center">
     <div>
@@ -33,10 +39,21 @@
   <% end %>
 
   <div class="mt-5 flex flex-wrap gap-3">
-    <%= button_to complete_crane_work_order_path(work_order), method: :patch,
-          form: { class: "flex-1", data: { turbo_confirm: t(".confirm_complete", location: destination.to_s) } },
-          class: "flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 text-base font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-emerald-700 active:scale-95" do %>
-      <%= material_icon "task_alt" %> <%= t(".complete") %>
+    <%= form_with url: complete_crane_work_order_path(work_order), method: :patch,
+          data: { turbo_confirm: t(".confirm_#{work_order.movement_type}", location: destination.to_s) },
+          class: "flex flex-1 flex-wrap items-center gap-3" do |f| %>
+      <% if work_order.reacomodo? %>
+        <% options = destination_options.fetch(work_order.id, []) %>
+        <%= f.label :yard_slot_id, t(".destination"), class: "sr-only" %>
+        <%= f.select :yard_slot_id, options.map { |slot| [slot.code, slot.id] },
+              { selected: work_order.to_yard_slot_id, include_blank: true },
+              required: true,
+              class: "min-h-12 min-w-36 flex-1 rounded-2xl border border-slate-300 bg-white px-4 text-sm focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20" %>
+      <% end %>
+      <%= f.button class: "flex min-h-14 w-full flex-1 items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 text-base font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-emerald-700 active:scale-95" do %>
+        <%= material_icon "task_alt" %>
+        <%= t(".complete_#{work_order.movement_type}") %>
+      <% end %>
     <% end %>
     <% if policy(work_order).cancel? %>
       <%= button_to cancel_crane_work_order_path(work_order), method: :patch,

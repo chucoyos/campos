@@ -42,10 +42,23 @@
         <dt class="text-sm text-slate-500"><%= t("movement_passes.pdf.issued_at") %></dt>
         <dd class="font-medium"><%= l(@pass.issued_at, format: :long) %></dd>
       </div>
-      <div>
-        <dt class="text-sm text-slate-500"><%= t("movement_passes.pdf.expires_at") %></dt>
-        <dd class="font-medium"><%= l(@pass.expires_at, format: :long) %></dd>
-      </div>
+      <% if @pass.entered_at? %>
+        <div>
+          <dt class="text-sm text-slate-500"><%= t(".entered_at") %></dt>
+          <dd class="font-medium"><%= l(@pass.entered_at, format: :long) %></dd>
+        </div>
+        <% if @pass.exit_scanned_at? %>
+          <div>
+            <dt class="text-sm text-slate-500"><%= t(".exit_scanned_at") %></dt>
+            <dd class="font-medium"><%= l(@pass.exit_scanned_at, format: :long) %></dd>
+          </div>
+        <% end %>
+      <% else %>
+        <div>
+          <dt class="text-sm text-slate-500"><%= t("movement_passes.pdf.expires_at") %></dt>
+          <dd class="font-medium"><%= l(@pass.expires_at, format: :long) %></dd>
+        </div>
+      <% end %>
       <% if @pass.consumed_at %>
         <div>
           <dt class="text-sm text-slate-500"><%= MovementPass.human_attribute_name(:consumed_at) %></dt>

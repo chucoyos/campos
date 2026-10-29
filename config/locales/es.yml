@@ -72,6 +72,9 @@ es:
     gate:
       completed: "Movimiento registrado y pase completado."
       entry_queued: "Ingreso confirmado. La grúa recibió la tarea para colocar el contenedor."
+      loading_queued: "Entrada del camión registrada. La grúa recibió la tarea de salida."
+      rehandling_queued: "Entrada del camión registrada. Se avisó a la grúa para liberar el contenedor solicitado."
+      exit_completed: "Salida del camión verificada y pase cerrado."
       photos_uploaded:
         one: "Se cargó 1 fotografía para el movimiento."
         other: "Se cargaron %{count} fotografías para el movimiento."
@@ -79,6 +82,8 @@ es:
     crane:
       completed: "Tarea concluida. El contenedor quedó registrado en su posición."
       canceled: "Tarea cancelada."
+      rehandle_created: "Reacomodo creado. La tarea ya está disponible para la grúa."
+      request_canceled: "Solicitud de salida cancelada. Los movimientos ya realizados se conservan."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -604,9 +609,17 @@ es:
   crane:
     index:
       title: "Grúa"
-      description: "Tareas de colocación en tiempo real."
+      description: "Tareas de patio y salidas bloqueadas en tiempo real."
       empty: "Sin tareas pendientes."
       empty_hint: "Las nuevas tareas aparecerán aquí automáticamente."
+      new_rehandle: "Nuevo reacomodo"
+      search_hint: "Busca por número un contenedor que ya esté en patio. No se muestra el listado general."
+      search_placeholder: "Número de contenedor"
+      search: "Buscar"
+      search_minimum: "Escribe al menos 3 caracteres para buscar."
+      no_candidates: "No se encontraron contenedores elegibles en patio sin otra tarea pendiente."
+      select_container: "Elegir"
+      blocked_exits: "Salidas que requieren reacomodo"
     work_order:
       container: "Contenedor"
       origin: "Origen"
@@ -616,10 +629,31 @@ es:
       plate: "Placas"
       unit: "Camión"
       no_origin: "Camión en Garita"
-      complete: "Concluir tarea"
-      confirm_complete: "¿Confirmas que el contenedor ya está colocado en %{location}?"
+      complete_ingreso: "Confirmar colocación"
+      complete_salida: "Confirmar carga al camión"
+      complete_reacomodo: "Confirmar reacomodo"
+      confirm_ingreso: "¿Confirmas que el contenedor ya está colocado en %{location}?"
+      confirm_salida: "¿Confirmas que el contenedor ya está cargado en el camión?"
+      confirm_reacomodo: "¿Confirmas que moviste el contenedor a %{location}?"
+      blocking_exit: "Este movimiento libera la salida de %{container}."
       cancel: "Cancelar tarea"
-      confirm_cancel: "¿Cancelar esta tarea? El contenedor quedará sin posición en patio."
+      confirm_cancel: "¿Cancelar esta tarea? El contenedor permanecerá en su ubicación actual."
+    rehandling_request:
+      title: "Salida bloqueada"
+      details: "%{plate} · Reacomodos completados: %{count}"
+      next_task: "Siguiente contenedor: %{container}"
+      no_destination: "No hay destino sugerido disponible. Libera una posición o revisa el patio."
+      cancel: "Cancelar solicitud"
+      confirm_cancel: "¿Cancelar la salida? Los reacomodos confirmados no se desharán y el camión saldrá sin el contenedor."
+    new_rehandle:
+      title: "Crear reacomodo"
+      description: "El origen se toma de la ubicación actual. Elige un destino disponible y soportado."
+      container: "Contenedor"
+      origin: "Origen"
+      destination: "Destino"
+      suggested: "Destino sugerido: %{location}. Puedes elegir otra posición."
+      create: "Crear tarea"
+      no_destinations: "No hay destinos disponibles y soportados para este contenedor."
     types:
       ingreso: "Ingreso"
       salida: "Salida"
@@ -629,6 +663,14 @@ es:
     errors:
       not_pending: "La tarea ya no está pendiente."
       already_in_yard: "El contenedor ya tiene una posición registrada en el patio."
+      container_not_in_yard: "El contenedor solicitado no está en el patio."
+      container_not_eligible: "El contenedor no está en patio o ya tiene una tarea pendiente."
+      task_already_pending: "El contenedor ya tiene una tarea pendiente."
+      request_not_pending: "La solicitud ya no está pendiente."
+      origin_changed: "La posición de origen cambió; revisa la tarea antes de confirmarla."
+      destination_unchanged: "Selecciona un destino distinto del origen."
+      container_still_blocked: "Aún hay contenedores bloqueando el objetivo de salida."
+      invalid_movement: "El tipo de tarea no es válido."
       destination_unavailable: "La posición de destino ya no está disponible."
       destination_occupied: "La posición de destino ya está ocupada."
       destination_unsupported: "La posición de destino no tiene un contenedor que la soporte debajo."
@@ -642,6 +684,7 @@ es:
       completado: "Completado"
       cancelado: "Cancelado"
       vencido: "Vencido"
+      en_patio: "Camión en patio"
     load_statuses:
       lleno: "Lleno"
       vacio: "Vacío"
@@ -671,13 +714,15 @@ es:
       qr_alt: "Código QR para abrir el pase en Garita"
       cancel: "Cancelar pase"
       confirm_cancel: "¿Cancelar este pase? El QR dejará de ser válido."
+      entered_at: "Entrada del camión"
+      exit_scanned_at: "Escaneo de salida"
     pdf:
       title: "Pase de movimiento"
       issued_at: "Emitido"
       expires_at: "Vence"
       vehicle_principal: "Vehículo"
       vehicle_destino: "Vehículo destino"
-      single_use: "Pase de un solo uso, válido %{hours} horas. Preséntalo en garita."
+      single_use: "Pase válido %{hours} horas hasta el primer escaneo de entrada. Preséntalo de nuevo al salir."
   gate:
     index:
       title: "Garita"
@@ -693,7 +738,8 @@ es:
       validate: "Validar pase"
     show:
       title: "Confirmar movimiento"
-      description: "Revisa los datos, agrega evidencia fotográfica y confirma el movimiento del contenedor."
+      description: "Registra la entrada del camión, revisa los datos y prepara el movimiento del contenedor."
+      exit_description: "Verifica visualmente la carga del vehículo para cerrar el pase."
       scan_another: "Escanear otro pase"
       container: "Contenedor"
       operator: "Operador"
@@ -721,6 +767,13 @@ es:
         client: "Área del cliente"
         yard: "Otras posiciones"
       complete: "Confirmar movimiento"
+      register_entry: "Registrar entrada del camión"
+      prepare_exit_title: "Registrar entrada del camión"
+      prepare_exit: "El camión entra para retirar el contenedor %{container}. La grúa recibirá la tarea de carga."
+      verify_exit_title: "Verificar salida del camión"
+      verify_exit_ingreso: "Verifica visualmente que el camión salga sin contenedor."
+      verify_exit_salida: "Verifica visualmente que el camión lleve el contenedor %{container}."
+      verify_exit: "Verificar y cerrar pase"
     errors:
       token_required: "Captura o escanea el token del pase."
       pass_not_found: "No se encontró un pase con ese token."
@@ -735,6 +788,9 @@ es:
       supports_other_container: "El contenedor soporta a otro en un nivel superior; retira primero el de arriba."
       not_in_yard: "El contenedor no tiene una posición registrada en el patio para salir."
       entry_pending: "El contenedor tiene un ingreso pendiente de colocar por la grúa."
+      movement_not_completed: "La tarea física del contenedor aún no está concluida; no se puede registrar la salida del camión."
+      scan_exit_qr: "Escanea nuevamente el QR al salir del patio para verificar y cerrar el pase."
+      exit_scan_required: "Escanea el QR del pase al salir antes de confirmarlo."
       immutable: "El movimiento registrado no se puede modificar ni eliminar."
       photos_missing: "Selecciona al menos una fotografía."
       photos_invalid: "No se pudieron adjuntar las fotografías. Inténtalo de nuevo."
@@ -940,6 +996,9 @@ es:
       work_order:
         one: "Tarea de grúa"
         other: "Tareas de grúa"
+      rehandling_request:
+        one: "Solicitud de reacomodo"
+        other: "Solicitudes de reacomodo"
       movement_pass_vehicle:
         one: "Vehículo"
         other: "Vehículos"

@@ -32,7 +32,8 @@
               <% if policy(pass).view_client? && pass.client %>· <%= pass.client.name %><% end %>
             </p>
             <p class="text-sm text-slate-500">
-              <%= t(".expires") %>: <%= l(pass.expires_at, format: :short) %>
+              <%= t(pass.entered_at? ? "movement_passes.show.entered_at" : ".expires") %>:
+              <%= l(pass.entered_at || pass.expires_at, format: :short) %>
               <% if (vehicle = pass.vehicle("principal")) %>· <%= vehicle.plate %><% end %>
             </p>
           </div>

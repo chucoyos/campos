@@ -4,7 +4,7 @@
       <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "qr_code_scanner" %></span>
       <div>
         <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
-        <p class="text-sm text-slate-600"><%= t(".description") %></p>
+        <p class="text-sm text-slate-600"><%= t(@pass.entered_at? ? ".exit_description" : ".description") %></p>
       </div>
     </div>
     <%= link_to gate_path, class: "flex min-h-12 items-center gap-2 rounded-full border border-slate-300 px-5 font-medium text-slate-700 hover:bg-slate-100" do %>
@@ -50,6 +50,7 @@
     <% end %>
   </section>
 
+  <% unless @pass.entered_at? %>
   <section class="mt-5 space-y-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
     <div>
       <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "photo_camera" %> <%= t(".photos_title") %></h2>
@@ -96,8 +97,21 @@
       <p class="text-sm text-slate-500"><%= t(".photos_empty") %></p>
     <% end %>
   </section>
+  <% end %>
 
-  <% if @pass.ingreso? %>
+  <% if @pass.entered_at? %>
+    <section class="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "fact_check" %> <%= t(".verify_exit_title") %></h2>
+      <p class="mt-2 text-sm text-slate-700">
+        <%= t(".verify_exit_#{@pass.movement_type}", container: @pass.container.number) %>
+      </p>
+      <%= form_with url: complete_gate_movement_path(@pass), class: "mt-5" do |f| %>
+        <%= f.button class: "flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 active:scale-95" do %>
+          <%= material_icon "verified" %> <%= t(".verify_exit") %>
+        <% end %>
+      <% end %>
+    </section>
+  <% elsif @pass.ingreso? %>
     <section class="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8"
              data-controller="<%= 'yard-slot-search' if @location_options.present? %>"
              data-yard-slot-search-select-prompt-value="<%= t(".select_location") %>">
@@ -146,15 +160,19 @@
         <%= f.hidden_field :yard_slot_id, data: { yard_slot_search_target: "slotId" } %>
         <%= f.button disabled: true, data: { yard_slot_search_target: "submit" },
               class: "flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50" do %>
-          <%= material_icon "task_alt" %> <%= t(".complete") %>
+          <%= material_icon "task_alt" %> <%= t(".register_entry") %>
         <% end %>
       <% end %>
     </section>
   <% else %>
     <section class="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <% if @pass.salida? %>
+        <h2 class="text-lg font-bold text-slate-900"><%= t(".prepare_exit_title") %></h2>
+        <p class="mt-2 text-sm text-slate-700"><%= t(".prepare_exit", container: @pass.container.number) %></p>
+      <% end %>
       <%= form_with url: complete_gate_movement_path(@pass), class: "space-y-3" do |f| %>
         <%= f.button class: "flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 active:scale-95" do %>
-          <%= material_icon "task_alt" %> <%= t(".complete") %>
+          <%= material_icon "task_alt" %> <%= t(@pass.traspaleo? ? ".complete" : ".register_entry") %>
         <% end %>
       <% end %>
     </section>

@@ -18,9 +18,16 @@ class GateController < ApplicationController
     end
 
     authorize @pass, :gate?
-    @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
+    @pass.with_lock do
+      @pass.vencer! if @pass.may_vencer?
+      record_exit_scan if @pass.usable? && @pass.entered_at?
+    end
     unless @pass.usable?
       @error = t("gate.errors.pass_unusable")
+      return render :index, status: :unprocessable_entity
+    end
+    if @pass.entered_at? && !@pass.exit_scanned_at?
+      @error = t("gate.errors.movement_not_completed")
       return render :index, status: :unprocessable_entity
     end
 
@@ -32,7 +39,11 @@ class GateController < ApplicationController
     return redirect_to gate_path, alert: t("gate.errors.pass_not_found") unless @pass
 
     authorize @pass, :gate?
-    @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
+    @pass.with_lock do
+      @pass.vencer! if @pass.may_vencer?
+      record_exit_scan if @pass.usable? && @pass.entered_at?
+    end
+    return redirect_to gate_path, alert: t("gate.errors.movement_not_completed") if @pass.entered_at? && !@pass.exit_scanned_at?
     return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless @pass.usable?
 
     redirect_to gate_movement_path(@pass)
@@ -46,6 +57,10 @@ class GateController < ApplicationController
       redirect_to gate_path, alert: t("gate.errors.pass_unusable")
       return
     end
+    if @pass.entered_at? && !@pass.exit_scanned_at?
+      redirect_to gate_path, alert: t("gate.errors.scan_exit_qr")
+      return
+    end
 
     load_location_options
   end
@@ -53,7 +68,7 @@ class GateController < ApplicationController
   def upload_photos
     @pass = MovementPass.find(params[:id])
     authorize @pass, :gate?
-    return redirect_to gate_movement_path(@pass), alert: t("gate.errors.pass_unusable") unless @pass.usable?
+    return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless @pass.usable? && !@pass.entered_at?
 
     files = Array(params[:photos]).compact_blank
     if files.empty?
@@ -77,7 +92,7 @@ class GateController < ApplicationController
   def remove_photo
     @pass = MovementPass.find(params[:id])
     authorize @pass, :gate?
-    return redirect_to gate_movement_path(@pass), alert: t("gate.errors.pass_unusable") unless @pass.usable?
+    return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless @pass.usable? && !@pass.entered_at?
 
     photo = @pass.photos_attachments.find(params[:photo_id])
     photo.purge_later
@@ -90,8 +105,15 @@ class GateController < ApplicationController
     @pass = MovementPass.find(params[:id])
     authorize @pass, :gate?
 
+    second_scan = @pass.entered_at?
     GateMovementService.call(pass: @pass, user: current_user, yard_slot_id: params[:yard_slot_id])
-    redirect_to container_path(@pass.container), notice: t(@pass.ingreso? ? "flash.gate.entry_queued" : "flash.gate.completed")
+    if second_scan
+      redirect_to gate_path, notice: t("flash.gate.exit_completed")
+    else
+      notice_key = @pass.ingreso? ? "flash.gate.entry_queued" :
+        (@pass.rehandling_request ? "flash.gate.rehandling_queued" : "flash.gate.loading_queued")
+      redirect_to gate_path, notice: t(notice_key)
+    end
   rescue GateMovementService::Error => error
     @pass.reload
     return redirect_to gate_path, alert: error.message unless @pass.usable?
@@ -117,9 +139,18 @@ class GateController < ApplicationController
   end
 
   def load_location_options
-    return unless @pass&.ingreso?
+    return unless @pass&.ingreso? && !@pass.entered_at?
 
     @location_options = GateMovementService.available_slot_records(@pass.container, pass: @pass)
     @suggested_slot = @location_options.first&.fetch(:slot)
+  end
+
+  def record_exit_scan
+    return false if @pass.exit_scanned_at?
+    unless @pass.movement || @pass.rehandling_request&.cancelada?
+      return false
+    end
+
+    @pass.update!(exit_scanned_at: Time.current)
   end
 end

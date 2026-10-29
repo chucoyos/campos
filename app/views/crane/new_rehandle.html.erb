@@ -1,0 +1,31 @@
+<div class="mx-auto w-full max-w-2xl">
+  <%= link_to crane_path, class: "mb-4 inline-flex min-h-12 items-center gap-2 text-sm text-slate-600 hover:text-slate-900" do %>
+    <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+  <% end %>
+  <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+    <h1 class="text-2xl font-bold text-slate-900"><%= t(".title") %></h1>
+    <p class="mt-1 text-sm text-slate-600"><%= t(".description") %></p>
+    <div class="mt-5 rounded-2xl bg-slate-50 p-4">
+      <p class="text-xs text-slate-500"><%= t(".container") %></p>
+      <p class="mt-1 text-xl font-bold text-slate-900"><%= @container.number %></p>
+      <p class="mt-1 text-sm text-slate-600"><%= t(".origin") %>: <%= @container.current_yard_slot.code %></p>
+    </div>
+    <% if @destinations.any? %>
+      <p class="mt-4 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900">
+        <%= t(".suggested", location: @suggested_destination.code) %>
+      </p>
+      <%= form_with url: create_crane_rehandle_path, method: :post, class: "mt-5 space-y-4" do |f| %>
+        <%= f.hidden_field :container_id, value: @container.id %>
+        <%= f.label :yard_slot_id, t(".destination"), class: "block text-sm font-medium text-slate-700" %>
+        <%= f.select :yard_slot_id, @destinations.map { |slot| [slot.code, slot.id] },
+              { selected: @suggested_destination.id },
+              class: "min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20" %>
+        <%= f.button class: "flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-700 active:scale-95" do %>
+          <%= material_icon "task_alt" %> <%= t(".create") %>
+        <% end %>
+      <% end %>
+    <% else %>
+      <p class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-800" role="alert"><%= t(".no_destinations") %></p>
+    <% end %>
+  </section>
+</div>

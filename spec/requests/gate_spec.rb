@@ -81,12 +81,55 @@ RSpec.describe "Garita", type: :request do
       post complete_gate_movement_path(pass), params: { yard_slot_id: slot.id }
     }.to change(WorkOrder, :count).by(1)
 
-    expect(response).to redirect_to(container_path(container))
+    expect(response).to redirect_to(gate_path)
+    expect(pass.reload).to be_vigente
+    expect(pass.entered_at).to be_present
+    expect(container.reload.current_yard_slot).to be_nil
+
+    CraneTaskService.complete(work_order: WorkOrder.find_by!(movement_pass: pass), user: create(:user, :grua))
+    post scan_gate_pass_path, params: { token: pass.token }
+    expect(response).to redirect_to(gate_movement_path(pass))
+    expect(response.body).not_to be_present
+
+    post complete_gate_movement_path(pass)
+    expect(response).to redirect_to(gate_path)
     expect(pass.reload).to be_completado
 
     post scan_gate_pass_path, params: { token: pass.token }
     expect(response).to have_http_status(:unprocessable_entity)
     expect(response.body).to include(I18n.t("gate.errors.pass_unusable"))
+  end
+
+  it "registra la salida solo después de la carga física y del segundo escaneo" do
+    container.update!(current_yard_slot: slot)
+    output_pass = create(:movement_pass, :standalone, container:, movement_type: "salida", load_status: nil)
+
+    post scan_gate_pass_path, params: { token: output_pass.token }
+    expect(response).to redirect_to(gate_movement_path(output_pass))
+
+    post complete_gate_movement_path(output_pass)
+    expect(response).to redirect_to(gate_path)
+    expect(output_pass.reload).to have_attributes(status: "vigente")
+    expect(output_pass.entered_at).to be_present
+    expect(output_pass.movement).to be_nil
+
+    order = WorkOrder.find_by!(movement_pass: output_pass)
+    CraneTaskService.complete(work_order: order, user: create(:user, :grua))
+    expect(output_pass.reload.movement).to be_present
+
+    post scan_gate_pass_path, params: { token: output_pass.token }
+    expect(response).to redirect_to(gate_movement_path(output_pass))
+    exit_scan_time = output_pass.reload.exit_scanned_at
+    expect(exit_scan_time).to be_present
+
+    post scan_gate_pass_path, params: { token: output_pass.token }
+    expect(output_pass.reload.exit_scanned_at).to eq(exit_scan_time)
+
+    post complete_gate_movement_path(output_pass)
+    expect(response).to redirect_to(gate_path)
+    expect(output_pass.reload).to be_completado
+    expect(output_pass.entered_at).to be_present
+    expect(container.reload.current_yard_slot).to be_nil
   end
 
   it "transfiere las fotos del pase al historial al confirmar el movimiento" do
@@ -108,6 +151,10 @@ RSpec.describe "Garita", type: :request do
     movement = ContainerMovement.last
     expect(movement.photos.count).to eq(1)
     expect(pass.reload.photos.count).to eq(0)
+
+    post scan_gate_pass_path, params: { token: pass.token }
+    post complete_gate_movement_path(pass)
+    expect(pass.reload).to be_completado
 
     get container_path(container)
     expect(response.body).to include("Historial de movimientos", "movement_photos_#{movement.id}")

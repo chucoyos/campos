@@ -4,12 +4,17 @@ RSpec.describe WorkOrder, type: :model do
   subject(:work_order) { create(:work_order) }
 
   it { is_expected.to belong_to(:container) }
-  it { is_expected.to belong_to(:movement_pass).optional }
   it { is_expected.to define_enum_for(:movement_type).with_values(ContainerMovement::TYPES.index_with(&:itself)).backed_by_column_of_type(:string) }
 
   it "requiere un destino para el ingreso" do
     order = build(:work_order, to_yard_slot: nil)
     expect(order).not_to be_valid
+  end
+
+  it "permite reacomodos sin pase de movimiento" do
+    order = build(:work_order, movement_type: "reacomodo", movement_pass: nil, from_yard_slot: create(:yard_slot))
+
+    expect(order).to be_valid
   end
 
   it "no admite dos tareas pendientes para el mismo contenedor" do
