@@ -44,8 +44,8 @@
   <% end %>
 
   <div class="mt-5 flex flex-wrap gap-3">
-    <%= form_with url: complete_crane_work_order_path(work_order), method: :patch,
-          data: { turbo_confirm: t(".confirm_#{work_order.movement_type}", location: destination.to_s) },
+    <%= form_with url: complete_crane_work_order_path(work_order, queue: params[:queue]), method: :patch,
+          data: { turbo_confirm: t(".confirm_#{work_order.movement_type}", location: destination.to_s), turbo_confirm_tone: "success" },
           class: "flex flex-1 flex-wrap items-center gap-3" do |f| %>
       <% if work_order.reacomodo? %>
         <% options = destination_options.fetch(work_order.id, []) %>
@@ -61,7 +61,7 @@
       <% end %>
     <% end %>
     <% if policy(work_order).cancel? %>
-      <%= button_to cancel_crane_work_order_path(work_order), method: :patch,
+      <%= button_to cancel_crane_work_order_path(work_order, queue: params[:queue]), method: :patch,
             form: { data: { turbo_confirm: t(".confirm_cancel") } },
             class: "flex min-h-14 items-center justify-center gap-2 rounded-full border border-slate-300 px-6 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95" do %>
         <%= material_icon "close" %> <%= t(".cancel") %>

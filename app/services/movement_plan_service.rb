@@ -125,6 +125,7 @@ class MovementPlanService
       plan.work_orders.where(status: "pendiente").lock.each(&:cancelar!)
       plan.cancelar!
       plan.rehandling_request&.cancelar! if plan.rehandling_request&.pendiente?
+      WorkScheduleService.close_if_finished(plan.work_schedule)
       plan
     end
   end
@@ -138,6 +139,7 @@ class MovementPlanService
       destination = YardSlot.find_by(id: destination_id)
       raise Error, :destination_unavailable unless destination
       raise Error, :destination_unchanged if destination.id == plan.origin_yard_slot_id
+      raise Error, :destination_not_desycon if plan.work_schedule_id && !destination.desycon?
 
       YardSlot.where(yard_block_id: [ plan.origin_yard_slot&.yard_block_id, destination.yard_block_id ].compact.uniq)
         .order(:id).lock.pluck(:id)
@@ -154,6 +156,7 @@ class MovementPlanService
       movement_pass: plan.movement_pass,
       rehandling_request: plan.rehandling_request,
       movement_plan: plan,
+      work_schedule_id: plan.work_schedule_id,
       movement_type: plan.movement_type,
       from_yard_slot: plan.container.current_yard_slot,
       to_yard_slot: plan.destination_yard_slot,
@@ -191,6 +194,7 @@ class MovementPlanService
 
   def create_rehandle_order(container, plan)
     GateMovementService.available_slots(container).each do |destination|
+      next if plan.work_schedule_id && destination.desycon?
       next if blocks_target_column?(container, destination, plan.container)
 
       lock_yard_blocks(destination.yard_block_id)

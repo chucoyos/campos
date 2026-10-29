@@ -1,0 +1,2 @@
+<% styles = { "activa" => "bg-amber-100 text-amber-800", "completada" => "bg-emerald-100 text-emerald-800", "cancelada" => "bg-slate-100 text-slate-600" } %>
+<span class="rounded-full px-3 py-1 text-xs font-medium <%= styles[schedule.status] %>"><%= t("work_schedules.statuses.#{schedule.status}") %></span>

@@ -35,7 +35,7 @@
       <% end %>
     </div>
     <% if policy(plan).cancel? %>
-      <%= button_to cancel_crane_movement_plan_path(plan), method: :patch,
+      <%= button_to cancel_crane_movement_plan_path(plan, queue: params[:queue]), method: :patch,
             form: { data: { turbo_confirm: plan.salida? ? t("crane.rehandling_request.confirm_cancel") : t("crane.movement_plan.confirm_cancel") } },
             class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
         <%= material_icon "close" %> <%= t("crane.movement_plan.cancel") %>
@@ -47,7 +47,7 @@
     <% if plan_destination_options.fetch(plan.id, []).empty? %>
       <p class="mt-4 border-t border-amber-200 pt-4 text-sm text-amber-900"><%= t("crane.movement_plan.no_destinations") %></p>
     <% end %>
-    <%= form_with url: update_crane_movement_plan_destination_path(plan), method: :patch,
+    <%= form_with url: update_crane_movement_plan_destination_path(plan, queue: params[:queue]), method: :patch,
           class: "mt-4 flex flex-wrap gap-3 border-t border-amber-200 pt-4" do |f| %>
       <%= f.label :yard_slot_id, t("crane.movement_plan.destination"), class: "sr-only" %>
       <%= f.select :yard_slot_id, plan_destination_options.fetch(plan.id, []).map { |slot| [slot.code, slot.id] },
@@ -78,7 +78,7 @@
     </div>
   <% elsif policy(plan).retry? %>
     <div class="mt-4 border-t border-amber-200 pt-4">
-      <%= button_to retry_crane_movement_plan_path(plan), method: :patch,
+      <%= button_to retry_crane_movement_plan_path(plan, queue: params[:queue]), method: :patch,
             class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
         <%= material_icon "refresh" %> <%= t("crane.movement_plan.retry") %>
       <% end %>

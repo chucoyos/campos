@@ -9,6 +9,17 @@
     </div>
   </div>
 
+  <nav class="mb-6 grid grid-cols-2 gap-2 rounded-full bg-slate-100 p-1" aria-label="<%= t(".queues") %>">
+    <% [ [ "normal", "swap_horiz" ], [ "scheduled", "event_note" ] ].each do |queue, icon| %>
+      <%= link_to crane_path(queue: (queue if queue == "scheduled")),
+            class: "flex min-h-12 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-all duration-200 ease-out active:scale-95 #{@queue == queue ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-700 hover:bg-slate-200'}" do %>
+        <%= material_icon icon %> <%= t(".queue_#{queue}") %>
+        <span class="rounded-full px-2 py-0.5 text-xs <%= @queue == queue ? 'bg-white/20' : 'bg-white' %>"><%= @queue_counts[queue] %></span>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <% if @queue == "normal" %>
   <section class="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
     <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900">
       <%= material_icon "swap_horiz" %> <%= t(".new_rehandle") %>
@@ -26,8 +37,9 @@
       <p class="mt-3 text-sm text-slate-500"><%= t(".search_minimum") %></p>
     <% end %>
   </section>
+  <% end %>
 
-  <% if @plans.any? %>
+  <% if @plans.any? && @queue == "normal" %>
     <section class="mb-6 space-y-4">
       <h2 class="text-lg font-bold text-slate-900"><%= t(".blocked_exits") %></h2>
       <%= render partial: "crane/movement_plan", collection: @plans, as: :plan,
@@ -39,6 +51,29 @@
     </section>
   <% end %>
 
+  <% if @queue == "scheduled" %>
+    <% orders_by_schedule = @standalone_work_orders.group_by(&:work_schedule_id) %>
+    <% plans_by_schedule = @plans.group_by(&:work_schedule_id) %>
+    <% @schedules.each do |schedule| %>
+      <section class="mb-6 space-y-4">
+        <h2 class="flex flex-wrap items-center gap-2 text-lg font-bold text-slate-900">
+          <%= material_icon "event_note", classes: "text-indigo-600" %>
+          <%= schedule.master_bl&.number || t("work_schedules.index.no_master_bl") %>
+          <span class="text-sm font-normal text-slate-500">· <%= l(schedule.scheduled_for, format: :long) %></span>
+        </h2>
+        <% if schedule.notes.present? %><p class="text-sm text-slate-600"><%= schedule.notes %></p><% end %>
+        <%= render partial: "crane/movement_plan", collection: plans_by_schedule.fetch(schedule.id, []), as: :plan,
+              locals: {
+                pending_orders_by_plan: @pending_orders_by_plan,
+                destination_options: @destination_options,
+                plan_destination_options: @plan_destination_options
+              } %>
+        <%= render partial: "crane/work_order", collection: orders_by_schedule.fetch(schedule.id, []), as: :work_order,
+              locals: { destination_options: @destination_options } %>
+      </section>
+    <% end %>
+  <% end %>
+
   <% if @standalone_work_orders.empty? && @plans.empty? %>
     <div class="flex flex-col items-center gap-2 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">
       <span class="text-emerald-600"><%= material_icon "task_alt", classes: "!text-4xl" %></span>
@@ -46,7 +81,7 @@
       <p class="text-sm"><%= t(".empty_hint") %></p>
     </div>
   <% else %>
-    <% if @standalone_work_orders.any? %>
+    <% if @standalone_work_orders.any? && @queue == "normal" %>
       <div class="space-y-4">
         <%= render partial: "crane/work_order", collection: @standalone_work_orders, as: :work_order,
               locals: { destination_options: @destination_options } %>

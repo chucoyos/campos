@@ -88,6 +88,9 @@ es:
       destination_updated: "Destino final actualizado."
       plan_retried: "Se revisó el plan y se programó el siguiente movimiento disponible."
       plan_waiting: "Se revisó el plan; todavía no hay un movimiento disponible."
+    work_schedules:
+      create: "Programación creada. Las tareas ya están en la cola de Programación de la grúa."
+      cancel: "Programación cancelada. Los movimientos ya realizados se conservan."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -111,6 +114,10 @@ es:
     number: "Número"
     master_bl: "MBL"
   shared:
+    confirm_dialog:
+      title: "Confirmar acción"
+      confirm: "Confirmar"
+      cancel: "Cancelar"
     related_users:
       title: "Usuarios relacionados"
       empty: "Aún no hay usuarios relacionados."
@@ -143,6 +150,7 @@ es:
       movement_passes: "Pases"
       gate: "Garita"
       crane: "Grúa"
+      work_schedules: "Programación"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
@@ -614,6 +622,9 @@ es:
     index:
       title: "Grúa"
       description: "Tareas de patio y salidas bloqueadas en tiempo real."
+      queues: "Colas de trabajo"
+      queue_normal: "Movimientos"
+      queue_scheduled: "Programación"
       empty: "Sin tareas pendientes."
       empty_hint: "Las nuevas tareas aparecerán aquí automáticamente."
       new_rehandle: "Nuevo reacomodo"
@@ -709,6 +720,51 @@ es:
       destination_occupied: "La posición de destino ya está ocupada."
       destination_unsupported: "La posición de destino no tiene un contenedor que la soporte debajo."
       destination_already_scheduled: "El movimiento final ya está programado; no se puede cambiar el destino."
+      destination_not_desycon: "Las tareas de programación solo pueden terminar en DESYCON."
+  work_schedules:
+    statuses:
+      activa: "Activa"
+      completada: "Completada"
+      cancelada: "Cancelada"
+    row_statuses:
+      pendiente: "Pendiente"
+      completada: "Movido a DESYCON"
+      cancelada: "Cancelado"
+    errors:
+      no_containers: "Selecciona al menos un contenedor."
+      invalid_containers: "Alguno de los contenedores seleccionados no existe."
+      invalid_schedule: "Indica una fecha válida para la programación."
+      not_in_yard: "El contenedor %{container} no está en el patio."
+      already_in_desycon: "El contenedor %{container} ya está en DESYCON."
+      task_pending: "El contenedor %{container} ya tiene una tarea o plan pendiente."
+      no_desycon_space: "No hay posiciones libres en DESYCON para el contenedor %{container}."
+      not_active: "La programación ya no está activa."
+    index:
+      title: "Programación"
+      count:
+        one: "1 programación"
+        other: "%{count} programaciones"
+      description: "Planea qué contenedores pasan del patio a DESYCON. La grúa los ejecuta uno por uno desde su cola de Programación."
+      new: "Nueva programación"
+      empty: "Aún no hay programaciones."
+      no_master_bl: "Sin MBL"
+      progress: "%{done} de %{total} movidos"
+    new:
+      title: "Nueva programación"
+      subtitle: "Elige un MBL y ajusta los contenedores que se moverán a DESYCON."
+      master_bl: "MBL"
+      choose_master_bl: "Selecciona un MBL con contenedores en patio"
+      load_containers: "Ver contenedores"
+      none_in_yard: "Este MBL no tiene contenedores en patio fuera de DESYCON."
+      containers: "Contenedores en patio"
+      busy: "Con tarea pendiente"
+      scheduled_for: "Fecha de ejecución"
+      notes: "Notas (opcional)"
+      submit: "Programar movimientos"
+    show:
+      blocked: "Bloqueado: la grúa moverá primero los contenedores de encima."
+      cancel: "Cancelar programación"
+      confirm_cancel: "¿Cancelar la programación? Los movimientos ya realizados se conservan."
   movement_passes:
     types:
       ingreso: "Ingreso"
@@ -1031,6 +1087,9 @@ es:
       work_order:
         one: "Tarea de grúa"
         other: "Tareas de grúa"
+      work_schedule:
+        one: "Programación"
+        other: "Programaciones"
       rehandling_request:
         one: "Solicitud de reacomodo"
         other: "Solicitudes de reacomodo"

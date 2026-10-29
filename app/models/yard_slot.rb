@@ -11,6 +11,11 @@ class YardSlot < ApplicationRecord
   validate :position_within_block
 
   scope :enabled, -> { where(enabled: true) }
+  scope :desycon, -> { joins(:yard_block).where(yard_blocks: { code: YardCatalog::DESYCON_BLOCKS }) }
+
+  def desycon?
+    yard_block&.code.in?(YardCatalog::DESYCON_BLOCKS)
+  end
 
   # Un contenedor de 40 pies ocupa dos bahías contiguas y se ancla en la bahía impar.
   def forty_foot_anchor?

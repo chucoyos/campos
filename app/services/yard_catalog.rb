@@ -11,6 +11,9 @@ class YardCatalog
     { code: "3CFS", bays: 4, rows: 12, levels: 1 }
   ].freeze
 
+  # Los bloques CFS forman el área DESYCON, destino de la desconsolidación.
+  DESYCON_BLOCKS = %w[1CFS 2CFS 3CFS].freeze
+
   # Bloques que cambiaron de código: se renombran en su lugar para conservar sus posiciones y su estado.
   RENAMES = { "1D" => "1CFS", "2D" => "2CFS", "3D" => "3CFS" }.freeze
 

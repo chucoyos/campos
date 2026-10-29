@@ -6,6 +6,7 @@ class MovementPlan < ApplicationRecord
 
   belongs_to :container
   belongs_to :movement_pass, optional: true
+  belongs_to :work_schedule, optional: true
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :origin_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :destination_yard_slot, class_name: "YardSlot", optional: true

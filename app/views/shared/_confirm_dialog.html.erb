@@ -1,0 +1,19 @@
+<dialog id="confirm-dialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-message"
+        data-tones="<%= { danger: { icon: "warning", confirm: "bg-red-600 hover:bg-red-700", iconBox: "bg-red-50 text-red-600" },
+                          success: { icon: "task_alt", confirm: "bg-emerald-600 hover:bg-emerald-700", iconBox: "bg-emerald-50 text-emerald-600" },
+                          neutral: { icon: "help", confirm: "bg-indigo-600 hover:bg-indigo-700", iconBox: "bg-indigo-50 text-indigo-600" } }.to_json %>"
+        class="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl bg-white p-0 text-slate-800 shadow-md backdrop:bg-slate-900/50 backdrop:backdrop-blur-sm">
+  <form method="dialog" class="space-y-5 p-6">
+    <span data-role="icon-box" class="flex h-12 w-12 items-center justify-center rounded-2xl">
+      <span data-role="icon" class="material-symbols-outlined" aria-hidden="true"></span>
+    </span>
+    <div class="space-y-2">
+      <h2 id="confirm-dialog-title" class="text-xl font-bold text-slate-900"><%= t("shared.confirm_dialog.title") %></h2>
+      <p id="confirm-dialog-message" data-role="message" class="text-sm text-slate-600"></p>
+    </div>
+    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+      <button value="cancel" data-role="cancel" class="min-h-12 rounded-full px-6 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95"><%= t("shared.confirm_dialog.cancel") %></button>
+      <button value="confirm" data-role="confirm" class="min-h-12 rounded-full px-6 font-semibold text-white shadow-sm transition-all duration-200 ease-out active:scale-95"><%= t("shared.confirm_dialog.confirm") %></button>
+    </div>
+  </form>
+</dialog>

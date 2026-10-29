@@ -8,6 +8,7 @@ class WorkOrder < ApplicationRecord
   belongs_to :movement_pass, optional: true
   belongs_to :rehandling_request, optional: true
   belongs_to :movement_plan, optional: true
+  belongs_to :work_schedule, optional: true
   belongs_to :from_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :to_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :created_by, class_name: "User", optional: true

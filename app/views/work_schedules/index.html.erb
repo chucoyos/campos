@@ -1,0 +1,36 @@
+<div class="w-full">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "event_note" %></span>
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+        <p class="text-sm text-slate-500"><%= t(".count", count: @pagy.count) %></p>
+      </div>
+    </div>
+    <%= link_to new_work_schedule_path, class: "flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 sm:w-auto" do %>
+      <%= material_icon "add" %> <%= t(".new") %>
+    <% end %>
+  </div>
+  <p class="mb-4 max-w-3xl text-sm text-slate-600"><%= t(".description") %></p>
+
+  <% if @schedules.empty? %>
+    <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".empty") %></p>
+  <% end %>
+
+  <ul class="space-y-3">
+    <% @schedules.each do |schedule| %>
+      <% progress = @progress[schedule.id] %>
+      <li>
+        <%= link_to work_schedule_path(schedule), class: "flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md" do %>
+          <div class="min-w-0">
+            <p class="font-semibold text-slate-900"><%= l(schedule.scheduled_for, format: :long) %></p>
+            <p class="text-sm text-slate-600"><%= schedule.master_bl&.number || t(".no_master_bl") %> · <%= t(".progress", done: progress[:done], total: progress[:total]) %></p>
+          </div>
+          <%= render "work_schedules/status", schedule: schedule %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

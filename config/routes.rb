@@ -56,6 +56,9 @@ Rails.application.routes.draw do
   resources :movement_passes, only: %i[index new create show] do
     patch :cancel, on: :member
   end
+  resources :work_schedules, only: %i[index new create show] do
+    patch :cancel, on: :member
+  end
   get "gate", to: "gate#index", as: :gate
   post "gate/scan", to: "gate#scan", as: :scan_gate_pass
   get "gate/passes/:token", to: "gate#open_pass", as: :gate_pass
