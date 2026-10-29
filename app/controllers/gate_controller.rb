@@ -91,7 +91,7 @@ class GateController < ApplicationController
     authorize @pass, :gate?
 
     GateMovementService.call(pass: @pass, user: current_user, yard_slot_id: params[:yard_slot_id])
-    redirect_to container_path(@pass.container), notice: t("flash.gate.completed")
+    redirect_to container_path(@pass.container), notice: t(@pass.ingreso? ? "flash.gate.entry_queued" : "flash.gate.completed")
   rescue GateMovementService::Error => error
     @pass.reload
     return redirect_to gate_path, alert: error.message unless @pass.usable?

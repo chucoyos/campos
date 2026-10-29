@@ -20,6 +20,7 @@ class Container < ApplicationRecord
   has_many :assignments, class_name: "ContainerAssignment", dependent: :restrict_with_error
   has_many :movement_passes, dependent: :restrict_with_error
   has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
+  has_many :work_orders, dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos
@@ -58,6 +59,10 @@ class Container < ApplicationRecord
   end
 
   def owner_client_id = master_bl&.client_id || client_id
+
+  def pending_placement?
+    work_orders.exists?(status: "pendiente")
+  end
 
   def declare_load_status!(value)
     raise ArgumentError, "Load status can only be declared for standalone containers" if with_master_bl?

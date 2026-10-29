@@ -1,0 +1,49 @@
+<% container = work_order.container %>
+<% vehicle = work_order.movement_pass&.vehicle("principal") %>
+<% destination = work_order.to_yard_slot&.code %>
+<article id="<%= dom_id(work_order) %>" class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="text-sm font-medium text-slate-500"><%= t(".container") %></p>
+      <h2 class="mt-1 text-2xl font-bold text-slate-900"><%= container.number %></h2>
+      <p class="text-sm text-slate-600"><%= t("containers.sizes.#{container.size}") %> · <%= t("containers.statuses.#{container.status}") %></p>
+    </div>
+    <span class="rounded-full bg-amber-100 px-4 py-2 text-sm font-semibold text-amber-800"><%= t("crane.types.#{work_order.movement_type}") %></span>
+  </div>
+
+  <div class="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-2xl bg-slate-50 p-4 text-center">
+    <div>
+      <p class="text-xs text-slate-500"><%= t(".origin") %></p>
+      <p class="font-semibold text-slate-900"><%= work_order.from_yard_slot&.code || t(".no_origin") %></p>
+    </div>
+    <%= material_icon "arrow_forward", classes: "text-indigo-600" %>
+    <div>
+      <p class="text-xs text-slate-500"><%= t(".destination") %></p>
+      <p class="text-xl font-bold text-indigo-700"><%= destination || "—" %></p>
+    </div>
+  </div>
+
+  <% if vehicle %>
+    <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <div><dt class="text-slate-500"><%= t(".transport") %></dt><dd class="font-medium text-slate-900"><%= vehicle.company_name %></dd></div>
+      <div><dt class="text-slate-500"><%= t(".operator") %></dt><dd class="font-medium text-slate-900"><%= vehicle.operator_name %></dd></div>
+      <div><dt class="text-slate-500"><%= t(".plate") %></dt><dd class="font-medium text-slate-900"><%= vehicle.plate %></dd></div>
+      <div><dt class="text-slate-500"><%= t(".unit") %></dt><dd class="font-medium text-slate-900"><%= t("movement_passes.unit_types.#{vehicle.unit_type}") %></dd></div>
+    </dl>
+  <% end %>
+
+  <div class="mt-5 flex flex-wrap gap-3">
+    <%= button_to complete_crane_work_order_path(work_order), method: :patch,
+          form: { class: "flex-1", data: { turbo_confirm: t(".confirm_complete", location: destination.to_s) } },
+          class: "flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 text-base font-semibold text-white shadow-sm transition-all duration-200 ease-out hover:bg-emerald-700 active:scale-95" do %>
+      <%= material_icon "task_alt" %> <%= t(".complete") %>
+    <% end %>
+    <% if policy(work_order).cancel? %>
+      <%= button_to cancel_crane_work_order_path(work_order), method: :patch,
+            form: { data: { turbo_confirm: t(".confirm_cancel") } },
+            class: "flex min-h-14 items-center justify-center gap-2 rounded-full border border-slate-300 px-6 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-100 active:scale-95" do %>
+        <%= material_icon "close" %> <%= t(".cancel") %>
+      <% end %>
+    <% end %>
+  </div>
+</article>

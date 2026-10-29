@@ -77,7 +77,7 @@ RSpec.describe "Garita", type: :request do
     pass
     expect {
       post complete_gate_movement_path(pass), params: { yard_slot_id: slot.id }
-    }.to change(ContainerMovement, :count).by(1)
+    }.to change(WorkOrder, :count).by(1)
 
     expect(response).to redirect_to(container_path(container))
     expect(pass.reload).to be_completado
@@ -96,8 +96,11 @@ RSpec.describe "Garita", type: :request do
     expect(response).to redirect_to(gate_movement_path(pass))
     expect(pass.reload.photos.count).to eq(1)
 
+    post complete_gate_movement_path(pass), params: { yard_slot_id: slot.id }
+    expect(pass.reload.photos.count).to eq(1)
+
     expect {
-      post complete_gate_movement_path(pass), params: { yard_slot_id: slot.id }
+      CraneTaskService.complete(work_order: WorkOrder.last, user: create(:user, :grua))
     }.to change(ContainerMovement, :count).by(1)
 
     movement = ContainerMovement.last

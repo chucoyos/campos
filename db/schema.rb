@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_230000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -290,6 +290,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_230000) do
     t.check_constraint "number >= 1 AND number <= 16", name: "warehouse_slots_number_valid"
   end
 
+  create_table "work_orders", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "movement_pass_id"
+    t.bigint "from_yard_slot_id"
+    t.bigint "to_yard_slot_id"
+    t.bigint "created_by_id"
+    t.bigint "completed_by_id"
+    t.string "movement_type", null: false
+    t.string "status", default: "pendiente", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["completed_by_id"], name: "index_work_orders_on_completed_by_id"
+    t.index ["container_id"], name: "index_work_orders_on_container_id"
+    t.index ["container_id"], name: "index_work_orders_on_container_id_pending", unique: true, where: "((status)::text = 'pendiente'::text)"
+    t.index ["created_by_id"], name: "index_work_orders_on_created_by_id"
+    t.index ["from_yard_slot_id"], name: "index_work_orders_on_from_yard_slot_id"
+    t.index ["movement_pass_id"], name: "index_work_orders_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
+    t.index ["status"], name: "index_work_orders_on_status"
+    t.index ["to_yard_slot_id"], name: "index_work_orders_on_to_yard_slot_id"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying, 'reacomodo'::character varying]::text[])", name: "work_orders_type_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "work_orders_status_valid"
+  end
+
   create_table "yard_area_sections", force: :cascade do |t|
     t.bigint "yard_area_id", null: false
     t.bigint "master_bl_id"
@@ -380,6 +404,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_230000) do
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
   add_foreign_key "warehouse_slots", "warehouse_bays"
+  add_foreign_key "work_orders", "containers", on_delete: :restrict
+  add_foreign_key "work_orders", "movement_passes", on_delete: :restrict
+  add_foreign_key "work_orders", "users", column: "completed_by_id", on_delete: :nullify
+  add_foreign_key "work_orders", "users", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "work_orders", "yard_slots", column: "from_yard_slot_id", on_delete: :restrict
+  add_foreign_key "work_orders", "yard_slots", column: "to_yard_slot_id", on_delete: :restrict
   add_foreign_key "yard_area_sections", "master_bls"
   add_foreign_key "yard_area_sections", "yard_areas"
   add_foreign_key "yard_areas", "clients"

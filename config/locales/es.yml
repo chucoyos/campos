@@ -71,10 +71,14 @@ es:
       not_downloadable: "Este pase ya no está vigente; no se puede descargar."
     gate:
       completed: "Movimiento registrado y pase completado."
+      entry_queued: "Ingreso confirmado. La grúa recibió la tarea para colocar el contenedor."
       photos_uploaded:
         one: "Se cargó 1 fotografía para el movimiento."
         other: "Se cargaron %{count} fotografías para el movimiento."
       photo_removed: "Fotografía eliminada del pase."
+    crane:
+      completed: "Tarea concluida. El contenedor quedó registrado en su posición."
+      canceled: "Tarea cancelada."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -129,6 +133,7 @@ es:
       container_assignments: "Asignaciones"
       movement_passes: "Pases"
       gate: "Garita"
+      crane: "Grúa"
       main_navigation: "Navegación principal"
       open_menu: "Abrir menú"
       sign_out: "Cerrar sesión"
@@ -596,6 +601,37 @@ es:
       destination_hint: "Opcional. Garita elegirá la posición exacta."
       level_hint: "Opcional. La estiba es preferida, no obligatoria."
       submit: "Asignar"
+  crane:
+    index:
+      title: "Grúa"
+      description: "Tareas de colocación en tiempo real."
+      empty: "Sin tareas pendientes."
+      empty_hint: "Las nuevas tareas aparecerán aquí automáticamente."
+    work_order:
+      container: "Contenedor"
+      origin: "Origen"
+      destination: "Destino"
+      transport: "Transporte"
+      operator: "Operador"
+      plate: "Placas"
+      unit: "Camión"
+      no_origin: "Camión en Garita"
+      complete: "Concluir tarea"
+      confirm_complete: "¿Confirmas que el contenedor ya está colocado en %{location}?"
+      cancel: "Cancelar tarea"
+      confirm_cancel: "¿Cancelar esta tarea? El contenedor quedará sin posición en patio."
+    types:
+      ingreso: "Ingreso"
+      salida: "Salida"
+      traspaleo: "Traspaleo"
+      reacomodo: "Reacomodo"
+    pending_badge: "Pendiente de colocar"
+    errors:
+      not_pending: "La tarea ya no está pendiente."
+      already_in_yard: "El contenedor ya tiene una posición registrada en el patio."
+      destination_unavailable: "La posición de destino ya no está disponible."
+      destination_occupied: "La posición de destino ya está ocupada."
+      destination_unsupported: "La posición de destino no tiene un contenedor que la soporte debajo."
   movement_passes:
     types:
       ingreso: "Ingreso"
@@ -698,6 +734,7 @@ es:
       location_unsupported: "No se puede apilar: falta un contenedor en el nivel inferior que soporte esta posición."
       supports_other_container: "El contenedor soporta a otro en un nivel superior; retira primero el de arriba."
       not_in_yard: "El contenedor no tiene una posición registrada en el patio para salir."
+      entry_pending: "El contenedor tiene un ingreso pendiente de colocar por la grúa."
       immutable: "El movimiento registrado no se puede modificar ni eliminar."
       photos_missing: "Selecciona al menos una fotografía."
       photos_invalid: "No se pudieron adjuntar las fotografías. Inténtalo de nuevo."
@@ -900,6 +937,9 @@ es:
       movement_pass:
         one: "Pase"
         other: "Pases"
+      work_order:
+        one: "Tarea de grúa"
+        other: "Tareas de grúa"
       movement_pass_vehicle:
         one: "Vehículo"
         other: "Vehículos"

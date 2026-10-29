@@ -11,6 +11,9 @@
       <div>
         <h1 class="text-2xl font-bold text-slate-900"><%= @container.number %></h1>
         <%= render "status", container: @container %>
+        <% if @container.pending_placement? %>
+          <span class="ml-1 inline-flex items-center gap-1 rounded-lg bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800"><%= material_icon "precision_manufacturing", classes: "!text-sm" %> <%= t("crane.pending_badge") %></span>
+        <% end %>
       </div>
     </div>
 

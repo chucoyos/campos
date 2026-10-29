@@ -7,30 +7,62 @@ RSpec.describe GateMovementService do
   let(:block) { create(:yard_block, bays: 4, rows: 1, levels: 2) }
   let(:slot) { create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1) }
   let(:pass) { create(:movement_pass, :standalone, container: container) }
+  let(:crane_user) { create(:user, :grua) }
+
+  def enter(entry_pass, yard_slot)
+    described_class.call(pass: entry_pass, user: security_user, yard_slot_id: yard_slot.id)
+    CraneTaskService.complete(work_order: WorkOrder.find_by!(movement_pass: entry_pass), user: crane_user)
+  end
 
   describe ".call" do
-    it "registra el ingreso, actualiza la ubicación y consume el pase en una transacción" do
+    it "registra el ingreso como tarea de grúa pendiente y consume el pase" do
       expect {
         described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
-      }.to change(ContainerMovement, :count).by(1)
+      }.to change(WorkOrder, :count).by(1)
+
+      expect(ContainerMovement.count).to eq(0)
 
       expect(pass.reload).to be_completado
-      expect(container.reload.current_yard_slot).to eq(slot)
-      expect(container.status).to eq("lleno")
-      expect(ContainerMovement.last).to have_attributes(
-        container: container,
-        movement_pass: pass,
-        from_yard_slot: nil,
-        to_yard_slot: slot,
-        user: security_user,
-        movement_type: "ingreso"
+      expect(container.reload.current_yard_slot).to be_nil
+      expect(WorkOrder.last).to have_attributes(
+        container: container, movement_pass: pass, to_yard_slot: slot,
+        movement_type: "ingreso", created_by: security_user
       )
+      expect(WorkOrder.last).to be_pendiente
+    end
+
+    it "reserva la posición pendiente y no la ofrece ni la acepta de nuevo" do
+      described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
+      other = create(:container, client: client)
+      other_pass = create(:movement_pass, :standalone, container: other)
+
+      expect(described_class.available_slots(other)).not_to include(slot)
+      expect {
+        described_class.call(pass: other_pass, user: security_user, yard_slot_id: slot.id)
+      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.location_occupied"))
+    end
+
+    it "no cuenta una posición reservada como soporte para apilar" do
+      upper = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+      described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
+      other = create(:container, client: client)
+
+      expect(described_class.available_slots(other)).not_to include(upper)
+    end
+
+    it "bloquea otro movimiento mientras el contenedor espera a la grúa" do
+      described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
+      another_pass = create(:movement_pass, :standalone, container: container)
+
+      expect {
+        described_class.call(pass: another_pass, user: security_user, yard_slot_id: slot.id)
+      }.to raise_error(GateMovementService::Error, I18n.t("gate.errors.entry_pending"))
     end
 
     it "rechaza una posición ocupada sin consumir el pase" do
       occupant = create(:container, client: client)
       occupant_pass = create(:movement_pass, :standalone, container: occupant)
-      described_class.call(pass: occupant_pass, user: security_user, yard_slot_id: slot.id)
+      enter(occupant_pass, slot)
 
       expect {
         described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
@@ -55,10 +87,10 @@ RSpec.describe GateMovementService do
       upper = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
       base = create(:container, client: client)
       base_pass = create(:movement_pass, :standalone, container: base)
-      described_class.call(pass: base_pass, user: security_user, yard_slot_id: slot.id)
+      enter(base_pass, slot)
 
       expect(described_class.available_slots(container)).to include(upper)
-      described_class.call(pass: pass, user: security_user, yard_slot_id: upper.id)
+      enter(pass, upper)
       expect(container.reload.current_yard_slot).to eq(upper)
 
       exit_pass = create(:movement_pass, :standalone, container: base.reload, movement_type: "salida")
@@ -72,7 +104,7 @@ RSpec.describe GateMovementService do
       forty_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: forty_foot))
       companion = create(:yard_slot, yard_block: block, bay: 2, row: "A", level: 1)
 
-      described_class.call(pass: forty_pass, user: security_user, yard_slot_id: slot.id)
+      enter(forty_pass, slot)
 
       other = create(:container, client: client)
       other_pass = create(:movement_pass, :standalone, container: other)
@@ -98,7 +130,7 @@ RSpec.describe GateMovementService do
       entry_pass = create(:movement_pass, container_assignment: create(:container_assignment, container: mbl_container))
       expect(mbl_container.status).to eq("activo")
 
-      described_class.call(pass: entry_pass, user: security_user, yard_slot_id: slot.id)
+      enter(entry_pass, slot)
       expect(mbl_container.reload.status).to eq("lleno")
 
       mbl_container.vaciar!
@@ -159,7 +191,7 @@ RSpec.describe GateMovementService do
   end
 
   it "no permite modificar ni eliminar el historial" do
-    described_class.call(pass: pass, user: security_user, yard_slot_id: slot.id)
+    enter(pass, slot)
     movement = ContainerMovement.last
 
     expect { movement.update!(created_at: 1.day.ago) }.to raise_error(ActiveRecord::RecordNotSaved)

@@ -63,6 +63,9 @@ Rails.application.routes.draw do
   post "gate/movements/:id/photos", to: "gate#upload_photos", as: :gate_movement_photos
   delete "gate/movements/:id/photos/:photo_id", to: "gate#remove_photo", as: :remove_gate_movement_photo
   post "gate/complete/:id", to: "gate#complete", as: :complete_gate_movement
+  get "crane", to: "crane#index", as: :crane
+  patch "crane/work_orders/:id/complete", to: "crane#complete", as: :complete_crane_work_order
+  patch "crane/work_orders/:id/cancel", to: "crane#cancel", as: :cancel_crane_work_order
   get "containers/:container_id/movements/:id/photos", to: "containers#movement_photos", as: :container_movement_photos
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do
