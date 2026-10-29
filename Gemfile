@@ -90,7 +90,7 @@ gem "rails-i18n", "~> 8.1"
 gem "devise-i18n", "~> 1.16"
 
 gem "caxlsx", "~> 4.5"
-gem "roo", "~> 3.0"
+gem "roo", "~> 4.0"
 gem "rqrcode", "~> 2.2"
 
 gem "pagy", "~> 43.7"
