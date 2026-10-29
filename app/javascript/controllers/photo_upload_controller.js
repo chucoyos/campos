@@ -11,6 +11,8 @@ export default class extends Controller {
 
   connect() {
     this.progresses = {}
+    this.prepareGeneration = 0
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
     this.element.addEventListener("direct-upload:initialize", (event) => this.track(event))
     this.element.addEventListener("direct-upload:start", () => this.start())
     this.element.addEventListener("direct-upload:progress", (event) => this.progress(event))
@@ -18,8 +20,10 @@ export default class extends Controller {
   }
 
   async prepare() {
+    const generation = ++this.prepareGeneration
     this.errorTarget.classList.add("hidden")
     let files = Array.from(this.inputTarget.files)
+    this.submitTarget.disabled = true
     if (files.length === 0) return
 
     if (files.length > this.maxValue) {
@@ -27,12 +31,13 @@ export default class extends Controller {
       return this.showError(this.tooManyValue)
     }
 
-    this.submitTarget.disabled = true
     const resized = await Promise.all(files.map((file) => this.resize(file)))
+    if (generation !== this.prepareGeneration) return
+
     const transfer = new DataTransfer()
     resized.forEach((file) => transfer.items.add(file))
     this.inputTarget.files = transfer.files
-    this.submitTarget.disabled = false
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
   }
 
   async resize(file) {
@@ -76,7 +81,7 @@ export default class extends Controller {
 
   fail(event) {
     event.preventDefault()
-    this.submitTarget.disabled = false
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
     this.progressTarget.classList.add("hidden")
     this.showError(this.failedValue)
   }

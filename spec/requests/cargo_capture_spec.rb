@@ -47,6 +47,8 @@ RSpec.describe "Cargo capture", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(cargo_manifest_cargo_item_path(manifest, item, token: item.qr_token))
       expect(response.body).to include(cargo_manifest_cargo_item_path(manifest, item))
+      import_button = Nokogiri::HTML(response.body).at_css('button[data-file-required-target="submit"]')
+      expect(import_button["disabled"]).to be_present
     end
 
     it "does not allow a QR on aggregated boxes" do

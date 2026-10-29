@@ -22,6 +22,8 @@ RSpec.describe "Garita", type: :request do
     get gate_movement_path(pass)
     expect(response).to have_http_status(:ok)
     expect(response.body).to include(container.number, slot.code, "yard-slot-search", "Evidencia fotográfica")
+    upload_button = Nokogiri::HTML(response.body).at_css('button[data-photo-upload-target="submit"]')
+    expect(upload_button["disabled"]).to be_present
   end
 
   it "abre el detalle del pase desde el enlace escaneado por la cámara nativa" do

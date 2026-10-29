@@ -20,7 +20,7 @@
       <%= f.file_field :photos, multiple: true, accept: Container::PHOTO_CONTENT_TYPES.join(","), required: true, direct_upload: true,
             data: { photo_upload_target: "input", action: "change->photo-upload#prepare" },
             class: "min-h-12 w-full flex-1 text-sm text-slate-600 file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700 hover:file:bg-indigo-100 sm:w-auto" %>
-      <%= f.button data: { photo_upload_target: "submit" },
+      <%= f.button disabled: true, data: { photo_upload_target: "submit" },
             class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50" do %>
         <%= material_icon "upload" %> <%= t("containers.photos.upload") %>
       <% end %>

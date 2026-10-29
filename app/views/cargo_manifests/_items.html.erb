@@ -85,9 +85,13 @@
         <%= link_to template_cargo_manifest_path(manifest), class: "mb-4 inline-flex min-h-12 items-center gap-2 rounded-full bg-slate-100 px-5 font-medium text-slate-700 hover:bg-slate-200" do %>
           <%= material_icon "download" %> <%= t("cargo_manifests.show.download_template") %>
         <% end %>
-        <%= form_with url: import_cargo_manifest_path(manifest), multipart: true, class: "space-y-3" do |f| %>
-          <%= f.file_field :file, accept: ".xlsx", required: true, class: "min-h-12 w-full text-sm file:mr-3 file:min-h-12 file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700" %>
-          <%= f.button class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white hover:bg-indigo-700" do %>
+        <%= form_with url: import_cargo_manifest_path(manifest), multipart: true,
+              data: { controller: "file-required" }, class: "space-y-3" do |f| %>
+          <%= f.file_field :file, accept: ".xlsx", required: true,
+                data: { file_required_target: "input", action: "change->file-required#toggle" },
+                class: "min-h-12 w-full text-sm file:mr-3 file:min-h-12 file:rounded-2xl file:border-0 file:bg-indigo-50 file:px-4 file:font-medium file:text-indigo-700" %>
+          <%= f.button disabled: true, data: { file_required_target: "submit" },
+                class: "flex min-h-12 items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50" do %>
             <%= material_icon "upload_file" %> <%= t("cargo_manifests.show.import_action") %>
           <% end %>
         <% end %>

@@ -21,6 +21,10 @@ RSpec.describe "Fotografías del contenedor", type: :request do
     expect(response.body.scan('loading="lazy"').size).to eq(3)
     expect(response.body).to include("/containers/#{container.id}/photos?section=opening")
     expect(response.body).not_to include("foto.png")
+
+    upload_buttons = Nokogiri::HTML(response.body).css('button[data-photo-upload-target="submit"]')
+    expect(upload_buttons.size).to eq(3)
+    expect(upload_buttons.map { |button| button["disabled"] }).to all(be_present)
   end
 
   it "sube fotos directo (firmadas) y las lista en el frame de la sección" do

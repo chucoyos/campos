@@ -15,6 +15,11 @@ RSpec.describe "MasterBls", type: :request do
     it "shows a record" do
       get master_bl_path(record)
       expect(response.body).to include(record.number, record.client.name)
+
+      document_button = Nokogiri::HTML(response.body).at_css('button[data-direct-upload-target="submit"]')
+      containers_button = Nokogiri::HTML(response.body).at_css('button[data-file-required-target="submit"]')
+      expect(document_button["disabled"]).to be_present
+      expect(containers_button["disabled"]).to be_present
     end
 
     it "creates a record linked to a client" do

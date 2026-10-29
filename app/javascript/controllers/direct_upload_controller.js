@@ -6,6 +6,7 @@ export default class extends Controller {
   static values = { maxSize: Number, tooLarge: String, failed: String }
 
   connect() {
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
     this.element.addEventListener("direct-upload:start", () => this.start())
     this.element.addEventListener("direct-upload:progress", (event) => this.progress(event))
     this.element.addEventListener("direct-upload:error", (event) => this.fail(event))
@@ -19,6 +20,7 @@ export default class extends Controller {
       this.inputTarget.value = ""
       this.showError(this.tooLargeValue)
     }
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
   }
 
   start() {
@@ -33,7 +35,7 @@ export default class extends Controller {
 
   fail(event) {
     event.preventDefault()
-    this.submitTarget.disabled = false
+    this.submitTarget.disabled = this.inputTarget.files.length === 0
     this.progressTarget.classList.add("hidden")
     this.showError(this.failedValue)
   }
