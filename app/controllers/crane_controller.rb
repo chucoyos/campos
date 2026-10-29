@@ -2,9 +2,12 @@ class CraneController < ApplicationController
   def index
     authorize WorkOrder
     @work_orders = policy_scope(WorkOrder).where(status: "pendiente").order(:created_at)
-      .includes(:container, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
+      .includes({ container: :master_bl }, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
     @requests = policy_scope(RehandlingRequest).where(status: "pendiente")
-      .includes(:container, :movement_pass, work_orders: :container).order(:created_at)
+      .includes(:container, :work_orders, movement_pass: :vehicles).order(:created_at)
+    @pending_orders_by_request = @work_orders.filter_map do |order|
+      [ order.rehandling_request_id, order ] if order.rehandling_request_id
+    end.to_h
     @destination_options = @work_orders.select(&:reacomodo?).to_h do |order|
       [ order.id, GateMovementService.available_slots(order.container, except_work_order_id: order.id) ]
     end

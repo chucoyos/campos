@@ -53,6 +53,29 @@ RSpec.describe "Grúa", type: :request do
     )
   end
 
+  it "muestra una salida bloqueada con el siguiente reacomodo y su progreso" do
+    block = create(:yard_block, bays: 4, rows: 1, levels: 3)
+    target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
+    blocker_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+    top_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 3)
+    create(:yard_slot, yard_block: block, bay: 3, row: "A", level: 1)
+    create(:yard_slot, yard_block: block, bay: 4, row: "A", level: 1)
+    target = create(:container, current_yard_slot: target_slot)
+    blocker = create(:container, current_yard_slot: blocker_slot)
+    top = create(:container, current_yard_slot: top_slot)
+    pass = create(:movement_pass, :standalone, container: target, movement_type: "salida", load_status: nil)
+
+    GateMovementService.call(pass:, user: create(:user, :seguridad))
+    first_order = WorkOrder.find_by!(rehandling_request: RehandlingRequest.find_by!(movement_pass: pass))
+    CraneTaskService.complete(work_order: first_order, user: crane_user)
+
+    sign_in crane_user
+    get crane_path
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include(target.number, blocker.number, "Reacomodos completados: 1")
+  end
+
   it "concluye la tarea" do
     sign_in crane_user
 

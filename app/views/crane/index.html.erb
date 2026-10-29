@@ -30,7 +30,8 @@
   <% if @requests.any? %>
     <section class="mb-6 space-y-4">
       <h2 class="text-lg font-bold text-slate-900"><%= t(".blocked_exits") %></h2>
-      <%= render partial: "crane/rehandling_request", collection: @requests, as: :request %>
+      <%= render partial: "crane/rehandling_request", collection: @requests, as: :request,
+            locals: { pending_orders_by_request: @pending_orders_by_request } %>
     </section>
   <% end %>
 
