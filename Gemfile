@@ -93,6 +93,6 @@ gem "caxlsx", "~> 4.5"
 gem "roo", "~> 3.0"
 gem "rqrcode", "~> 2.2"
 
-gem "pagy", "~> 43.7"
+gem "pagy", "~> 43.8"
 
 gem "prawn", "~> 2.5"
