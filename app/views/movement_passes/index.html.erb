@@ -25,9 +25,19 @@
       <li>
         <%= link_to movement_pass_path(pass), class: "flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 ease-out hover:shadow-md active:scale-[0.99]" do %>
           <div class="min-w-0">
+            <% movement_styles = {
+              "ingreso" => "bg-emerald-100 text-emerald-900",
+              "salida" => "bg-amber-100 text-amber-950",
+              "traspaleo" => "bg-indigo-100 text-indigo-900"
+            } %>
+            <% movement_icons = { "ingreso" => "move_to_inbox", "salida" => "logout", "traspaleo" => "swap_horiz" } %>
+            <span data-movement-type="<%= pass.movement_type %>"
+                  class="inline-flex min-h-9 items-center gap-2 rounded-full px-4 text-sm font-bold <%= movement_styles.fetch(pass.movement_type) %>">
+              <%= material_icon movement_icons.fetch(pass.movement_type) %>
+              <%= t("movement_passes.types.#{pass.movement_type}") %>
+            </span>
             <p class="font-mono text-lg font-semibold text-slate-900"><%= pass.container.number %></p>
             <p class="text-sm text-slate-600">
-              <%= t("movement_passes.types.#{pass.movement_type}") %>
               <% if pass.container.master_bl %>· <%= pass.container.master_bl.number %><% end %>
               <% if policy(pass).view_client? && pass.client %>· <%= pass.client.name %><% end %>
             </p>

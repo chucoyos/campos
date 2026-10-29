@@ -166,6 +166,9 @@ RSpec.describe "Pases de movimiento", type: :request do
       pass = create(:movement_pass)
       get movement_passes_path
       expect(response.body).to include(pass.container.number)
+      movement_type = Nokogiri::HTML(response.body).at_css("[data-movement-type='ingreso']")
+      expect(movement_type.text).to include(I18n.t("movement_passes.types.ingreso"))
+      expect(movement_type["class"]).to include("font-bold", "bg-emerald-100")
 
       get new_movement_pass_path
       expect(response).to redirect_to(root_path)
