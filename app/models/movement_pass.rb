@@ -65,7 +65,12 @@ class MovementPass < ApplicationRecord
   def usable? = vigente? && (entered_at.present? || !expired?)
 
   # Estado vigente en pantalla aunque nadie haya persistido aún el vencimiento.
-  def display_status = vigente? && expired? ? "vencido" : (entered_at? ? "en_patio" : status)
+  def display_status
+    return "vencido" if vigente? && expired?
+    return "en_patio" if vigente? && entered_at?
+
+    status
+  end
 
   def vehicle(role) = vehicles.find { |item| item.role == role }
 

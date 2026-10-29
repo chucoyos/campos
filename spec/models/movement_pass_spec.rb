@@ -110,6 +110,12 @@ RSpec.describe MovementPass, type: :model do
       expect(MovementPass.active).to include(pass)
     end
 
+    it "muestra completado cuando el pase ya se utilizó aunque conserve su fecha de entrada" do
+      pass = create(:movement_pass, :standalone, status: "completado", entered_at: Time.current, consumed_at: Time.current)
+
+      expect(pass.display_status).to eq("completado")
+    end
+
     it "no permite cancelar un pase después de que entró el camión" do
       pass = create(:movement_pass, entered_at: Time.current)
 
