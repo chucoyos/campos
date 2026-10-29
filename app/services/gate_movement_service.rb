@@ -18,11 +18,11 @@ class GateMovementService
     available_slots(pass.container, pass:).first
   end
 
-  def self.available_slots(container, pass: nil, except_work_order_id: nil)
-    available_slot_records(container, pass:, except_work_order_id:).map { |slot| slot[:slot] }
+  def self.available_slots(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil)
+    available_slot_records(container, pass:, except_work_order_id:, except_movement_plan_id:).map { |slot| slot[:slot] }
   end
 
-  def self.available_slot_records(container, pass: nil, except_work_order_id: nil)
+  def self.available_slot_records(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil)
     sources = preferred_slot_sources(container, pass)
     preferred = sources.keys
     enabled_slots = YardSlot.enabled.joins(:yard_block).merge(YardBlock.enabled)
@@ -41,7 +41,9 @@ class GateMovementService
       end
 
     reserved_by_block = Hash.new { |hash, key| hash[key] = Set.new }
-    reserved_positions(block_ids, except_work_order_id:).each { |position| reserved_by_block[position.first] << position }
+    reserved_positions(block_ids, except_work_order_id:, except_movement_plan_id:).each do |position|
+      reserved_by_block[position.first] << position
+    end
 
     available = ordered.select do |slot|
       footprint = footprint_for(container, slot, slots_by_position:)
@@ -122,14 +124,23 @@ class GateMovementService
   end
 
   # Destinos de órdenes de grúa pendientes: bloquean la posición, pero aún no sirven de soporte.
-  def self.reserved_positions(block_ids, except_work_order_id: nil)
+  def self.reserved_positions(block_ids, except_work_order_id: nil, except_movement_plan_id: nil)
     scope = WorkOrder.where(status: "pendiente").where.not(to_yard_slot_id: nil)
     scope = scope.where.not(id: except_work_order_id) if except_work_order_id
-    scope
+    work_order_positions = scope
       .joins(:to_yard_slot).where(yard_slots: { yard_block_id: block_ids })
       .includes(:container, :to_yard_slot).flat_map do |order|
         footprint_for(order.container, order.to_yard_slot, require_enabled: false) || []
       end.to_set
+    plan_scope = MovementPlan.where(status: "pendiente", movement_type: "reacomodo")
+      .where.not(destination_yard_slot_id: nil)
+    plan_scope = plan_scope.where.not(id: except_movement_plan_id) if except_movement_plan_id
+    plan_positions = plan_scope
+      .joins(:destination_yard_slot).where(yard_slots: { yard_block_id: block_ids })
+      .includes(:container, :destination_yard_slot).flat_map do |plan|
+        footprint_for(plan.container, plan.destination_yard_slot, require_enabled: false) || []
+      end.to_set
+    work_order_positions | plan_positions
   end
 
   # Un nivel superior solo es válido si cada posición de la huella tiene un contenedor debajo.
@@ -235,7 +246,7 @@ class GateMovementService
 
         case @pass.movement_type
         when "ingreso" then record_entry
-        when "salida" then RehandlingRequestService.start_exit(pass: @pass, user: @user)
+        when "salida" then MovementPlanService.start_exit(pass: @pass, user: @user)
         when "traspaleo" then record_transfer
         else raise Error, :invalid_movement
         end
@@ -290,7 +301,7 @@ class GateMovementService
   def complete_gate_exit
     raise Error, :exit_scan_required unless @pass.exit_scanned_at?
 
-    pass_canceled_without_load = @pass.rehandling_request&.cancelada? && @pass.movement.nil?
+    pass_canceled_without_load = @pass.movement_plan&.cancelada? && @pass.movement.nil?
     raise Error, :movement_not_completed unless @pass.movement || pass_canceled_without_load
 
     @pass.consumed_at ||= Time.current

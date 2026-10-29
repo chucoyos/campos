@@ -15,6 +15,7 @@ class MovementPass < ApplicationRecord
   has_many :vehicles, class_name: "MovementPassVehicle", dependent: :destroy, inverse_of: :movement_pass
   has_one :movement, class_name: "ContainerMovement", dependent: :restrict_with_error
   has_one :rehandling_request, dependent: :restrict_with_error
+  has_one :movement_plan, dependent: :restrict_with_error
   has_many_attached :photos
 
   accepts_nested_attributes_for :vehicles

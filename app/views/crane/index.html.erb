@@ -27,18 +27,19 @@
     <% end %>
   </section>
 
-  <% if @requests.any? %>
+  <% if @plans.any? %>
     <section class="mb-6 space-y-4">
       <h2 class="text-lg font-bold text-slate-900"><%= t(".blocked_exits") %></h2>
-      <%= render partial: "crane/rehandling_request", collection: @requests, as: :request,
+      <%= render partial: "crane/movement_plan", collection: @plans, as: :plan,
             locals: {
-              pending_orders_by_request: @pending_orders_by_request,
-              destination_options: @destination_options
+              pending_orders_by_plan: @pending_orders_by_plan,
+              destination_options: @destination_options,
+              plan_destination_options: @plan_destination_options
             } %>
     </section>
   <% end %>
 
-  <% if @standalone_work_orders.empty? && @requests.empty? %>
+  <% if @standalone_work_orders.empty? && @plans.empty? %>
     <div class="flex flex-col items-center gap-2 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">
       <span class="text-emerald-600"><%= material_icon "task_alt", classes: "!text-4xl" %></span>
       <p class="text-lg font-semibold text-slate-800"><%= t(".empty") %></p>

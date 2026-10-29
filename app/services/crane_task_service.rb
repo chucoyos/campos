@@ -34,8 +34,8 @@ class CraneTaskService
       @work_order.completed_at = Time.current
       @work_order.completar!
 
-      complete_rehandling_request if @work_order.salida? && @work_order.rehandling_request
-      RehandlingRequestService.advance_pending if @work_order.salida? || @work_order.reacomodo?
+      complete_movement_plan if movement_plan_target_order?
+      MovementPlanService.advance_pending if @work_order.salida? || @work_order.reacomodo?
       @work_order
     end
   end
@@ -60,7 +60,7 @@ class CraneTaskService
     raise Error, :origin_changed unless @work_order.from_yard_slot_id == slot.id
     lock_block_slots(slot)
     raise Error, :supports_other_container if GateMovementService.supporting_other?(@container)
-    if @work_order.rehandling_request && GateMovementService.blocking_containers(@container).any?
+    if @work_order.movement_plan && GateMovementService.blocking_containers(@container).any?
       raise Error, :container_still_blocked
     end
 
@@ -98,7 +98,11 @@ class CraneTaskService
     lock_block_slots(slot)
     occupied = GateMovementService.occupied_positions(slot.yard_block_id)
     raise Error, :destination_occupied if footprint.any? { |position| occupied.include?(position) }
-    reserved = GateMovementService.reserved_positions(slot.yard_block_id, except_work_order_id: @work_order.id)
+    reserved = GateMovementService.reserved_positions(
+      slot.yard_block_id,
+      except_work_order_id: @work_order.id,
+      except_movement_plan_id: @work_order.movement_plan_id
+    )
     raise Error, :destination_occupied if footprint.any? { |position| reserved.include?(position) }
     raise Error, :destination_unsupported unless GateMovementService.supported_footprint?(footprint, occupied)
   end
@@ -137,8 +141,15 @@ class CraneTaskService
     movement
   end
 
-  def complete_rehandling_request
-    request = @work_order.rehandling_request
-    request.completar! if request.pendiente?
+  def movement_plan_target_order?
+    plan = @work_order.movement_plan
+    plan && @work_order.container_id == plan.container_id && @work_order.movement_type == plan.movement_type
+  end
+
+  def complete_movement_plan
+    plan = @work_order.movement_plan
+    plan.completar! if plan.pendiente?
+    request = plan.rehandling_request
+    request.completar! if request&.pendiente?
   end
 end

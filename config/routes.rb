@@ -70,6 +70,9 @@ Rails.application.routes.draw do
   patch "crane/work_orders/:id/complete", to: "crane#complete", as: :complete_crane_work_order
   patch "crane/work_orders/:id/cancel", to: "crane#cancel", as: :cancel_crane_work_order
   patch "crane/rehandling_requests/:id/cancel", to: "crane#cancel_request", as: :cancel_crane_rehandling_request
+  patch "crane/movement_plans/:id/cancel", to: "crane#cancel_plan", as: :cancel_crane_movement_plan
+  patch "crane/movement_plans/:id/destination", to: "crane#update_plan_destination", as: :update_crane_movement_plan_destination
+  patch "crane/movement_plans/:id/retry", to: "crane#retry_plan", as: :retry_crane_movement_plan
   get "containers/:container_id/movements/:id/photos", to: "containers#movement_photos", as: :container_movement_photos
   get "yard", to: "yard#index", as: :yard
   resources :yard_slots, only: [] do

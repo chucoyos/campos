@@ -89,6 +89,27 @@ RSpec.describe RehandlingRequestService do
     )
   end
 
+  it "desbloquea un reacomodo independiente reservando el destino final hasta la última tarea" do
+    blocker
+
+    plan = described_class.create_independent(
+      container: target, user: crane_user, destination_id: free_slot.id
+    )
+    blocker_order = plan.work_orders.find_by!(status: "pendiente")
+
+    expect(plan).to have_attributes(movement_type: "reacomodo", destination_yard_slot: free_slot)
+    expect(blocker_order).to have_attributes(container: blocker, to_yard_slot: second_free_slot)
+    expect(GateMovementService.available_slots(blocker)).not_to include(free_slot)
+
+    CraneTaskService.complete(work_order: blocker_order, user: crane_user)
+    target_order = plan.work_orders.find_by!(container: target, status: "pendiente")
+    expect(target_order).to have_attributes(movement_type: "reacomodo", to_yard_slot: free_slot)
+
+    CraneTaskService.complete(work_order: target_order, user: crane_user)
+    expect(plan.reload).to be_completada
+    expect(target.reload.current_yard_slot).to eq(free_slot)
+  end
+
   it "cancelar solicitud no revierte reacomodos previos y permite cerrar el pase con el camión vacío" do
     blocker
     GateMovementService.call(pass:, user: security_user)

@@ -1,0 +1,87 @@
+<% pending_order = pending_orders_by_plan[plan.id] %>
+<% pending_target_order = plan.pending_target_order %>
+<% completed_rehandles = plan.completed_rehandles %>
+<% destination_slot = plan.destination_yard_slot %>
+<% phase = pending_target_order ? "ready" : (pending_order ? "blocked" : "waiting") %>
+<article id="<%= dom_id(plan) %>" class="rounded-3xl border <%= phase == "ready" ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50" %> p-5 shadow-sm sm:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <p class="text-sm font-semibold <%= phase == "ready" ? "text-emerald-900" : "text-amber-900" %>"><%= t("crane.movement_plan.#{plan.movement_type}.#{phase}") %></p>
+      <h3 class="mt-1 text-xl font-bold text-slate-900"><%= plan.container.number %></h3>
+      <p class="mt-1 text-sm text-slate-700">
+        <% if plan.movement_pass&.vehicle("principal") %>
+          <%= t("crane.movement_plan.details", plate: plan.movement_pass.vehicle("principal").plate, count: completed_rehandles.size) %>
+        <% else %>
+          <%= t("crane.movement_plan.rehandles_completed", count: completed_rehandles.size) %>
+        <% end %>
+      </p>
+      <% if plan.reacomodo? %>
+        <p class="mt-1 text-sm text-slate-700"><%= t("crane.movement_plan.final_destination", location: destination_slot&.code || "—") %></p>
+        <% destination_options_for_plan = plan_destination_options.fetch(plan.id, []) %>
+        <% unless destination_options_for_plan.include?(destination_slot) %>
+          <p class="mt-2 text-sm font-medium text-red-800"><%= t("crane.movement_plan.destination_invalid") %></p>
+        <% end %>
+      <% end %>
+      <% if pending_order %>
+        <p class="mt-2 text-sm font-medium <%= phase == "ready" ? "text-emerald-900" : "text-amber-900" %>">
+          <% if pending_target_order %>
+            <%= t("crane.movement_plan.#{plan.movement_type}.target_pending") %>
+          <% else %>
+            <%= t("crane.movement_plan.next_task", container: pending_order.container.number) %>
+          <% end %>
+        </p>
+      <% else %>
+        <p class="mt-2 text-sm font-medium text-amber-900"><%= t("crane.movement_plan.#{plan.movement_type}.waiting") %></p>
+      <% end %>
+    </div>
+    <% if policy(plan).cancel? %>
+      <%= button_to cancel_crane_movement_plan_path(plan), method: :patch,
+            form: { data: { turbo_confirm: plan.salida? ? t("crane.rehandling_request.confirm_cancel") : t("crane.movement_plan.confirm_cancel") } },
+            class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
+        <%= material_icon "close" %> <%= t("crane.movement_plan.cancel") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if plan.reacomodo? && !pending_target_order %>
+    <% if plan_destination_options.fetch(plan.id, []).empty? %>
+      <p class="mt-4 border-t border-amber-200 pt-4 text-sm text-amber-900"><%= t("crane.movement_plan.no_destinations") %></p>
+    <% end %>
+    <%= form_with url: update_crane_movement_plan_destination_path(plan), method: :patch,
+          class: "mt-4 flex flex-wrap gap-3 border-t border-amber-200 pt-4" do |f| %>
+      <%= f.label :yard_slot_id, t("crane.movement_plan.destination"), class: "sr-only" %>
+      <%= f.select :yard_slot_id, plan_destination_options.fetch(plan.id, []).map { |slot| [slot.code, slot.id] },
+            { selected: plan.destination_yard_slot_id, include_blank: true },
+            required: true,
+            class: "min-h-12 min-w-36 flex-1 rounded-2xl border border-slate-300 bg-white px-4 text-sm focus:border-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-600/20" %>
+      <%= f.button class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
+        <%= material_icon "edit_location_alt" %> <%= t("crane.movement_plan.change_destination") %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <% if completed_rehandles.any? %>
+    <ol class="mt-4 space-y-2 border-t border-amber-200 pt-4" aria-label="<%= t("crane.movement_plan.completed_title") %>">
+      <% completed_rehandles.each do |work_order| %>
+        <li class="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+          <%= material_icon "task_alt", classes: "text-emerald-700" %>
+          <span class="font-medium"><%= work_order.container.number %></span>
+          <span><%= work_order.from_yard_slot.code %> → <%= work_order.to_yard_slot.code %></span>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+
+  <% if pending_order %>
+    <div class="mt-4 border-t <%= phase == "ready" ? "border-emerald-200" : "border-amber-200" %> pt-4">
+      <%= render "crane/work_order", work_order: pending_order, destination_options: destination_options, movement_plan: plan %>
+    </div>
+  <% elsif policy(plan).retry? %>
+    <div class="mt-4 border-t border-amber-200 pt-4">
+      <%= button_to retry_crane_movement_plan_path(plan), method: :patch,
+            class: "flex min-h-12 items-center gap-2 rounded-full border border-amber-300 px-5 font-medium text-amber-900 transition-all duration-200 ease-out hover:bg-amber-100 active:scale-95" do %>
+        <%= material_icon "refresh" %> <%= t("crane.movement_plan.retry") %>
+      <% end %>
+    </div>
+  <% end %>
+</article>

@@ -111,7 +111,7 @@ class GateController < ApplicationController
       redirect_to gate_path, notice: t("flash.gate.exit_completed")
     else
       notice_key = @pass.ingreso? ? "flash.gate.entry_queued" :
-        (@pass.rehandling_request ? "flash.gate.rehandling_queued" : "flash.gate.loading_queued")
+        (@pass.movement_plan ? "flash.gate.rehandling_queued" : "flash.gate.loading_queued")
       redirect_to gate_path, notice: t(notice_key)
     end
   rescue GateMovementService::Error => error
@@ -147,7 +147,7 @@ class GateController < ApplicationController
 
   def record_exit_scan
     return false if @pass.exit_scanned_at?
-    unless @pass.movement || @pass.rehandling_request&.cancelada?
+    unless @pass.movement || @pass.movement_plan&.cancelada?
       return false
     end
 

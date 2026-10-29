@@ -83,7 +83,11 @@ es:
       completed: "Tarea concluida. El contenedor quedó registrado en su posición."
       canceled: "Tarea cancelada."
       rehandle_created: "Reacomodo creado. La tarea ya está disponible para la grúa."
-      request_canceled: "Solicitud de salida cancelada. Los movimientos ya realizados se conservan."
+      rehandle_plan_waiting: "Plan creado. No hay un movimiento disponible ahora; puedes reintentarlo desde Grúa."
+      request_canceled: "Plan cancelado. Los movimientos ya realizados se conservan."
+      destination_updated: "Destino final actualizado."
+      plan_retried: "Se revisó el plan y se programó el siguiente movimiento disponible."
+      plan_waiting: "Se revisó el plan; todavía no hay un movimiento disponible."
     yard_areas:
       create: "Área creada."
       update: "Área actualizada."
@@ -617,9 +621,9 @@ es:
       search_placeholder: "Número de contenedor"
       search: "Buscar"
       search_minimum: "Escribe al menos 3 caracteres para buscar."
-      no_candidates: "No se encontraron contenedores elegibles en patio sin otra tarea pendiente."
+      no_candidates: "No se encontraron contenedores en patio sin otra tarea o plan pendiente."
       select_container: "Elegir"
-      blocked_exits: "Salidas y reacomodos en curso"
+      blocked_exits: "Planes de movimiento en curso"
     work_order:
       container: "Contenedor"
       origin: "Origen"
@@ -636,6 +640,7 @@ es:
       confirm_salida: "¿Confirmas que el contenedor ya está cargado en el camión?"
       confirm_reacomodo: "¿Confirmas que moviste el contenedor a %{location}?"
       blocking_exit: "Este movimiento libera la salida de %{container}."
+      blocking_plan: "Este reacomodo desbloquea el movimiento %{movement} de %{container}."
       cancel: "Cancelar tarea"
       confirm_cancel: "¿Cancelar esta tarea? El contenedor permanecerá en su ubicación actual."
     rehandling_request:
@@ -649,9 +654,34 @@ es:
       no_destination: "No hay destino sugerido disponible. Libera una posición o revisa el patio."
       cancel: "Cancelar solicitud"
       confirm_cancel: "¿Cancelar la salida? Los reacomodos confirmados no se desharán y el camión saldrá sin el contenedor."
+    movement_plan:
+      details: "%{plate} · Reacomodos completados: %{count}"
+      rehandles_completed:
+        one: "1 reacomodo completado"
+        other: "%{count} reacomodos completados"
+      final_destination: "Destino final reservado: %{location}"
+      next_task: "Siguiente contenedor: %{container}"
+      completed_title: "Reacomodos confirmados"
+      destination: "Destino final"
+      destination_invalid: "El destino final dejó de estar disponible; elige una posición válida antes de continuar."
+      no_destinations: "No hay destinos disponibles y soportados. Libera una posición del patio y vuelve a intentarlo."
+      change_destination: "Cambiar destino"
+      retry: "Reintentar programación"
+      cancel: "Cancelar plan"
+      confirm_cancel: "¿Cancelar este plan? Los reacomodos confirmados no se desharán."
+      salida:
+        blocked: "Salida bloqueada · reacomodo pendiente"
+        ready: "Salida desbloqueada · carga pendiente"
+        waiting: "Salida bloqueada · sin movimiento disponible"
+        target_pending: "Columna despejada. La grúa puede cargar el contenedor solicitado."
+      reacomodo:
+        blocked: "Reacomodo bloqueado · desbloqueo en curso"
+        ready: "Desbloqueado · reacomodo final pendiente"
+        waiting: "Reacomodo bloqueado · sin movimiento disponible"
+        target_pending: "Columna despejada. La grúa puede reacomodar el contenedor solicitado."
     new_rehandle:
       title: "Crear reacomodo"
-      description: "El origen se toma de la ubicación actual. Elige un destino disponible y soportado."
+      description: "El origen se toma de la ubicación actual. Si hay contenedores encima, se moverán uno por uno antes del reacomodo final."
       container: "Contenedor"
       origin: "Origen"
       destination: "Destino"
@@ -678,6 +708,7 @@ es:
       destination_unavailable: "La posición de destino ya no está disponible."
       destination_occupied: "La posición de destino ya está ocupada."
       destination_unsupported: "La posición de destino no tiene un contenedor que la soporte debajo."
+      destination_already_scheduled: "El movimiento final ya está programado; no se puede cambiar el destino."
   movement_passes:
     types:
       ingreso: "Ingreso"

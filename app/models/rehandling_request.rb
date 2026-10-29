@@ -6,6 +6,7 @@ class RehandlingRequest < ApplicationRecord
   belongs_to :movement_pass
   belongs_to :container
   belongs_to :created_by, class_name: "User", optional: true
+  belongs_to :movement_plan, optional: true
   has_many :work_orders, dependent: :restrict_with_error
 
   validates :movement_pass_id, uniqueness: { conditions: -> { where(status: "pendiente") } }, if: :pendiente?

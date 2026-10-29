@@ -9,6 +9,60 @@ RSpec.describe "Grúa", type: :request do
     expect(response).to redirect_to(new_user_session_path)
   end
 
+  it "agrupa el desbloqueo de un reacomodo independiente y reserva su destino final" do
+    block = create(:yard_block, bays: 6, rows: 1, levels: 2)
+    target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
+    blocker_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+    final_destination = create(:yard_slot, yard_block: block, bay: 3, row: "A", level: 1)
+    blocker_destination = create(:yard_slot, yard_block: block, bay: 4, row: "A", level: 1)
+    target = create(:container, current_yard_slot: target_slot)
+    blocker = create(:container, current_yard_slot: blocker_slot)
+
+    sign_in crane_user
+    post create_crane_rehandle_path, params: { container_id: target.id, yard_slot_id: final_destination.id }
+    plan = MovementPlan.find_by!(container: target)
+    first_order = plan.work_orders.find_by!(status: "pendiente")
+    expect(first_order).to have_attributes(container: blocker, to_yard_slot: blocker_destination)
+    expect(GateMovementService.available_slots(blocker)).not_to include(final_destination)
+
+    get crane_path
+    plan_card = Nokogiri::HTML(response.body).at_css("#movement_plan_#{plan.id}")
+    expect(plan_card.text).to include(target.number, blocker.number, "Reacomodo bloqueado", final_destination.code)
+    expect(plan_card.css("article#work_order_#{first_order.id}").size).to eq(1)
+
+    CraneTaskService.complete(work_order: first_order, user: crane_user)
+    target_order = plan.work_orders.find_by!(container: target, status: "pendiente")
+    expect(target_order).to have_attributes(movement_type: "reacomodo", to_yard_slot: final_destination)
+    CraneTaskService.complete(work_order: target_order, user: crane_user)
+
+    expect(plan.reload).to be_completada
+    expect(target.reload.current_yard_slot).to eq(final_destination)
+  end
+
+  it "permite reintentar un plan de salida cuando aún no hay bloqueador movible" do
+    block = create(:yard_block, bays: 4, rows: 1, levels: 4)
+    target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
+    blocker_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+    top_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 3)
+    reserved_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 4)
+    target = create(:container, current_yard_slot: target_slot)
+    create(:container, current_yard_slot: blocker_slot)
+    create(:container, current_yard_slot: top_slot)
+    create(:work_order, to_yard_slot: reserved_slot)
+    pass = create(:movement_pass, :standalone, container: target, movement_type: "salida", load_status: nil)
+
+    GateMovementService.call(pass:, user: create(:user, :seguridad))
+    plan = MovementPlan.find_by!(movement_pass: pass)
+    expect(plan.work_orders).to be_empty
+
+    sign_in crane_user
+    patch retry_crane_movement_plan_path(plan)
+
+    expect(response).to redirect_to(crane_path)
+    expect(flash[:notice]).to eq(I18n.t("flash.crane.plan_waiting"))
+    expect(plan.reload.work_orders).to be_empty
+  end
+
   it "muestra las tareas pendientes con los datos del transporte" do
     sign_in crane_user
     get crane_path
@@ -36,7 +90,7 @@ RSpec.describe "Grúa", type: :request do
 
     get search_crane_rehandles_path, params: { q: candidate.number }
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include(candidate.number)
+    expect(response.body).to include(candidate.number, 'id="rehandle_search_results"')
     expect(response.body).not_to include(elsewhere.number)
 
     get new_crane_rehandle_path, params: { container_id: candidate.id }
@@ -73,7 +127,7 @@ RSpec.describe "Grúa", type: :request do
     get crane_path
 
     expect(response).to have_http_status(:ok)
-    request_card = Nokogiri::HTML(response.body).at_css("#rehandling_request_#{RehandlingRequest.find_by!(movement_pass: pass).id}")
+    request_card = Nokogiri::HTML(response.body).at_css("#movement_plan_#{RehandlingRequest.find_by!(movement_pass: pass).movement_plan_id}")
     expect(request_card.text).to include(target.number, blocker.number, "Reacomodos completados: 1", "Salida bloqueada")
     expect(request_card.css("article#work_order_#{WorkOrder.find_by!(rehandling_request: RehandlingRequest.find_by!(movement_pass: pass), status: "pendiente").id}").size).to eq(1)
   end
@@ -97,7 +151,7 @@ RSpec.describe "Grúa", type: :request do
 
     request = RehandlingRequest.find_by!(movement_pass: pass)
     load_order = WorkOrder.find_by!(movement_pass: pass, status: "pendiente")
-    request_card = Nokogiri::HTML(response.body).at_css("#rehandling_request_#{request.id}")
+    request_card = Nokogiri::HTML(response.body).at_css("#movement_plan_#{request.movement_plan_id}")
     expect(response).to have_http_status(:ok)
     expect(request_card.text).to include(target.number, blocker.number, "Salida desbloqueada", "Columna despejada")
     expect(request_card.text).not_to include("Salida bloqueada")

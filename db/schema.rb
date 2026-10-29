@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,8 +76,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["warehouse_slot_id"], name: "index_cargo_items_on_warehouse_slot_id"
     t.check_constraint "(warehouse_slot_id IS NULL) = (slot_section IS NULL) AND (status::text = 'stored'::text) = (warehouse_slot_id IS NOT NULL)", name: "cargo_items_location_consistent"
     t.check_constraint "quantity > 0", name: "cargo_items_quantity_positive"
-    t.check_constraint "slot_section::text = ANY (ARRAY['A'::character varying::text, 'B'::character varying::text, 'C'::character varying::text])", name: "cargo_items_slot_section_valid"
-    t.check_constraint "status::text = ANY (ARRAY['captured'::character varying::text, 'stored'::character varying::text])", name: "cargo_items_status_valid"
+    t.check_constraint "slot_section::text = ANY (ARRAY['A'::character varying, 'B'::character varying, 'C'::character varying]::text[])", name: "cargo_items_slot_section_valid"
+    t.check_constraint "status::text = ANY (ARRAY['captured'::character varying, 'stored'::character varying]::text[])", name: "cargo_items_status_valid"
     t.check_constraint "weight_kg IS NULL OR weight_kg > 0::numeric", name: "cargo_items_weight_positive"
   end
 
@@ -91,7 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["cargo_manifest_id", "created_at"], name: "idx_on_cargo_manifest_id_created_at_1692a9d850"
     t.index ["cargo_manifest_id"], name: "index_cargo_manifest_events_on_cargo_manifest_id"
     t.index ["user_id"], name: "index_cargo_manifest_events_on_user_id"
-    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying::text, 'reopen'::character varying::text])", name: "cargo_manifest_events_event_valid"
+    t.check_constraint "event::text = ANY (ARRAY['confirm'::character varying, 'reopen'::character varying]::text[])", name: "cargo_manifest_events_event_valid"
   end
 
   create_table "cargo_manifests", force: :cascade do |t|
@@ -103,7 +103,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_cargo_manifests_on_client_id"
     t.index ["container_id"], name: "index_cargo_manifests_on_container_id", unique: true, where: "(container_id IS NOT NULL)"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'confirmed'::character varying::text])", name: "cargo_manifests_status_valid"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'confirmed'::character varying]::text[])", name: "cargo_manifests_status_valid"
   end
 
   create_table "cargo_packagings", force: :cascade do |t|
@@ -118,7 +118,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["code"], name: "index_cargo_packagings_on_code", unique: true
     t.check_constraint "tracking_mode::text = 'aggregate'::text OR weight_required = true", name: "cargo_packagings_individual_weight_required"
     t.check_constraint "tracking_mode::text = 'individual'::text OR weight_required = false AND qr_allowed = false", name: "cargo_packagings_aggregate_capabilities_valid"
-    t.check_constraint "tracking_mode::text = ANY (ARRAY['individual'::character varying::text, 'aggregate'::character varying::text])", name: "cargo_packagings_tracking_mode_valid"
+    t.check_constraint "tracking_mode::text = ANY (ARRAY['individual'::character varying, 'aggregate'::character varying]::text[])", name: "cargo_packagings_tracking_mode_valid"
   end
 
   create_table "carriers", force: :cascade do |t|
@@ -153,7 +153,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["container_id"], name: "index_container_assignments_on_container_id"
     t.index ["yard_area_id"], name: "index_container_assignments_on_yard_area_id"
     t.index ["yard_area_section_id"], name: "index_container_assignments_on_yard_area_section_id"
-    t.check_constraint "operation::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text])", name: "container_assignments_operation_valid"
+    t.check_constraint "operation::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying]::text[])", name: "container_assignments_operation_valid"
     t.check_constraint "preferred_level IS NULL OR preferred_level > 0", name: "container_assignments_level_positive"
   end
 
@@ -172,10 +172,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["movement_pass_id"], name: "index_container_movements_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
     t.index ["to_yard_slot_id"], name: "index_container_movements_on_to_yard_slot_id"
     t.index ["user_id"], name: "index_container_movements_on_user_id"
-    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying::text, 'vacio'::character varying::text]))", name: "container_movements_load_status_valid"
+    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying, 'vacio'::character varying]::text[]))", name: "container_movements_load_status_valid"
     t.check_constraint "movement_type::text = 'ingreso'::text AND from_yard_slot_id IS NULL AND to_yard_slot_id IS NOT NULL OR movement_type::text = 'salida'::text AND from_yard_slot_id IS NOT NULL AND to_yard_slot_id IS NULL OR movement_type::text = 'traspaleo'::text AND from_yard_slot_id IS NULL AND to_yard_slot_id IS NULL OR movement_type::text = 'reacomodo'::text AND from_yard_slot_id IS NOT NULL AND to_yard_slot_id IS NOT NULL", name: "container_movements_slots_valid"
     t.check_constraint "movement_type::text = 'reacomodo'::text AND movement_pass_id IS NULL OR movement_type::text <> 'reacomodo'::text AND movement_pass_id IS NOT NULL", name: "container_movements_pass_valid"
-    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text, 'traspaleo'::character varying::text, 'reacomodo'::character varying::text])", name: "container_movements_type_valid"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying, 'reacomodo'::character varying]::text[])", name: "container_movements_type_valid"
   end
 
   create_table "containers", force: :cascade do |t|
@@ -215,8 +215,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.datetime "updated_at", null: false
     t.index ["movement_pass_id", "role"], name: "index_movement_pass_vehicles_on_movement_pass_id_and_role", unique: true
     t.index ["movement_pass_id"], name: "index_movement_pass_vehicles_on_movement_pass_id"
-    t.check_constraint "role::text = ANY (ARRAY['principal'::character varying::text, 'destino'::character varying::text])", name: "movement_pass_vehicles_role_check"
-    t.check_constraint "unit_type::text = ANY (ARRAY['sencillo'::character varying::text, 'full'::character varying::text])", name: "movement_pass_vehicles_unit_type_check"
+    t.check_constraint "role::text = ANY (ARRAY['principal'::character varying, 'destino'::character varying]::text[])", name: "movement_pass_vehicles_role_check"
+    t.check_constraint "unit_type::text = ANY (ARRAY['sencillo'::character varying, 'full'::character varying]::text[])", name: "movement_pass_vehicles_unit_type_check"
   end
 
   create_table "movement_passes", force: :cascade do |t|
@@ -245,9 +245,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.index ["requested_by_id"], name: "index_movement_passes_on_requested_by_id"
     t.index ["status", "expires_at"], name: "index_movement_passes_on_status_and_expires_at"
     t.index ["token"], name: "index_movement_passes_on_token", unique: true
-    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying::text, 'vacio'::character varying::text]))", name: "movement_passes_load_status_check"
-    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text, 'traspaleo'::character varying::text])", name: "movement_passes_type_check"
-    t.check_constraint "status::text = ANY (ARRAY['vigente'::character varying::text, 'completado'::character varying::text, 'cancelado'::character varying::text, 'vencido'::character varying::text])", name: "movement_passes_status_check"
+    t.check_constraint "load_status IS NULL OR (load_status::text = ANY (ARRAY['lleno'::character varying, 'vacio'::character varying]::text[]))", name: "movement_passes_load_status_check"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying]::text[])", name: "movement_passes_type_check"
+    t.check_constraint "status::text = ANY (ARRAY['vigente'::character varying, 'completado'::character varying, 'cancelado'::character varying, 'vencido'::character varying]::text[])", name: "movement_passes_status_check"
+  end
+
+  create_table "movement_plans", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "movement_pass_id"
+    t.bigint "created_by_id"
+    t.bigint "origin_yard_slot_id"
+    t.bigint "destination_yard_slot_id"
+    t.string "movement_type", null: false
+    t.string "status", default: "pendiente", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["container_id"], name: "index_movement_plans_on_container_id"
+    t.index ["container_id"], name: "index_movement_plans_on_pending_container", unique: true, where: "((status)::text = 'pendiente'::text)"
+    t.index ["created_by_id"], name: "index_movement_plans_on_created_by_id"
+    t.index ["destination_yard_slot_id"], name: "index_movement_plans_on_destination_yard_slot_id"
+    t.index ["movement_pass_id"], name: "index_movement_plans_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
+    t.index ["origin_yard_slot_id"], name: "index_movement_plans_on_origin_yard_slot_id"
+    t.index ["status"], name: "index_movement_plans_on_status"
+    t.check_constraint "movement_type::text = 'salida'::text AND movement_pass_id IS NOT NULL OR movement_type::text = 'reacomodo'::text AND movement_pass_id IS NULL AND destination_yard_slot_id IS NOT NULL", name: "movement_plans_target_valid"
+    t.check_constraint "movement_type::text = ANY (ARRAY['salida'::character varying, 'reacomodo'::character varying]::text[])", name: "movement_plans_type_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "movement_plans_status_valid"
   end
 
   create_table "rehandling_requests", force: :cascade do |t|
@@ -257,10 +279,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.string "status", default: "pendiente", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "movement_plan_id"
     t.index ["container_id"], name: "index_rehandling_requests_on_container_id"
     t.index ["created_by_id"], name: "index_rehandling_requests_on_created_by_id"
     t.index ["movement_pass_id"], name: "index_rehandling_requests_on_movement_pass_id"
     t.index ["movement_pass_id"], name: "index_rehandling_requests_on_pending_pass", unique: true, where: "((status)::text = 'pendiente'::text)"
+    t.index ["movement_plan_id"], name: "index_rehandling_requests_on_movement_plan_id", unique: true
     t.index ["status"], name: "index_rehandling_requests_on_status"
     t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "rehandling_requests_status_valid"
   end
@@ -320,17 +344,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "rehandling_request_id"
+    t.bigint "movement_plan_id"
     t.index ["completed_by_id"], name: "index_work_orders_on_completed_by_id"
     t.index ["container_id"], name: "index_work_orders_on_container_id"
     t.index ["container_id"], name: "index_work_orders_on_container_id_pending", unique: true, where: "((status)::text = 'pendiente'::text)"
     t.index ["created_by_id"], name: "index_work_orders_on_created_by_id"
     t.index ["from_yard_slot_id"], name: "index_work_orders_on_from_yard_slot_id"
     t.index ["movement_pass_id"], name: "index_work_orders_on_movement_pass_id", unique: true, where: "(movement_pass_id IS NOT NULL)"
+    t.index ["movement_plan_id"], name: "index_work_orders_on_movement_plan_id"
     t.index ["rehandling_request_id"], name: "index_work_orders_on_rehandling_request_id"
     t.index ["status"], name: "index_work_orders_on_status"
     t.index ["to_yard_slot_id"], name: "index_work_orders_on_to_yard_slot_id"
-    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying::text, 'salida'::character varying::text, 'traspaleo'::character varying::text, 'reacomodo'::character varying::text])", name: "work_orders_type_valid"
-    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying::text, 'completada'::character varying::text, 'cancelada'::character varying::text])", name: "work_orders_status_valid"
+    t.check_constraint "movement_type::text = ANY (ARRAY['ingreso'::character varying, 'salida'::character varying, 'traspaleo'::character varying, 'reacomodo'::character varying]::text[])", name: "work_orders_type_valid"
+    t.check_constraint "status::text = ANY (ARRAY['pendiente'::character varying, 'completada'::character varying, 'cancelada'::character varying]::text[])", name: "work_orders_status_valid"
   end
 
   create_table "yard_area_sections", force: :cascade do |t|
@@ -420,14 +446,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_020000) do
   add_foreign_key "movement_passes", "container_assignments"
   add_foreign_key "movement_passes", "containers"
   add_foreign_key "movement_passes", "users", column: "requested_by_id", on_delete: :nullify
+  add_foreign_key "movement_plans", "containers", on_delete: :restrict
+  add_foreign_key "movement_plans", "movement_passes", on_delete: :restrict
+  add_foreign_key "movement_plans", "users", column: "created_by_id", on_delete: :nullify
+  add_foreign_key "movement_plans", "yard_slots", column: "destination_yard_slot_id", on_delete: :restrict
+  add_foreign_key "movement_plans", "yard_slots", column: "origin_yard_slot_id", on_delete: :restrict
   add_foreign_key "rehandling_requests", "containers", on_delete: :restrict
   add_foreign_key "rehandling_requests", "movement_passes", on_delete: :restrict
+  add_foreign_key "rehandling_requests", "movement_plans", on_delete: :restrict
   add_foreign_key "rehandling_requests", "users", column: "created_by_id", on_delete: :nullify
   add_foreign_key "users", "carriers"
   add_foreign_key "users", "clients"
   add_foreign_key "warehouse_slots", "warehouse_bays"
   add_foreign_key "work_orders", "containers", on_delete: :restrict
   add_foreign_key "work_orders", "movement_passes", on_delete: :restrict
+  add_foreign_key "work_orders", "movement_plans", on_delete: :restrict
   add_foreign_key "work_orders", "rehandling_requests", on_delete: :restrict
   add_foreign_key "work_orders", "users", column: "completed_by_id", on_delete: :nullify
   add_foreign_key "work_orders", "users", column: "created_by_id", on_delete: :nullify

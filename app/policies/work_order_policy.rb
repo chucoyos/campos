@@ -2,7 +2,7 @@ class WorkOrderPolicy < ApplicationPolicy
   def index? = operator?
   def create? = operator?
   def complete? = operator? && record.pendiente?
-  def cancel? = user&.admin? && record.pendiente? && record.rehandling_request.nil?
+  def cancel? = user&.admin? && record.pendiente? && record.movement_plan.nil? && record.rehandling_request.nil?
 
   class Scope < Scope
     def resolve
