@@ -619,7 +619,7 @@ es:
       search_minimum: "Escribe al menos 3 caracteres para buscar."
       no_candidates: "No se encontraron contenedores elegibles en patio sin otra tarea pendiente."
       select_container: "Elegir"
-      blocked_exits: "Salidas que requieren reacomodo"
+      blocked_exits: "Salidas y reacomodos en curso"
     work_order:
       container: "Contenedor"
       origin: "Origen"
@@ -639,9 +639,13 @@ es:
       cancel: "Cancelar tarea"
       confirm_cancel: "¿Cancelar esta tarea? El contenedor permanecerá en su ubicación actual."
     rehandling_request:
-      title: "Salida bloqueada"
+      blocked: "Salida bloqueada · reacomodo pendiente"
+      ready: "Salida desbloqueada · carga pendiente"
+      waiting: "Salida bloqueada · sin destino disponible"
       details: "%{plate} · Reacomodos completados: %{count}"
+      completed_title: "Reacomodos confirmados"
       next_task: "Siguiente contenedor: %{container}"
+      load_pending: "Columna despejada. La grúa puede cargar el contenedor solicitado."
       no_destination: "No hay destino sugerido disponible. Libera una posición o revisa el patio."
       cancel: "Cancelar solicitud"
       confirm_cancel: "¿Cancelar la salida? Los reacomodos confirmados no se desharán y el camión saldrá sin el contenedor."

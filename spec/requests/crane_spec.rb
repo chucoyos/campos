@@ -73,7 +73,36 @@ RSpec.describe "Grúa", type: :request do
     get crane_path
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include(target.number, blocker.number, "Reacomodos completados: 1")
+    request_card = Nokogiri::HTML(response.body).at_css("#rehandling_request_#{RehandlingRequest.find_by!(movement_pass: pass).id}")
+    expect(request_card.text).to include(target.number, blocker.number, "Reacomodos completados: 1", "Salida bloqueada")
+    expect(request_card.css("article#work_order_#{WorkOrder.find_by!(rehandling_request: RehandlingRequest.find_by!(movement_pass: pass), status: "pendiente").id}").size).to eq(1)
+  end
+
+  it "agrupa la carga con la solicitud y deja de indicar salida bloqueada cuando ya no hay bloqueadores" do
+    block = create(:yard_block, bays: 4, rows: 1, levels: 2)
+    target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
+    blocker_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 2)
+    create(:yard_slot, yard_block: block, bay: 3, row: "A", level: 1)
+    create(:yard_slot, yard_block: block, bay: 4, row: "A", level: 1)
+    target = create(:container, current_yard_slot: target_slot)
+    blocker = create(:container, current_yard_slot: blocker_slot)
+    pass = create(:movement_pass, :standalone, container: target, movement_type: "salida", load_status: nil)
+
+    GateMovementService.call(pass:, user: create(:user, :seguridad))
+    rehandle_order = WorkOrder.find_by!(rehandling_request: RehandlingRequest.find_by!(movement_pass: pass))
+    CraneTaskService.complete(work_order: rehandle_order, user: crane_user)
+
+    sign_in crane_user
+    get crane_path
+
+    request = RehandlingRequest.find_by!(movement_pass: pass)
+    load_order = WorkOrder.find_by!(movement_pass: pass, status: "pendiente")
+    request_card = Nokogiri::HTML(response.body).at_css("#rehandling_request_#{request.id}")
+    expect(response).to have_http_status(:ok)
+    expect(request_card.text).to include(target.number, blocker.number, "Salida desbloqueada", "Columna despejada")
+    expect(request_card.text).not_to include("Salida bloqueada")
+    expect(request_card.css("article#work_order_#{load_order.id}").size).to eq(1)
+    expect(Nokogiri::HTML(response.body).css("article#work_order_#{load_order.id}").size).to eq(1)
   end
 
   it "concluye la tarea" do

@@ -4,7 +4,9 @@ class CraneController < ApplicationController
     @work_orders = policy_scope(WorkOrder).where(status: "pendiente").order(:created_at)
       .includes({ container: :master_bl }, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
     @requests = policy_scope(RehandlingRequest).where(status: "pendiente")
-      .includes(:container, :work_orders, movement_pass: :vehicles).order(:created_at)
+      .includes(:container, { work_orders: %i[container from_yard_slot to_yard_slot] }, movement_pass: :vehicles)
+      .order(:created_at)
+    @standalone_work_orders = @work_orders.reject(&:rehandling_request_id)
     @pending_orders_by_request = @work_orders.filter_map do |order|
       [ order.rehandling_request_id, order ] if order.rehandling_request_id
     end.to_h
