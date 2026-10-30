@@ -74,12 +74,12 @@ class Container < ApplicationRecord
     update!(status: value)
   end
 
-  # Corrección manual (solo admin): no dispara eventos AASM. Activo y entregado exigen estar fuera del patio.
+  # Corrección manual (solo admin): no dispara eventos AASM. Sin MBL solo admite lleno/vacio; activo y entregado exigen estar fuera del patio.
   def correct_status(value)
     value = value.to_s
     return true if value.blank? || value == status
 
-    if !with_master_bl? || Container.aasm.states.map { |state| state.name.to_s }.exclude?(value)
+    if allowed_statuses.exclude?(value)
       errors.add(:status, :invalid)
     elsif %w[activo entregado].include?(value) && current_yard_slot_id.present?
       errors.add(:status, :in_yard)
@@ -88,6 +88,10 @@ class Container < ApplicationRecord
       return true
     end
     false
+  end
+
+  def allowed_statuses
+    with_master_bl? ? Container.aasm.states.map { |state| state.name.to_s } : STANDALONE_STATUSES
   end
 
   def photos_zip_name(section)

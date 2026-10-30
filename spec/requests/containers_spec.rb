@@ -83,20 +83,24 @@ RSpec.describe "Containers", type: :request do
       expect(record.reload).to be_vacio
     end
 
-    it "does not change the status of containers without MBL or with unknown values" do
+    it "lets the admin switch a container without MBL between lleno and vacio only" do
       standalone = create(:container)
       patch container_path(standalone), params: { container: { status: "vacio" } }
-      expect(standalone.reload).to be_lleno
+      expect(standalone.reload).to be_vacio
+      patch container_path(standalone), params: { container: { status: "entregado" } }
+      expect(standalone.reload).to be_vacio
       patch container_path(record), params: { container: { status: "inventado" } }
       expect(record.reload).to be_activo
     end
 
-    it "shows the status dropdown only in edit for containers with MBL" do
+    it "shows the status dropdown in edit with the statuses allowed for each kind" do
       get edit_container_path(record)
-      expect(response.body).to include(I18n.t("containers.form.status_edit_hint"))
+      expect(response.body).to include(I18n.t("containers.form.status_edit_hint"), "Entregado")
       get edit_container_path(create(:container))
-      expect(response.body).not_to include(I18n.t("containers.form.status_edit_hint"))
+      expect(response.body).to include(I18n.t("containers.form.status_edit_hint"))
+      expect(response.body).not_to include('value="entregado"')
     end
+
 
     it "updates and deletes" do
       patch container_path(record), params: { container: { size: 40 } }
