@@ -35,13 +35,23 @@ RSpec.describe "Containers", type: :request do
     it "requires an explicit status without MBL" do
       get new_container_path
       expect(response.body).to include(I18n.t("containers.form.status_prompt"))
-      expect(response.body).not_to match(/<option selected[^>]*>/)
+      expect(response.body).not_to match(/<option selected="selected" value="(lleno|vacio)"/)
       expect { post containers_path, params: { container: { number: "MSKU3333333", size: 20, container_type: "standard", status: "" } } }.not_to change(Container, :count)
     end
 
-    it "wires the form to hide the status when an MBL is selected" do
+    it "offers only the standalone form on the generic new route" do
       get new_container_path
-      expect(response.body).to include('data-controller="container-form"', 'data-container-form-target="statusField"')
+      expect(response.body).not_to include('name="container[master_bl_id]"')
+      expect(response.body).to include(I18n.t("containers.new.standalone_title"))
+      expect(response.body).to match(/<option selected="selected" value="40"/)
+      expect(response.body).to include('name="container[client_id]"', 'name="container[status]"')
+    end
+
+    it "creates containers of an MBL from its detail link with a fixed MBL and no status" do
+      get new_container_path(container: { master_bl_id: master_bl.id })
+      expect(response.body).to match(/<input[^>]*name="container\[master_bl_id\]"[^>]*type="hidden"|<input[^>]*type="hidden"[^>]*name="container\[master_bl_id\]"/)
+      expect(response.body).to include(%(value="#{master_bl.id}"), master_bl.number)
+      expect(response.body).not_to include('name="container[status]"', 'name="container[client_id]"')
     end
 
     it "rejects an invalid status without MBL" do

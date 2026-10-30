@@ -20,11 +20,13 @@ class ContainersController < ApplicationController
 
   def new
     @container = Container.new(params.fetch(:container, {}).permit(:master_bl_id))
+    @container.size = Container::SIZES.last
     authorize @container
   end
 
   def create
     @container = Container.new(container_params)
+    @container.status = "activo" if @container.master_bl_id.present?
     @container.client_id = current_user.client_id if current_user.client_member? && @container.master_bl_id.blank?
     authorize @container
 

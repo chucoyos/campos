@@ -63,7 +63,8 @@ RSpec.describe "MasterBls", type: :request do
       expect(response.body).to include(new_container_path(container: { master_bl_id: record.id }).gsub("&", "&amp;"))
 
       get new_container_path(container: { master_bl_id: record.id })
-      expect(response.body).to match(/<option selected="selected" value="#{record.id}"/)
+      expect(response.body).to include(%(value="#{record.id}"), record.number)
+      expect(response.body).not_to include('name="container[status]"')
 
       post containers_path, params: { container: { number: "MSKU1234567", size: 20, container_type: "standard", master_bl_id: record.id } }
       expect(response).to redirect_to(master_bl_path(record))

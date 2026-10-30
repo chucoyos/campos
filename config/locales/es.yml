@@ -205,6 +205,8 @@ es:
     new:
       title: "Nuevo contenedor"
       subtitle: "Registra un contenedor."
+      standalone_title: "Nuevo contenedor de resguardo"
+      standalone_subtitle: "Solo resguardo, sin MBL. Los contenedores con MBL se crean desde el detalle del MBL."
     edit:
       title: "Editar contenedor"
     photos:
@@ -254,6 +256,7 @@ es:
       photos_empty: "Este movimiento no tiene fotografías."
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
+      for_master_bl: "Contenedor del MBL %{number}. Inicia como Activo y avanza con el flujo operativo."
       client_prompt: "Selecciona un cliente"
       client_hint: "Solo aplica sin MBL: cliente propietario del contenedor en resguardo."
       status_prompt: "Selecciona un estado"
