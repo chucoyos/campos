@@ -56,6 +56,13 @@ Rails.application.routes.draw do
   resources :movement_passes, only: %i[index new create show] do
     patch :cancel, on: :member
   end
+  resources :deconsolidations, only: %i[index show create] do
+    patch :advance, on: :member
+    get :labels, on: :member
+  end
+  get "forklift", to: "forklift#index", as: :forklift
+  post "forklift/pick", to: "forklift#pick", as: :forklift_pick
+  post "forklift/store", to: "forklift#store", as: :forklift_store
   resources :work_schedules, only: %i[index new create show] do
     patch :cancel, on: :member
   end

@@ -9,7 +9,8 @@ module CargoItemsHelper
     material_icon(cargo_manifest.container ? "inventory_2" : "local_shipping")
   end
 
-  def cargo_qr_svg(cargo_item)
+  # Con scalable: true el SVG se ajusta al ancho de su contenedor en lugar de usar tamaño fijo.
+  def cargo_qr_svg(cargo_item, scalable: false)
     url = cargo_manifest_cargo_item_url(
       cargo_item.cargo_manifest,
       cargo_item,
@@ -17,6 +18,6 @@ module CargoItemsHelper
       host: request.host,
       protocol: request.protocol
     )
-    RQRCode::QRCode.new(url).as_svg(module_size: 4, standalone: true).html_safe
+    RQRCode::QRCode.new(url).as_svg(module_size: 4, standalone: true, viewbox: scalable).html_safe
   end
 end

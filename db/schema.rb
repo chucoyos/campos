@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_234500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,6 +193,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_210000) do
     t.index ["master_bl_id"], name: "index_containers_on_master_bl_id"
     t.index ["number"], name: "index_containers_on_number"
     t.index ["status"], name: "index_containers_on_status"
+  end
+
+  create_table "deconsolidations", force: :cascade do |t|
+    t.bigint "container_id", null: false
+    t.bigint "created_by_id"
+    t.string "status", default: "apertura", null: false
+    t.datetime "started_at"
+    t.datetime "emptied_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["container_id"], name: "index_deconsolidations_on_container_id", unique: true
+    t.index ["created_by_id"], name: "index_deconsolidations_on_created_by_id"
+    t.index ["status"], name: "index_deconsolidations_on_status"
+    t.check_constraint "status::text = ANY (ARRAY['apertura'::character varying, 'desconsolidando'::character varying, 'vacio'::character varying, 'vaciado'::character varying]::text[])", name: "deconsolidations_status_valid"
   end
 
   create_table "master_bls", force: :cascade do |t|
@@ -458,6 +472,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_210000) do
   add_foreign_key "containers", "clients"
   add_foreign_key "containers", "master_bls"
   add_foreign_key "containers", "yard_slots", column: "current_yard_slot_id"
+  add_foreign_key "deconsolidations", "containers"
+  add_foreign_key "deconsolidations", "users", column: "created_by_id"
   add_foreign_key "master_bls", "clients"
   add_foreign_key "movement_pass_vehicles", "movement_passes", on_delete: :cascade
   add_foreign_key "movement_passes", "carriers"

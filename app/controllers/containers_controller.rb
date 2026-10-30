@@ -68,16 +68,16 @@ class ContainersController < ApplicationController
 
   def upload_photos
     files = Array(params[:photos]).compact_blank.first(Container::MAX_PHOTOS_PER_UPLOAD)
-    return redirect_to container_path(@container), alert: t("flash.containers.photos_missing") if files.empty?
+    return redirect_to photos_return_path, alert: t("flash.containers.photos_missing") if files.empty?
 
     @container.public_send(:"#{@section}_photos").attach(files)
     if @container.errors.none?
-      redirect_to container_path(@container), notice: t("flash.containers.photos_uploaded", count: files.size)
+      redirect_to photos_return_path, notice: t("flash.containers.photos_uploaded", count: files.size)
     else
-      redirect_to container_path(@container), alert: @container.errors.full_messages.to_sentence
+      redirect_to photos_return_path, alert: @container.errors.full_messages.to_sentence
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
-    redirect_to container_path(@container), alert: t("flash.containers.photos_invalid")
+    redirect_to photos_return_path, alert: t("flash.containers.photos_invalid")
   end
 
   def remove_photo
@@ -85,13 +85,13 @@ class ContainersController < ApplicationController
     photo = ActiveStorage::Attachment.where(record: @container, name: names).find(params[:photo_id])
     section = photo.name.delete_suffix("_photos")
     photo.purge_later
-    redirect_to container_path(@container), notice: t("flash.containers.photo_removed")
+    redirect_to photos_return_path, notice: t("flash.containers.photo_removed")
   end
 
   def remove_photos
     count = @container.public_send(:"#{@section}_photos_attachments").count
     @container.public_send(:"#{@section}_photos").purge_later
-    redirect_to container_path(@container), notice: t("flash.containers.photos_removed", count: count)
+    redirect_to photos_return_path, notice: t("flash.containers.photos_removed", count: count)
   end
 
   def zip_photos
@@ -114,6 +114,12 @@ class ContainersController < ApplicationController
   end
 
   private
+
+  # Las fotos también se gestionan desde la desconsolidación; solo se acepta volver a esa ruta interna.
+  def photos_return_path
+    path = params[:return_to].to_s
+    path.match?(%r{\A/deconsolidations/\d+\z}) ? path : container_path(@container)
+  end
 
   def load_container_cargo
     return unless @container.master_bl && policy(CargoManifest).index?

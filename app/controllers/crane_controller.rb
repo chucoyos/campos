@@ -139,8 +139,7 @@ class CraneController < ApplicationController
 
   # Las tareas de programación solo pueden terminar en DESYCON.
   def destination_slots(container, work_schedule_id, **except)
-    slots = GateMovementService.available_slots(container, **except)
-    work_schedule_id ? slots.select(&:desycon?) : slots
+    GateMovementService.available_slots(container, desycon: work_schedule_id.present?, **except)
   end
 
   def load_schedules

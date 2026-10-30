@@ -1,5 +1,6 @@
 <%# Sección desplegable siempre cerrada al cargar: las fotos se piden solo al abrirla (turbo-frame lazy dentro de <details>). %>
 <% label = t("containers.photos.#{section}") %>
+<% return_to = local_assigns[:return_to] %>
 <details class="group rounded-2xl border border-slate-200 bg-slate-50">
   <summary class="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-2 font-medium text-slate-800 transition-colors hover:bg-slate-100">
     <span class="flex items-center gap-2">
@@ -11,7 +12,7 @@
 
   <div class="space-y-4 p-4">
     <% if policy(container).upload_photos? %>
-    <%= form_with url: upload_photos_container_path(container, section: section), method: :post, multipart: true,
+    <%= form_with url: upload_photos_container_path(container, section: section, return_to: return_to), method: :post, multipart: true,
           data: { controller: "photo-upload", photo_upload_max_value: Container::MAX_PHOTOS_PER_UPLOAD,
                   photo_upload_too_many_value: t("containers.photos.too_many", max: Container::MAX_PHOTOS_PER_UPLOAD),
                   photo_upload_failed_value: t("containers.photos.failed") },
@@ -37,7 +38,7 @@
                                                       url: zip&.url(expires_in: 30.minutes, disposition: :attachment, filename: zip.filename) %>
     <% end %>
 
-    <%= turbo_frame_tag "photos_#{section}", src: photos_container_path(container, section: section), loading: :lazy do %>
+    <%= turbo_frame_tag "photos_#{section}", src: photos_container_path(container, section: section, return_to: return_to), loading: :lazy do %>
       <p class="flex items-center gap-2 text-sm text-slate-500"><%= material_icon "hourglass_top" %> <%= t("containers.photos.loading") %></p>
     <% end %>
   </div>

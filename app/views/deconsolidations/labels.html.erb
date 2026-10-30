@@ -1,0 +1,24 @@
+<div class="w-full">
+  <%= link_to deconsolidation_path(@deconsolidation), class: "mb-3 inline-flex min-h-12 items-center gap-1 text-sm font-medium text-indigo-700 print:hidden" do %>
+    <%= material_icon "arrow_back" %> <%= t(".back") %>
+  <% end %>
+  <div class="mb-6 flex items-center justify-between gap-3 print:hidden">
+    <h1 class="text-2xl font-bold text-slate-900"><%= t(".title", container: @deconsolidation.container.number) %></h1>
+    <button type="button" onclick="window.print()" class="flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95">
+      <%= material_icon "print" %> <%= t(".print") %>
+    </button>
+  </div>
+  <% if @items.empty? %>
+    <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".empty") %></p>
+  <% end %>
+  <ul class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <% @items.each do |item| %>
+      <li class="break-inside-avoid rounded-2xl border border-slate-200 bg-white p-4 text-center">
+        <div class="mx-auto w-32"><%= cargo_qr_svg(item, scalable: true) %></div>
+        <p class="mt-2 font-bold text-slate-900"><%= item.description %></p>
+        <p class="font-mono text-sm font-semibold text-slate-800"><%= item.identifier_label %></p>
+        <p class="text-sm text-slate-600"><%= item.cargo_packaging.name %> · <%= @deconsolidation.container.number %></p>
+      </li>
+    <% end %>
+  </ul>
+</div>

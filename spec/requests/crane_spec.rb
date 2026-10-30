@@ -9,6 +9,26 @@ RSpec.describe "Grúa", type: :request do
     expect(response).to redirect_to(new_user_session_path)
   end
 
+  it "acota el desplegable del reacomodo posterior a la desconsolidación al área/sección del MBL" do
+    desycon_block = create(:yard_block, code: "1CFS", bays: 4, rows: 2, levels: 1)
+    yard = create(:yard_block, bays: 4, rows: 1, levels: 1)
+    origin = create(:yard_slot, yard_block: desycon_block, bay: 1, row: "A", level: 1)
+    own_slot = create(:yard_slot, yard_block: yard, bay: 1, row: "A", level: 1)
+    foreign_slot = create(:yard_slot, yard_block: yard, bay: 3, row: "A", level: 1)
+    container = create(:container, :with_master_bl, current_yard_slot: origin).tap(&:llenar!)
+    area = create(:yard_area, yard_block: yard, client: container.master_bl.client)
+    own_slot.update!(yard_area_section: create(:yard_area_section, yard_area: area, master_bl: container.master_bl))
+    foreign_slot.update!(yard_area_section: create(:yard_area_section, yard_area: area, master_bl: create(:master_bl, client: container.master_bl.client)))
+    create(:deconsolidation, container:, status: "vaciado")
+    create(:work_order, container:, movement_type: "reacomodo", from_yard_slot: origin, to_yard_slot: own_slot, movement_pass: nil)
+
+    sign_in crane_user
+    get crane_path
+
+    expect(response.body).to include(%(value="#{own_slot.id}"))
+    expect(response.body).not_to include(%(value="#{foreign_slot.id}"))
+  end
+
   it "agrupa el desbloqueo de un reacomodo independiente y reserva su destino final" do
     block = create(:yard_block, bays: 6, rows: 1, levels: 2)
     target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)

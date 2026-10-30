@@ -22,6 +22,22 @@ RSpec.describe "Warehouse", type: :request do
       expect(response.body).to include("Subdivisión A")
     end
 
+    it "shows a slot with stored lines and lines located elsewhere" do
+      other_slot = create(:warehouse_slot, number: 4)
+      item.store_at!(other_slot, "A", nil)
+      second = create(:cargo_item, description: "Rollo otro").tap do |line|
+        line.cargo_manifest.update_columns(status: "confirmed", confirmed_at: Time.current)
+        line.store_at!(other_slot, "B", nil)
+      end
+      here = create(:cargo_item, description: "Rollo aquí").tap do |line|
+        line.cargo_manifest.update_columns(status: "confirmed", confirmed_at: Time.current)
+        line.store_at!(slot, "B", nil)
+      end
+
+      get warehouse_slot_path(slot)
+      expect(response.body).to include(here.description, item.location_label, second.location_label)
+    end
+
     it "stores a line in a section of the slot" do
       patch store_warehouse_slot_path(slot), params: { cargo_item_id: item.id, section: "B" }
 

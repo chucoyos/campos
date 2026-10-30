@@ -23,6 +23,7 @@ class Container < ApplicationRecord
   has_many :work_orders, dependent: :restrict_with_error
   has_many :rehandling_requests, dependent: :restrict_with_error
   has_many :movement_plans, dependent: :restrict_with_error
+  has_one :deconsolidation_record, class_name: "Deconsolidation", dependent: :restrict_with_error
 
   has_many_attached :opening_photos
   has_many_attached :deconsolidation_photos

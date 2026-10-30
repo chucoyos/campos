@@ -34,6 +34,7 @@ class CraneTaskService
       @work_order.completed_at = Time.current
       @work_order.completar!
 
+      DeconsolidationService.start_if_desycon(@container.reload, @user) if @work_order.reacomodo?
       complete_movement_plan if movement_plan_target_order?
       WorkScheduleService.close_if_finished(@work_order.work_schedule)
       MovementPlanService.advance_pending if @work_order.salida? || @work_order.reacomodo?
@@ -81,6 +82,9 @@ class CraneTaskService
     raise Error, :destination_unavailable unless destination
     raise Error, :destination_unchanged if destination.id == origin.id
     raise Error, :destination_not_desycon if @work_order.work_schedule_id && !destination.desycon?
+    unless @work_order.work_schedule_id || GateMovementService.allowed_destination?(@container, destination)
+      raise Error, :destination_not_owner
+    end
 
     lock_block_slots(origin, destination)
     raise Error, :supports_other_container if GateMovementService.supporting_other?(

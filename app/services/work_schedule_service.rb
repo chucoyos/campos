@@ -74,7 +74,7 @@ class WorkScheduleService
     raise Error.new(:task_pending, container:) if container.work_orders.where(status: "pendiente").exists? ||
       container.movement_plans.where(status: "pendiente").exists?
 
-    destination = GateMovementService.available_slots(container).find(&:desycon?)
+    destination = GateMovementService.available_slots(container, desycon: true).first
     raise Error.new(:no_desycon_space, container:) unless destination
 
     if GateMovementService.blocking_containers(container).empty?

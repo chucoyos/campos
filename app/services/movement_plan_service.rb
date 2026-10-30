@@ -194,7 +194,6 @@ class MovementPlanService
 
   def create_rehandle_order(container, plan)
     GateMovementService.available_slots(container).each do |destination|
-      next if plan.work_schedule_id && destination.desycon?
       next if blocks_target_column?(container, destination, plan.container)
 
       lock_yard_blocks(destination.yard_block_id)
@@ -232,6 +231,7 @@ class MovementPlanService
   def validate_destination(container, destination, except_movement_plan_id: nil)
     footprint = GateMovementService.footprint_for(container, destination)
     raise Error, :destination_unavailable unless footprint
+    raise Error, :destination_not_owner unless GateMovementService.allowed_destination?(container, destination)
 
     occupied = GateMovementService.occupied_positions(destination.yard_block_id)
     raise Error, :destination_occupied if footprint.any? { |position| occupied.include?(position) }

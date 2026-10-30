@@ -1,0 +1,2 @@
+<% tones = { "apertura" => "bg-amber-50 text-amber-800", "desconsolidando" => "bg-sky-50 text-sky-800", "vacio" => "bg-sky-50 text-sky-800", "vaciado" => "bg-emerald-50 text-emerald-800" } %>
+<span class="inline-flex items-center rounded-lg px-3 py-1 text-sm font-medium <%= tones[deconsolidation.status] %>"><%= t("deconsolidations.statuses.#{deconsolidation.status}") %></span>

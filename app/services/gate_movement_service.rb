@@ -18,11 +18,43 @@ class GateMovementService
     available_slots(pass.container, pass:).first
   end
 
-  def self.available_slots(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil)
-    available_slot_records(container, pass:, except_work_order_id:, except_movement_plan_id:).map { |slot| slot[:slot] }
+  # Por defecto solo devuelve posiciones del área/sección del cliente/MBL y nunca DESYCON;
+  # `desycon: true` devuelve únicamente DESYCON (programación de desconsolidación).
+  def self.available_slots(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil, desycon: false)
+    available_slot_records(container, pass:, except_work_order_id:, except_movement_plan_id:, desycon:).map { |slot| slot[:slot] }
   end
 
-  def self.available_slot_records(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil)
+  def self.allowed_destination?(container, slot, desycon: false, pass: nil, assignment: assignment_for(container, pass))
+    return slot.desycon? if desycon
+
+    !slot.desycon? && owner_destination?(container, slot) && within_assignment?(assignment, slot)
+  end
+
+  # La asignación del pase manda; sin pase se usa la última de ingreso con área definida.
+  def self.assignment_for(container, pass = nil)
+    pass&.container_assignment ||
+      container.assignments.where(operation: "ingreso").where.not(yard_area_id: nil).order(:id).last
+  end
+
+  def self.within_assignment?(assignment, slot)
+    return true unless assignment&.yard_area_id
+
+    section = slot.yard_area_section
+    return section&.id == assignment.yard_area_section_id if assignment.yard_area_section_id
+
+    section&.yard_area_id == assignment.yard_area_id
+  end
+
+  # Una sección reservada a un MBL solo admite ese MBL; un área de cliente, solo ese cliente.
+  def self.owner_destination?(container, slot)
+    section = slot.yard_area_section
+    return section.master_bl_id == container.master_bl_id if section&.master_bl_id
+
+    client_id = section&.yard_area&.client_id
+    client_id.nil? || client_id == container.owner_client_id
+  end
+
+  def self.available_slot_records(container, pass: nil, except_work_order_id: nil, except_movement_plan_id: nil, desycon: false)
     sources = preferred_slot_sources(container, pass)
     preferred = sources.keys
     enabled_slots = YardSlot.enabled.joins(:yard_block).merge(YardBlock.enabled)
@@ -45,7 +77,10 @@ class GateMovementService
       reserved_by_block[position.first] << position
     end
 
+    assignment = assignment_for(container, pass)
     available = ordered.select do |slot|
+      next false unless allowed_destination?(container, slot, desycon:, assignment:)
+
       footprint = footprint_for(container, slot, slots_by_position:)
       footprint && free_and_supported?(footprint, occupied_by_block[slot.yard_block_id], reserved_by_block[slot.yard_block_id])
     end
@@ -280,6 +315,7 @@ class GateMovementService
     footprint = lock_footprint(slot)
     raise Error, :location_unavailable unless footprint
     raise Error, :location_occupied unless self.class.compatible_and_free?(@container, slot)
+    raise Error, :location_not_allowed unless self.class.allowed_destination?(@container, slot, pass: @pass)
     raise Error, :location_unsupported unless self.class.supported?(@container, slot)
 
     WorkOrder.create!(

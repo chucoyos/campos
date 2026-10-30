@@ -1,0 +1,46 @@
+<div class="w-full">
+  <div class="mb-6 flex items-center gap-3">
+    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600"><%= material_icon "unarchive" %></span>
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+      <p class="text-sm text-slate-500"><%= t(".description") %></p>
+    </div>
+  </div>
+
+  <% if @waiting.any? %>
+    <section class="mb-6 rounded-3xl bg-amber-50 p-5">
+      <h2 class="mb-3 flex items-center gap-2 font-bold text-amber-900"><%= material_icon "hourglass_top" %> <%= t(".waiting_title") %></h2>
+      <ul class="space-y-2">
+        <% @waiting.each do |container| %>
+          <li class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4">
+            <p class="text-sm text-slate-700"><span class="font-semibold text-slate-900"><%= container.number %></span> · <%= container.master_bl.number %> · <%= container.current_yard_slot.code %></p>
+            <%= button_to deconsolidations_path(container_id: container.id), method: :post, class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-indigo-600 px-5 font-medium text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95" do %>
+              <%= material_icon "play_arrow" %> <%= t(".start") %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if @deconsolidations.empty? %>
+    <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".empty") %></p>
+  <% end %>
+
+  <ul class="space-y-3">
+    <% @deconsolidations.each do |deconsolidation| %>
+      <% stored, total = @progress[deconsolidation.id] %>
+      <li>
+        <%= link_to deconsolidation_path(deconsolidation), class: "flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm transition-all duration-200 ease-out hover:shadow-md" do %>
+          <div class="min-w-0">
+            <p class="font-semibold text-slate-900"><%= deconsolidation.container.number %></p>
+            <p class="text-sm text-slate-600"><%= deconsolidation.container.master_bl&.number %> · <%= t(".progress", stored: stored, total: total) %></p>
+          </div>
+          <%= render "deconsolidations/status", deconsolidation: deconsolidation %>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

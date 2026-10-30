@@ -38,9 +38,13 @@ La aplicación **Soluciones Campos** es una plataforma web logística diseñada 
    * **Maniobra de Montacargas:**
      * Descarga de mercancía y colocación en bodega (agrupada por contenedor origen).
      * Registro de ubicación en bodega mediante **etiquetas QR adheribles** por bulto/lote de acero.
+   * **Proceso `Deconsolidation`** (uno por contenedor con MBL, se crea al llegar a DESYCON o manualmente desde `/deconsolidations`): `apertura → desconsolidando → vaciado`. Opera solo el administrador (política `DeconsolidationPolicy#operator?`, punto único para abrir un rol nuevo).
+     * Apertura → Desconsolidación exige ≥1 foto de apertura; Desconsolidación → Vacío exige ≥1 foto de vacío y toda la mercancía del manifiesto ubicada en bodega.
+     * Las fotos usan las secciones del contenedor (`opening`, `deconsolidation`, `empty`).
+   * **Consola `/forklift` (montacargas):** 1) escanea el QR del bulto (o elige la línea si no tiene QR); 2) escanea el QR fijo de la ubicación de bodega y la sección, lo que confirma el movimiento (`CargoItem#store_at!`). No ubica mientras el contenedor está en apertura. Las etiquetas QR de los bultos se imprimen desde el detalle de la desconsolidación.
 5. **Cierre de Contenedor:**
    * Tras completar el vaciado, el contenedor cambia automáticamente a estatus `Vacío`.
-   * Generación de orden de movimiento y notificación a la grúa para traslado a zona de vacíos.
+   * Al marcar vacío se crea automáticamente la tarea de reacomodo para la grúa, con posición sugerida (sección del MBL o área del cliente) que la grúa puede cambiar; si no hay espacio libre, el administrador la crea desde la grúa.
    * Programación y asignación de transporte para retiro del contenedor vacío.
 
 ---

@@ -9,6 +9,8 @@
     container_assignments: [t(".container_assignments"), container_assignments_path, "assignment", controller_name == "container_assignments", policy(ContainerAssignment).index?],
     movement_passes: [t(".movement_passes"), movement_passes_path, "qr_code_2", controller_name == "movement_passes", policy(MovementPass).index?],
     work_schedules: [t(".work_schedules"), work_schedules_path, "event_note", controller_name == "work_schedules", policy(WorkSchedule).index?],
+    deconsolidations: [t(".deconsolidations"), deconsolidations_path, "unarchive", controller_name == "deconsolidations", policy(Deconsolidation).index?],
+    forklift: [t(".forklift"), forklift_path, "forklift", controller_name == "forklift", policy(:forklift).index?],
     gate: [t(".gate"), gate_path, "qr_code_scanner", controller_name == "gate", policy(MovementPass).gate?],
     crane: [t(".crane"), crane_path, "precision_manufacturing", controller_name == "crane", policy(WorkOrder).index?],
     clients: [t(".clients"), clients_path, "person_search", controller_name == "clients", policy(Client).index?],
@@ -17,7 +19,7 @@
     cargo_packagings: [t(".cargo_packagings"), cargo_packagings_path, "category", controller_name == "cargo_packagings", policy(CargoPackaging).index?]
   }
   group_defs = [
-    [t(".groups.deconsolidation"), "directions_boat", %i[master_bls cargo_manifests warehouse]],
+    [t(".groups.deconsolidation"), "directions_boat", %i[master_bls cargo_manifests warehouse deconsolidations forklift]],
     [t(".groups.yard"), "grid_view", %i[containers yard yard_areas]],
     [t(".groups.movements"), "swap_horiz", %i[container_assignments movement_passes work_schedules gate crane]],
     [t(".catalogs"), "folder_open", %i[clients carriers users cargo_packagings]]

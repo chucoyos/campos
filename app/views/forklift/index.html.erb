@@ -1,0 +1,103 @@
+<div class="mx-auto w-full max-w-3xl space-y-6">
+  <div class="flex items-center gap-3">
+    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><%= material_icon "forklift" %></span>
+    <div>
+      <h1 class="text-2xl font-bold text-slate-900 sm:text-3xl"><%= t(".title") %></h1>
+      <p class="text-sm text-slate-500"><%= t(".description") %></p>
+    </div>
+  </div>
+
+  <% if @item %>
+    <section class="space-y-4 rounded-3xl border-2 border-violet-600 bg-white p-6 shadow-sm" data-controller="qr-camera"
+             data-qr-camera-unsupported-value="<%= t(".camera_unsupported") %>"
+             data-qr-camera-denied-value="<%= t(".camera_denied") %>"
+             data-qr-camera-reading-value="<%= t(".camera_reading") %>">
+      <%= link_to forklift_path, class: "inline-flex min-h-12 items-center gap-1 text-sm font-medium text-violet-800" do %>
+        <%= material_icon "arrow_back" %> <%= t(".back") %>
+      <% end %>
+      <p class="text-sm font-medium text-violet-800"><%= t(".in_hand") %></p>
+      <div>
+        <p class="text-xl font-bold text-slate-900"><%= @item.description %> <span class="font-mono text-base font-semibold text-violet-800"><%= @item.identifier_label %></span></p>
+        <p class="text-sm text-slate-600"><%= @item.cargo_packaging.name %> · <%= @item.cargo_manifest.container&.number || t("cargo_manifests.show.general_cargo") %><%= " · #{@item.location_label}" if @item.warehouse_slot_id %></p>
+      </div>
+      <p class="font-semibold text-slate-900"><%= t(".scan_slot") %></p>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" data-qr-camera-target="start" data-action="qr-camera#start" class="flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-violet-700 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-violet-800 active:scale-95 disabled:opacity-50">
+          <%= material_icon "qr_code_scanner" %> <%= t(".scan") %>
+        </button>
+        <button type="button" data-qr-camera-target="stop" data-action="qr-camera#stop" class="hidden min-h-12 cursor-pointer rounded-full px-6 font-medium text-slate-700 hover:bg-slate-100"><%= t(".stop") %></button>
+        <%= link_to t(".cancel"), forklift_path, class: "flex min-h-12 items-center rounded-full px-6 font-medium text-slate-700 hover:bg-slate-100" %>
+        <%= link_to warehouse_labels_path, target: "_blank", rel: "noopener", class: "flex min-h-12 items-center gap-2 rounded-full px-6 font-medium text-violet-800 hover:bg-violet-50" do %>
+          <%= material_icon "qr_code_2" %> <%= t(".slot_labels") %>
+        <% end %>
+      </div>
+      <div data-qr-camera-target="preview" class="hidden overflow-hidden rounded-2xl bg-slate-950">
+        <video data-qr-camera-target="video" class="max-h-[55vh] w-full object-contain" autoplay playsinline muted></video>
+      </div>
+      <p data-qr-camera-target="status" role="status" aria-live="polite" class="hidden rounded-xl bg-violet-50 p-3 text-sm text-violet-800"></p>
+      <%= form_with url: forklift_store_path, data: { turbo: false, qr_camera_target: "form" }, class: "grid grid-cols-1 gap-3 sm:grid-cols-[1fr_8rem_auto]" do |f| %>
+        <%= f.hidden_field :item_id, value: @item.id %>
+        <%= f.label :code, t(".slot_code"), class: "sr-only" %>
+        <%= f.search_field :code, required: true, autocomplete: "off", list: "slot-codes", placeholder: t(".slot_code"), data: { qr_camera_target: "token" },
+              class: "min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-mono focus:border-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-600/20" %>
+        <datalist id="slot-codes">
+          <% @slot_codes.each do |code| %><option value="<%= code %>"></option><% end %>
+        </datalist>
+        <%= f.label :section, t(".section"), class: "sr-only" %>
+        <%= f.select :section, WarehouseSlot::SECTIONS, {}, class: "min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3" %>
+        <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-600 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-emerald-700 active:scale-95" do %>
+          <%= material_icon "move_to_inbox" %> <%= t(".confirm") %>
+        <% end %>
+      <% end %>
+    </section>
+  <% else %>
+    <section class="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm" data-controller="qr-camera"
+             data-qr-camera-unsupported-value="<%= t(".camera_unsupported") %>"
+             data-qr-camera-denied-value="<%= t(".camera_denied") %>"
+             data-qr-camera-reading-value="<%= t(".camera_reading") %>">
+      <p class="font-semibold text-slate-900"><%= t(".scan_item") %></p>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" data-qr-camera-target="start" data-action="qr-camera#start" class="flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-violet-700 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-violet-800 active:scale-95 disabled:opacity-50">
+          <%= material_icon "qr_code_scanner" %> <%= t(".scan") %>
+        </button>
+        <button type="button" data-qr-camera-target="stop" data-action="qr-camera#stop" class="hidden min-h-12 cursor-pointer rounded-full px-6 font-medium text-slate-700 hover:bg-slate-100"><%= t(".stop") %></button>
+      </div>
+      <div data-qr-camera-target="preview" class="hidden overflow-hidden rounded-2xl bg-slate-950">
+        <video data-qr-camera-target="video" class="max-h-[55vh] w-full object-contain" autoplay playsinline muted></video>
+      </div>
+      <p data-qr-camera-target="status" role="status" aria-live="polite" class="hidden rounded-xl bg-violet-50 p-3 text-sm text-violet-800"></p>
+      <%= form_with url: forklift_pick_path, data: { turbo: false, qr_camera_target: "form" }, class: "flex flex-col gap-3 sm:flex-row" do |f| %>
+        <%= f.label :code, t(".item_code"), class: "sr-only" %>
+        <%= f.text_field :code, required: true, autocomplete: "off", placeholder: t(".item_code"), data: { qr_camera_target: "token" },
+              class: "min-h-12 w-full rounded-2xl border border-slate-300 bg-white px-4 font-mono focus:border-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-600/20" %>
+        <%= f.button class: "flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-violet-700 px-6 font-medium text-white transition-all duration-200 ease-out hover:bg-violet-800 active:scale-95" do %>
+          <%= material_icon "search" %> <%= t(".pick") %>
+        <% end %>
+      <% end %>
+    </section>
+
+    <section class="space-y-4">
+      <h2 class="flex items-center gap-2 text-lg font-bold text-slate-900"><%= material_icon "inventory_2" %> <%= t(".pending_title") %></h2>
+      <% if @deconsolidations.empty? %>
+        <p class="rounded-3xl bg-slate-50 p-6 text-center text-slate-500"><%= t(".none") %></p>
+      <% end %>
+      <% @deconsolidations.each do |deconsolidation| %>
+        <% container = deconsolidation.container %>
+        <div class="rounded-3xl border border-slate-100 bg-white p-5 shadow-sm">
+          <p class="font-semibold text-slate-900"><%= container.number %> <span class="font-normal text-slate-500">· <%= container.master_bl&.number %></span></p>
+          <p class="mb-3 text-sm text-slate-600"><%= t(".progress", stored: deconsolidation.stored_count, total: deconsolidation.total_count) %></p>
+          <ul class="space-y-2">
+            <% @pending.fetch(container, []).each do |item| %>
+              <li class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 p-3 text-sm">
+                <span class="min-w-0"><span class="font-medium text-slate-900"><%= item.description %></span> <span class="rounded-lg bg-violet-50 px-2 py-0.5 font-mono text-xs font-semibold text-violet-800"><%= item.identifier_label %></span> · <%= item.cargo_packaging.name %><%= " · #{t('.has_qr')}" if item.qr_token.present? %></span>
+                <%= button_to forklift_pick_path(item_id: item.id), method: :post, class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-violet-50 px-5 font-medium text-violet-800 transition-all duration-200 ease-out hover:bg-violet-100 active:scale-95" do %>
+                  <%= material_icon "forklift" %> <%= t(".move") %>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+</div>

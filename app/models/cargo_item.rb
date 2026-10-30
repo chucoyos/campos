@@ -52,6 +52,11 @@ class CargoItem < ApplicationRecord
     raise
   end
 
+  # Identificador legible para distinguir bultos iguales en consola y etiquetas.
+  def identifier_label
+    [ "##{id}", origin_identifier ].compact.join(" · ")
+  end
+
   def location_label
     "#{warehouse_slot.code} · #{slot_section}" if warehouse_slot
   end
