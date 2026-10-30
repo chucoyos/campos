@@ -42,7 +42,6 @@ Rails.application.routes.draw do
   resources :cargo_packagings, except: :show
   resources :containers do
     member do
-      patch :transition
       get :photos
       post :upload_photos
       delete :remove_photos

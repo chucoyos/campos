@@ -74,6 +74,22 @@ class Container < ApplicationRecord
     update!(status: value)
   end
 
+  # Corrección manual (solo admin): no dispara eventos AASM. Activo y entregado exigen estar fuera del patio.
+  def correct_status(value)
+    value = value.to_s
+    return true if value.blank? || value == status
+
+    if !with_master_bl? || Container.aasm.states.map { |state| state.name.to_s }.exclude?(value)
+      errors.add(:status, :invalid)
+    elsif %w[activo entregado].include?(value) && current_yard_slot_id.present?
+      errors.add(:status, :in_yard)
+    else
+      update_column(:status, value)
+      return true
+    end
+    false
+  end
+
   def photos_zip_name(section)
     "#{number}_#{I18n.t("containers.photos.#{section}").parameterize}.zip"
   end

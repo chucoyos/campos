@@ -48,21 +48,6 @@
       </div>
     </dl>
 
-    <% events = policy(@container).transition? ? %w[llenar vaciar entregar].select { |event| @container.public_send(:"may_#{event}?") } : [] %>
-    <% if events.any? %>
-      <div class="mt-6">
-        <h2 class="mb-2 text-sm font-medium text-slate-500"><%= t(".change_status") %></h2>
-        <div class="flex flex-wrap gap-3">
-          <% events.each do |event| %>
-            <%= button_to transition_container_path(@container, event: event), method: :patch,
-                  class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-slate-100 px-5 font-medium text-slate-700 transition-all duration-200 ease-out hover:bg-slate-200 active:scale-95" do %>
-              <%= material_icon "swap_horiz" %> <%= t("containers.events.#{event}") %>
-            <% end %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-
     <% if policy(@container).update? %>
     <div class="mt-6 flex flex-wrap items-center gap-3">
       <%= link_to edit_container_path(@container), class: "flex min-h-12 items-center gap-2 rounded-2xl bg-indigo-600 px-5 font-medium text-white transition-colors hover:bg-indigo-700" do %>

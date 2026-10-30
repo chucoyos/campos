@@ -110,7 +110,7 @@ RSpec.describe "Acceso del cliente", type: :request do
       expect { delete container_path(own) }.not_to change(Container, :count)
       post upload_photos_container_path(own), params: { section: "opening", photos: [ pdf.signed_id ] }
       expect(own.reload.photos_attachments.count).to eq(0) if own.respond_to?(:photos_attachments)
-      patch transition_container_path(own), params: { event: "llenar" }
+      patch container_path(own), params: { container: { status: "lleno" } }
       expect(own.reload.status).to eq("activo")
     end
 

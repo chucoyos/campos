@@ -48,39 +48,50 @@ RSpec.describe "Containers", type: :request do
       expect { post containers_path, params: { container: { number: "MSKU1111111", size: 20, container_type: "standard", status: "entregado" } } }.not_to change(Container, :count)
     end
 
-    it "does not allow changing status through update" do
+    it "lets the admin correct the status in any direction while the container is outside the yard" do
+      patch container_path(record), params: { container: { status: "vacio" } }
+      expect(record.reload).to be_vacio
       patch container_path(record), params: { container: { status: "entregado" } }
+      expect(record.reload).to be_entregado
+      patch container_path(record), params: { container: { status: "lleno" } }
+      expect(record.reload).to be_lleno
+    end
+
+    it "blocks activo and entregado while the container is in a yard position" do
+      slot = create(:yard_slot)
+      record.update!(current_yard_slot: slot)
+      record.llenar!
+      patch container_path(record), params: { container: { size: 40, status: "entregado" } }
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).not_to include("translation missing", "Translation missing")
+      expect(response.body).to include("siga en una posición de patio")
+      expect(record.reload).to be_lleno
+      expect(record.size).not_to eq(40)
+      patch container_path(record), params: { container: { status: "activo" } }
+      expect(record.reload).to be_lleno
+      patch container_path(record), params: { container: { status: "vacio" } }
+      expect(record.reload).to be_vacio
+    end
+
+    it "does not change the status of containers without MBL or with unknown values" do
+      standalone = create(:container)
+      patch container_path(standalone), params: { container: { status: "vacio" } }
+      expect(standalone.reload).to be_lleno
+      patch container_path(record), params: { container: { status: "inventado" } }
       expect(record.reload).to be_activo
+    end
+
+    it "shows the status dropdown only in edit for containers with MBL" do
+      get edit_container_path(record)
+      expect(response.body).to include(I18n.t("containers.form.status_edit_hint"))
+      get edit_container_path(create(:container))
+      expect(response.body).not_to include(I18n.t("containers.form.status_edit_hint"))
     end
 
     it "updates and deletes" do
       patch container_path(record), params: { container: { size: 40 } }
       expect(record.reload.size).to eq(40)
       expect { delete container_path(record) }.to change(Container, :count).by(-1)
-    end
-
-    it "applies a valid transition" do
-      patch transition_container_path(record, event: "llenar")
-      expect(record.reload).to be_lleno
-      expect(flash[:notice]).to eq(I18n.t("flash.containers.transition"))
-    end
-
-    it "rejects transitions for containers without MBL" do
-      standalone = create(:container)
-      patch transition_container_path(standalone, event: "vaciar")
-      expect(standalone.reload).to be_lleno
-      expect(flash[:alert]).to eq(I18n.t("flash.containers.invalid_transition"))
-    end
-
-    it "rejects an invalid transition" do
-      patch transition_container_path(record, event: "entregar")
-      expect(record.reload).to be_activo
-      expect(flash[:alert]).to eq(I18n.t("flash.containers.invalid_transition"))
-    end
-
-    it "rejects unknown events" do
-      patch transition_container_path(record, event: "destroy")
-      expect(flash[:alert]).to eq(I18n.t("flash.containers.invalid_transition"))
     end
 
     it "renders pages without missing translations" do
@@ -94,9 +105,9 @@ RSpec.describe "Containers", type: :request do
   context "as non-admin" do
     before { sign_in create(:user, :cliente) }
 
-    it "cannot create or transition" do
+    it "cannot create or change the status" do
       expect { post containers_path, params: { container: { number: "MSKU2222222", size: 20, container_type: "standard" } } }.not_to change(Container, :count)
-      patch transition_container_path(record, event: "llenar")
+      patch container_path(record), params: { container: { status: "lleno" } }
       expect(record.reload).to be_activo
     end
   end
@@ -132,7 +143,7 @@ RSpec.describe "Contenedores como Seguridad", type: :request do
 
   it "no puede cambiar el estado ni entrar a MBL" do
     container = create(:container, :with_master_bl)
-    patch transition_container_path(container, event: "llenar")
+    patch container_path(container), params: { container: { status: "lleno" } }
     expect(container.reload.status).to eq("activo")
 
     get master_bls_path

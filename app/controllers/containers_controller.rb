@@ -2,7 +2,7 @@ class ContainersController < ApplicationController
   include ActiveStorage::SetCurrent
   include CargoManifestData
 
-  before_action :set_container, only: %i[show edit update destroy transition photos upload_photos remove_photo remove_photos zip_photos movement_photos]
+  before_action :set_container, only: %i[show edit update destroy photos upload_photos remove_photo remove_photos zip_photos movement_photos]
   before_action :set_photo_section, only: %i[photos upload_photos remove_photos zip_photos]
 
   def index
@@ -39,7 +39,7 @@ class ContainersController < ApplicationController
   end
 
   def update
-    if @container.update(container_params)
+    if update_container
       redirect_to containers_path, notice: t("flash.containers.update")
     else
       render :edit, status: :unprocessable_entity
@@ -49,17 +49,6 @@ class ContainersController < ApplicationController
   def destroy
     @container.destroy
     redirect_to containers_path, notice: t("flash.containers.destroy")
-  end
-
-  def transition
-    event = params[:event].to_s
-
-    if TRANSITION_EVENTS.include?(event) && @container.public_send(:"may_#{event}?")
-      @container.public_send(:"#{event}!")
-      redirect_to @container, notice: t("flash.containers.transition")
-    else
-      redirect_to @container, alert: t("flash.containers.invalid_transition")
-    end
   end
 
   def photos
@@ -155,17 +144,31 @@ class ContainersController < ApplicationController
     ]
   end
 
-  TRANSITION_EVENTS = %w[llenar vaciar entregar].freeze
 
   def set_container
     @container = policy_scope(Container).find(params[:container_id] || params[:id])
     authorize @container
   end
 
+  def update_container
+    Container.transaction do
+      raise ActiveRecord::Rollback unless @container.update(container_params.except(:status))
+      raise ActiveRecord::Rollback unless correct_status
+
+      true
+    end
+  end
+
+  def correct_status
+    return true unless current_user.admin?
+
+    @container.correct_status(params.dig(:container, :status))
+  end
+
   def container_params
     permitted = %i[number size container_type]
     permitted << :master_bl_id if action_name == "create" || current_user.admin?
-    permitted << :status if action_name == "create"
+    permitted << :status
     permitted << :client_id if action_name == "create" && !current_user.client_member?
     params.expect(container: permitted)
   end
