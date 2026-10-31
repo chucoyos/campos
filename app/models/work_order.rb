@@ -20,7 +20,7 @@ class WorkOrder < ApplicationRecord
   validates :to_yard_slot, presence: true, if: :ingreso?
   validates :from_yard_slot, presence: true, if: :salida?
   validates :from_yard_slot, :to_yard_slot, presence: true, if: :reacomodo?
-  validates :movement_pass, presence: true, if: -> { ingreso? || salida? }
+  validates :movement_pass, presence: true, if: -> { ingreso? || salida? || traspaleo? }
   validates :movement_pass, absence: true, if: :reacomodo?
 
   after_commit :broadcast_changed, on: %i[create update]

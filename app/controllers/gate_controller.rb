@@ -148,8 +148,10 @@ class GateController < ApplicationController
     if second_scan
       redirect_to gate_path, notice: t("flash.gate.exit_completed")
     else
-      notice_key = @pass.ingreso? ? "flash.gate.entry_queued" :
-        (@pass.movement_plan ? "flash.gate.rehandling_queued" : "flash.gate.loading_queued")
+      notice_key = if @pass.ingreso? then "flash.gate.entry_queued"
+      elsif @pass.traspaleo? then "flash.gate.transfer_queued"
+      else (@pass.movement_plan ? "flash.gate.rehandling_queued" : "flash.gate.loading_queued")
+      end
       redirect_to gate_path, notice: t(notice_key)
     end
   rescue GateMovementService::Error => error

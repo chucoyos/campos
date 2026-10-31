@@ -26,6 +26,7 @@ class CraneTaskService
       case @work_order.movement_type
       when "ingreso" then complete_entry
       when "salida" then complete_exit
+      when "traspaleo" then complete_transfer
       when "reacomodo" then complete_rehandle
       else raise Error, :invalid_movement
       end
@@ -71,6 +72,17 @@ class CraneTaskService
     @container.entregar! if @container.may_entregar?
     @container.save!
     create_movement(from: slot, to: nil)
+  end
+
+  # El traspaleo no ocupa patio y conserva una sola validación: al confirmarlo la Grúa cierra el pase.
+  def complete_transfer
+    raise Error, :already_in_yard if @container.current_yard_slot_id.present?
+
+    update_standalone_load_status
+    @container.save! if @container.changed?
+    create_movement(from: nil, to: nil)
+    @pass.consumed_at ||= Time.current
+    @pass.completar!
   end
 
   def complete_rehandle

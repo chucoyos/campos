@@ -20,6 +20,13 @@ class Container < ApplicationRecord
   has_many :assignments, class_name: "ContainerAssignment", dependent: :restrict_with_error
   has_many :movement_passes, dependent: :restrict_with_error
   has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
+
+  # Tras un traspaleo el contenedor sale en otro camión y deja de estar bajo resguardo.
+  scope :not_transferred, -> {
+    where.not(
+      "COALESCE((SELECT movement_type FROM container_movements WHERE container_movements.container_id = containers.id ORDER BY id DESC LIMIT 1), '') = 'traspaleo'"
+    )
+  }
   has_many :work_orders, dependent: :restrict_with_error
   has_many :rehandling_requests, dependent: :restrict_with_error
   has_many :movement_plans, dependent: :restrict_with_error

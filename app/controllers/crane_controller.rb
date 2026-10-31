@@ -11,12 +11,15 @@ class CraneController < ApplicationController
     @work_orders = queue_filter(orders_scope).where(movement_plan_id: nil)
       .or(orders_scope.where(movement_plan_id: @plans.map(&:id)))
       .order(:created_at)
-      .includes({ container: :master_bl }, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
+      .includes(:container, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
     @standalone_work_orders = @work_orders.reject { |order| order.movement_plan_id || order.rehandling_request_id }
     @pending_orders_by_plan = @work_orders.filter_map do |order|
       [ order.movement_plan_id, order ] if order.movement_plan_id
     end.to_h
-    @destination_options = @work_orders.select(&:reacomodo?).to_h do |order|
+    rehandle_orders = @work_orders.select(&:reacomodo?)
+    # Solo los reacomodos consultan el MBL (para acotar destinos); precargarlo para el resto sería innecesario.
+    ActiveRecord::Associations::Preloader.new(records: rehandle_orders.map(&:container), associations: :master_bl).call
+    @destination_options = rehandle_orders.to_h do |order|
       [ order.id, destination_slots(order.container, order.work_schedule_id, except_work_order_id: order.id, except_movement_plan_id: order.movement_plan_id) ]
     end
     @plan_destination_options = @plans.select(&:reacomodo?).to_h do |plan|

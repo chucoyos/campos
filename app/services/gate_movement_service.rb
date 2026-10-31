@@ -286,12 +286,7 @@ class GateMovementService
         else raise Error, :invalid_movement
         end
 
-        if @pass.traspaleo?
-          @pass.consumed_at ||= Time.current
-          @pass.completar!
-        else
-          @pass.update!(entered_at: Time.current)
-        end
+        @pass.update!(entered_at: Time.current)
       end
       @pass
     end
@@ -348,9 +343,7 @@ class GateMovementService
   def record_transfer
     raise Error, :already_in_yard if @container.current_yard_slot_id.present?
 
-    update_standalone_load_status
-    @container.save! if @container.changed?
-    create_movement(from: nil, to: nil)
+    WorkOrder.create!(container: @container, movement_pass: @pass, movement_type: "traspaleo", created_by: @user)
   end
 
   def lock_footprint(anchor, require_enabled: true)
@@ -368,31 +361,5 @@ class GateMovementService
     return if require_enabled && slots.any? { |position| !position.enabled? || !position.yard_block.enabled? }
 
     slots
-  end
-
-  def update_standalone_load_status
-    return if @container.with_master_bl? || @pass.load_status.blank?
-
-    @container.declare_load_status!(@pass.load_status)
-  end
-
-  def create_movement(from:, to:)
-    movement = ContainerMovement.create!(
-      container: @container,
-      movement_pass: @pass,
-      from_yard_slot: from,
-      to_yard_slot: to,
-      user: @user,
-      movement_type: @pass.movement_type,
-      load_status: @pass.load_status,
-      created_at: Time.current
-    )
-    if @pass.photos.attached?
-      @pass.photos.blobs.each do |blob|
-        ActiveStorage::Attachment.create!(name: "photos", record: movement, blob:)
-      end
-    end
-    @pass.photos.detach if @pass.photos.attached?
-    movement
   end
 end

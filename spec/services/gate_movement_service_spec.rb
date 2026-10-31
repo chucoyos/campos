@@ -168,12 +168,20 @@ RSpec.describe GateMovementService do
       )
     end
 
-    it "registra traspaleo sin ocupar patio" do
+    it "registra traspaleo con tarea de grúa sin ocupar patio" do
       transfer_pass = create(:movement_pass, :standalone, container: container, movement_type: "traspaleo")
 
       described_class.call(pass: transfer_pass, user: security_user)
 
+      order = WorkOrder.find_by!(movement_pass: transfer_pass)
+      expect(order).to be_pendiente.and be_traspaleo
+      expect(ContainerMovement.where(movement_pass: transfer_pass)).to be_empty
+      expect(transfer_pass.reload).to be_vigente
+
+      CraneTaskService.complete(work_order: order, user: crane_user)
+
       expect(container.reload.current_yard_slot).to be_nil
+      expect(transfer_pass.reload).to be_completado
       expect(ContainerMovement.last).to have_attributes(
         movement_type: "traspaleo",
         from_yard_slot: nil,

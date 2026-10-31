@@ -83,6 +83,7 @@ es:
       completed: "Movimiento registrado y pase completado."
       entry_queued: "Ingreso confirmado. La grúa recibió la tarea para colocar el contenedor."
       loading_queued: "Entrada del camión registrada. La grúa recibió la tarea de salida."
+      transfer_queued: "Traspaleo registrado. La grúa recibió la tarea para confirmar el movimiento."
       rehandling_queued: "Entrada del camión registrada. Se avisó a la grúa para liberar el contenedor solicitado."
       exit_completed: "Salida del camión verificada y pase cerrado."
       photos_uploaded:
@@ -656,6 +657,9 @@ es:
       plate: "Placas"
       unit: "Camión"
       no_origin: "Camión en Garita"
+      truck: "Camión"
+      complete_traspaleo: "Confirmar traspaleo"
+      confirm_traspaleo: "¿Confirmas que el contenedor ya pasó al otro camión?"
       complete_ingreso: "Confirmar colocación"
       complete_salida: "Confirmar carga al camión"
       complete_reacomodo: "Confirmar reacomodo"

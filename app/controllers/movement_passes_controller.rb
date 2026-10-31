@@ -95,10 +95,10 @@ class MovementPassesController < ApplicationController
   end
 
   def standalone_containers
-    return Container.where(master_bl_id: nil) if current_user.admin?
+    return Container.not_transferred.where(master_bl_id: nil) if current_user.admin?
     return Container.none unless current_user.client_member?
 
-    Container.where(master_bl_id: nil, client_id: current_user.client_id)
+    Container.not_transferred.where(master_bl_id: nil, client_id: current_user.client_id)
   end
 
   def filter_fields

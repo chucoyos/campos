@@ -29,6 +29,22 @@ RSpec.describe "Grúa", type: :request do
     expect(response.body).not_to include(%(value="#{foreign_slot.id}"))
   end
 
+  it "muestra y confirma la tarea de traspaleo con ambos camiones" do
+    container = create(:container, status: "lleno")
+    transfer_pass = create(:movement_pass, :standalone, container:, movement_type: "traspaleo")
+    transfer_order = create(:work_order, container:, movement_pass: transfer_pass, movement_type: "traspaleo")
+    transfer_pass.update!(entered_at: Time.current)
+
+    sign_in crane_user
+    get crane_path
+    expect(response.body).to include(container.number, I18n.t("crane.work_order.complete_traspaleo"))
+    expect(response.body).to include(I18n.t("movement_passes.pdf.vehicle_destino"))
+
+    patch complete_crane_work_order_path(transfer_order)
+    expect(transfer_order.reload).to be_completada
+    expect(transfer_pass.reload).to be_completado
+  end
+
   it "agrupa el desbloqueo de un reacomodo independiente y reserva su destino final" do
     block = create(:yard_block, bays: 6, rows: 1, levels: 2)
     target_slot = create(:yard_slot, yard_block: block, bay: 1, row: "A", level: 1)
