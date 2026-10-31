@@ -35,6 +35,7 @@ class MovementPass < ApplicationRecord
   validate :assignment_matches_container, if: :container_assignment
   validate :standalone_requires_no_assignment
   validate :movement_allowed_for_container
+  validate :container_not_closed, on: :create
   validate :vehicles_match_movement
   validate :photos_are_valid_images
 
@@ -104,6 +105,10 @@ class MovementPass < ApplicationRecord
 
   def standalone_requires_no_assignment
     errors.add(:container_assignment, :required) if container&.with_master_bl? && container_assignment.blank?
+  end
+
+  def container_not_closed
+    errors.add(:container, :closed) if container&.closed?
   end
 
   def movement_allowed_for_container

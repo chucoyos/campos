@@ -40,7 +40,7 @@ class ApplicationController < ActionController::Base
   def filter_fields = []
 
   def filter_value(field)
-    value = params[field[:name]].to_s.strip
+    value = params.fetch(field[:name], field[:default]).to_s.strip
     return if value.blank?
     return if field[:type] == :select && field[:options].none? { |_label, option| option.to_s == value }
 
@@ -51,6 +51,7 @@ class ApplicationController < ActionController::Base
     filter_fields.filter_map do |field|
       value = filter_value(field)
       next unless value
+      next if value == field[:default]
 
       display = field[:type] == :select ? field[:options].find { |_label, option| option.to_s == value }.first : value
       { name: field[:name], label: field[:label], value: display }

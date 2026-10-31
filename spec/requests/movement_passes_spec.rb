@@ -123,16 +123,19 @@ RSpec.describe "Pases de movimiento", type: :request do
 
     before { sign_in create(:user, :cliente, client: client) }
 
-    it "no ofrece contenedores cuyo último movimiento fue un traspaleo" do
-      transferred = create(:container, client: client)
-      pass = create(:movement_pass, :standalone, container: transferred, movement_type: "traspaleo")
-      ContainerMovement.create!(container: transferred, movement_pass: pass, movement_type: "traspaleo",
-                                user: create(:user, :grua), created_at: Time.current)
-
+    it "no ofrece contenedores cuyo ciclo ya terminó" do
       kept = container
+      closed = create(:container, client: client)
+      closed.close_cycle!
+
       get new_movement_pass_path
       expect(response.body).to include(kept.number)
-      expect(response.body).not_to include(transferred.number)
+      expect(response.body).not_to include(closed.number)
+
+      expect {
+        post movement_passes_path, params: { container_id: closed.id, movement_type: "ingreso",
+                                             movement_pass: { load_status: "vacio", vehicles_attributes: vehicle_params } }
+      }.not_to change(MovementPass, :count)
     end
 
     it "solicita ingreso declarando el estado de carga" do

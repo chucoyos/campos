@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_234500) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -188,10 +188,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_234500) do
     t.datetime "updated_at", null: false
     t.bigint "client_id"
     t.bigint "current_yard_slot_id"
+    t.datetime "closed_at"
     t.index ["client_id"], name: "index_containers_on_client_id"
     t.index ["current_yard_slot_id"], name: "index_containers_on_current_yard_slot_id", unique: true, where: "(current_yard_slot_id IS NOT NULL)"
     t.index ["master_bl_id"], name: "index_containers_on_master_bl_id"
-    t.index ["number"], name: "index_containers_on_number"
+    t.index ["number"], name: "index_containers_on_number_active", unique: true, where: "(closed_at IS NULL)"
     t.index ["status"], name: "index_containers_on_status"
   end
 

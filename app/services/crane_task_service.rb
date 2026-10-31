@@ -72,6 +72,7 @@ class CraneTaskService
     @container.entregar! if @container.may_entregar?
     @container.save!
     create_movement(from: slot, to: nil)
+    @container.close_cycle!
   end
 
   # El traspaleo no ocupa patio y conserva una sola validación: al confirmarlo la Grúa cierra el pase.
@@ -81,6 +82,7 @@ class CraneTaskService
     update_standalone_load_status
     @container.save! if @container.changed?
     create_movement(from: nil, to: nil)
+    @container.close_cycle!
     @pass.consumed_at ||= Time.current
     @pass.completar!
   end

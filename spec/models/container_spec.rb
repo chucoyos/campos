@@ -5,11 +5,39 @@ RSpec.describe Container, type: :model do
 
   it { is_expected.to belong_to(:master_bl).optional }
   it { is_expected.to validate_presence_of(:number) }
-  it { is_expected.to validate_uniqueness_of(:number).ignoring_case_sensitivity }
   it { is_expected.to validate_inclusion_of(:size).in_array([ 20, 40 ]) }
   it { is_expected.to define_enum_for(:container_type).with_values(standard: "standard", hq: "hq").backed_by_column_of_type(:string) }
 
   describe "number" do
+    it "rechaza un número ya usado por un contenedor vigente, sin importar mayúsculas" do
+      create(:container, number: "MSKU1234567")
+
+      duplicate = build(:container, number: "msku1234567")
+      expect(duplicate).not_to be_valid
+      expect(duplicate.errors[:number]).to include(I18n.t("activerecord.errors.models.container.attributes.number.taken_active"))
+    end
+
+    it "permite reutilizar el número cuando el ciclo anterior ya terminó" do
+      create(:container, number: "MSKU1234567").close_cycle!
+
+      expect(build(:container, number: "MSKU1234567")).to be_valid
+    end
+
+    it "garantiza la unicidad vigente en la base de datos y reporta la carrera como error de validación" do
+      create(:container, number: "MSKU1234567")
+      duplicate = build(:container, number: "MSKU1234567")
+
+      expect(duplicate.save(validate: false)).to be(false)
+      expect(duplicate.errors[:number]).to be_present
+    end
+
+    it "cierra el ciclo sin disparar validaciones ni cambiar el estado" do
+      container = create(:container)
+
+      expect { container.close_cycle! }.to change(container, :closed?).from(false).to(true)
+      expect(Container.active).not_to include(container)
+    end
+
     it "normalizes spaces, hyphens and case" do
       expect(build(:container, number: " msku 123456-7 ").number).to eq("MSKU1234567")
     end

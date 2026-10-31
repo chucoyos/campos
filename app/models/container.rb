@@ -21,12 +21,9 @@ class Container < ApplicationRecord
   has_many :movement_passes, dependent: :restrict_with_error
   has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
 
-  # Tras un traspaleo el contenedor sale en otro camión y deja de estar bajo resguardo.
-  scope :not_transferred, -> {
-    where.not(
-      "COALESCE((SELECT movement_type FROM container_movements WHERE container_movements.container_id = containers.id ORDER BY id DESC LIMIT 1), '') = 'traspaleo'"
-    )
-  }
+  # Un contenedor cerrado terminó su ciclo (salió del patio); si regresa se crea una instancia nueva.
+  scope :active, -> { where(closed_at: nil) }
+
   has_many :work_orders, dependent: :restrict_with_error
   has_many :rehandling_requests, dependent: :restrict_with_error
   has_many :movement_plans, dependent: :restrict_with_error
@@ -40,7 +37,8 @@ class Container < ApplicationRecord
 
   normalizes :number, with: ->(number) { number.gsub(/[\s-]/, "").upcase }
 
-  validates :number, presence: true, uniqueness: true, format: { with: NUMBER_FORMAT, allow_blank: true }
+  validates :number, presence: true, format: { with: NUMBER_FORMAT, allow_blank: true }
+  validates :number, uniqueness: { conditions: -> { active }, message: :taken_active }, unless: :closed?
   validates :size, inclusion: { in: SIZES }
   validates :status, inclusion: { in: STANDALONE_STATUSES }, unless: :with_master_bl?
   validates :client, presence: true, on: :create, unless: :with_master_bl?
@@ -67,6 +65,18 @@ class Container < ApplicationRecord
       transitions from: :vacio, to: :entregado, guard: :with_master_bl?
     end
   end
+
+  # La validación no cubre dos altas simultáneas; el índice único parcial las rechaza y se reporta igual.
+  def save(**)
+    super
+  rescue ActiveRecord::RecordNotUnique
+    errors.add(:number, :taken_active)
+    false
+  end
+
+  def closed? = closed_at.present?
+
+  def close_cycle!(at: Time.current) = update_column(:closed_at, at)
 
   def owner_client_id = master_bl&.client_id || client_id
 

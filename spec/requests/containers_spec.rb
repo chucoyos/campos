@@ -108,6 +108,23 @@ RSpec.describe "Containers", type: :request do
       expect { delete container_path(record) }.to change(Container, :count).by(-1)
     end
 
+    it "lista solo contenedores vigentes por defecto y permite ver los de ciclo cerrado" do
+      open_container = create(:container)
+      closed = create(:container)
+      closed.close_cycle!
+
+      get containers_path
+      expect(response.body).to include(open_container.number)
+      expect(response.body).not_to include(closed.number)
+
+      get containers_path(cycle: "closed")
+      expect(response.body).to include(closed.number)
+      expect(response.body).not_to include(open_container.number)
+
+      get containers_path(cycle: "")
+      expect(response.body).to include(open_container.number, closed.number)
+    end
+
     it "renders pages without missing translations" do
       [ new_container_path, edit_container_path(record), containers_path, container_path(record) ].each do |path|
         get path

@@ -28,6 +28,32 @@ RSpec.describe CraneTaskService do
     )
   end
 
+  it "cierra el ciclo del contenedor al completar su salida" do
+    exit_pass = create(:movement_pass, :standalone, container: container, movement_type: "salida")
+    container.update!(current_yard_slot: slot)
+    order = create(:work_order, container:, movement_pass: exit_pass, movement_type: "salida", from_yard_slot: slot)
+
+    described_class.complete(work_order: order, user: crane_user)
+
+    expect(container.reload).to be_closed
+    expect(build(:container, number: container.number)).to be_valid
+  end
+
+  it "cierra el ciclo del contenedor al completar su traspaleo" do
+    transfer_pass = create(:movement_pass, :standalone, container: container, movement_type: "traspaleo")
+    order = create(:work_order, container:, movement_pass: transfer_pass, movement_type: "traspaleo")
+
+    described_class.complete(work_order: order, user: crane_user)
+
+    expect(container.reload).to be_closed
+  end
+
+  it "no cierra el ciclo al colocar el contenedor en el patio" do
+    described_class.complete(work_order: queue_entry, user: crane_user)
+
+    expect(container.reload).not_to be_closed
+  end
+
   it "no permite concluir dos veces" do
     order = queue_entry
     described_class.complete(work_order: order, user: crane_user)

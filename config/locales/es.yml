@@ -124,6 +124,9 @@ es:
   filters:
     number: "Número"
     master_bl: "MBL"
+    cycle: "Ciclo"
+    cycle_active: "Vigentes"
+    cycle_closed: "Cerrados"
   shared:
     confirm_dialog:
       title: "Confirmar acción"
@@ -267,6 +270,7 @@ es:
       number_hint: "4 letras y 7 números, por ejemplo MSKU1234567."
       number_title: "Debe tener 4 letras seguidas de 7 números (ej. MSKU1234567)."
     show:
+      cycle_closed: "Ciclo cerrado · %{date}"
       photos_title: "Fotografías"
       photos_hint: "Evidencia fotográfica por etapa. Se cargan al abrir cada sección."
       movement_history: "Historial de movimientos"
@@ -1198,6 +1202,8 @@ es:
           attributes:
             container_id:
               taken: "ya tiene un pase vigente para este movimiento"
+            container:
+              closed: "ya terminó su ciclo; registra una nueva instancia del contenedor"
             container_assignment:
               mismatch: "no corresponde al contenedor y movimiento"
               not_pending: "ya no está pendiente"
@@ -1251,6 +1257,8 @@ es:
           attributes:
             master_bl_id:
               unchangeable: "no se puede asignar ni quitar después de crear el contenedor"
+            number:
+              taken_active: "ya existe un contenedor vigente con este número; solo puede registrarse de nuevo cuando termine su ciclo y salga del patio"
             status:
               in_yard: "no puede ser Activo ni Entregado mientras el contenedor siga en una posición de patio"
             opening_photos: &photo_errors

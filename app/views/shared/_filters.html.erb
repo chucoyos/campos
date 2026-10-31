@@ -8,7 +8,7 @@
         <div>
           <%= label_tag field[:name], field[:label], class: "mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500" %>
           <% if field[:type] == :select %>
-            <%= select_tag field[:name], options_for_select(field[:options], params[field[:name]]), include_blank: t("shared.filters.all"), class: input %>
+            <%= select_tag field[:name], options_for_select(field[:options], params.fetch(field[:name], field[:default])), include_blank: t("shared.filters.all"), class: input %>
           <% else %>
             <div class="relative">
               <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><%= material_icon "search" %></span>
