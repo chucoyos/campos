@@ -181,12 +181,19 @@ RSpec.describe GateMovementService do
       CraneTaskService.complete(work_order: order, user: crane_user)
 
       expect(container.reload.current_yard_slot).to be_nil
-      expect(transfer_pass.reload).to be_completado
+      expect(transfer_pass.reload).to be_vigente
       expect(ContainerMovement.last).to have_attributes(
         movement_type: "traspaleo",
         from_yard_slot: nil,
         to_yard_slot: nil
       )
+
+      expect { described_class.call(pass: transfer_pass, user: security_user) }
+        .to raise_error(GateMovementService::Error, I18n.t("gate.errors.exit_scan_required"))
+
+      transfer_pass.update!(exit_scanned_at: Time.current)
+      described_class.call(pass: transfer_pass, user: security_user)
+      expect(transfer_pass.reload).to be_completado
     end
 
     it "rechaza completar dos veces el mismo pase" do

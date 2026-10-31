@@ -197,6 +197,25 @@ RSpec.describe "Garita", type: :request do
     expect(response.body).to include('turbo-frame id="movement_photos_', "evidencia.png")
   end
 
+  it "cierra el traspaleo con un segundo escaneo y admite fotos de salida opcionales" do
+    transfer_pass = create(:movement_pass, :standalone, container: container, movement_type: "traspaleo")
+    png_data = png
+    post complete_gate_movement_path(transfer_pass)
+    CraneTaskService.complete(work_order: WorkOrder.find_by!(movement_pass: transfer_pass), user: create(:user, :grua))
+    movement = transfer_pass.reload.movement
+    expect(transfer_pass).to be_vigente
+
+    post gate_movement_exit_photos_path(transfer_pass), params: { photos: [ png_data ] }
+    expect(movement.reload.exit_photos.count).to eq(0)
+
+    post scan_gate_pass_path, params: { token: transfer_pass.token }
+    get gate_movement_path(transfer_pass)
+    expect(response.body).to include(I18n.t("gate.show.exit_photos_title"), I18n.t("gate.show.verify_exit_traspaleo", container: container.number))
+
+    post complete_gate_movement_path(transfer_pass)
+    expect(transfer_pass.reload).to be_completado
+  end
+
   it "rechaza evidencia que no es una imagen" do
     document = ActiveStorage::Blob.create_and_upload!(
       io: StringIO.new("%PDF"), filename: "evidencia.pdf", content_type: "application/pdf"

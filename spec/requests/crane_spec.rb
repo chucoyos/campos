@@ -42,7 +42,7 @@ RSpec.describe "Grúa", type: :request do
 
     patch complete_crane_work_order_path(transfer_order)
     expect(transfer_order.reload).to be_completada
-    expect(transfer_pass.reload).to be_completado
+    expect(transfer_pass.reload).to be_vigente
   end
 
   it "agrupa el desbloqueo de un reacomodo independiente y reserva su destino final" do

@@ -83,7 +83,7 @@ es:
       completed: "Movimiento registrado y pase completado."
       entry_queued: "Ingreso confirmado. La grúa recibió la tarea para colocar el contenedor."
       loading_queued: "Entrada del camión registrada. La grúa recibió la tarea de salida."
-      transfer_queued: "Traspaleo registrado. La grúa recibió la tarea para confirmar el movimiento."
+      transfer_queued: "Entrada de los camiones registrada. La grúa recibió la tarea de traspaleo."
       rehandling_queued: "Entrada del camión registrada. Se avisó a la grúa para liberar el contenedor solicitado."
       exit_completed: "Salida del camión verificada y pase cerrado."
       photos_uploaded:
@@ -960,6 +960,7 @@ es:
       verify_exit_title: "Verificar salida del camión"
       verify_exit_ingreso: "Verifica visualmente que el camión salga sin contenedor."
       verify_exit_salida: "Verifica visualmente que el camión lleve el contenedor %{container}."
+      verify_exit_traspaleo: "Verifica visualmente que el contenedor %{container} haya pasado al camión de destino."
       verify_exit: "Verificar y cerrar pase"
     errors:
       token_required: "Captura o escanea el token del pase."

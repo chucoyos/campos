@@ -219,7 +219,7 @@
       <% end %>
       <%= form_with url: complete_gate_movement_path(@pass), class: "space-y-3" do |f| %>
         <%= f.button class: "flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-emerald-700 px-6 font-semibold text-white transition-all duration-200 ease-out hover:bg-emerald-800 active:scale-95" do %>
-          <%= material_icon "task_alt" %> <%= t(@pass.traspaleo? ? ".complete" : ".register_entry") %>
+          <%= material_icon "task_alt" %> <%= t(".register_entry") %>
         <% end %>
       <% end %>
     </section>

@@ -75,7 +75,7 @@ class CraneTaskService
     @container.close_cycle!
   end
 
-  # El traspaleo no ocupa patio y conserva una sola validación: al confirmarlo la Grúa cierra el pase.
+  # El traspaleo no ocupa patio; el pase se cierra con el segundo escaneo de Garita, como ingreso y salida.
   def complete_transfer
     raise Error, :already_in_yard if @container.current_yard_slot_id.present?
 
@@ -83,8 +83,6 @@ class CraneTaskService
     @container.save! if @container.changed?
     create_movement(from: nil, to: nil)
     @container.close_cycle!
-    @pass.consumed_at ||= Time.current
-    @pass.completar!
   end
 
   def complete_rehandle
