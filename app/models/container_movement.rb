@@ -8,6 +8,7 @@ class ContainerMovement < ApplicationRecord
   belongs_to :to_yard_slot, class_name: "YardSlot", optional: true
   belongs_to :user, optional: true
   has_many_attached :photos
+  has_many_attached :exit_photos
 
   validates :movement_type, inclusion: { in: TYPES }
   validates :load_status, inclusion: { in: Container::STANDALONE_STATUSES }, allow_nil: true
@@ -43,13 +44,16 @@ class ContainerMovement < ApplicationRecord
   end
 
   def photos_are_valid_images
-    return unless photos.attached?
+    %i[photos exit_photos].each do |name|
+      attachments = public_send(name)
+      next unless attachments.attached?
 
-    photos.each do |photo|
-      errors.add(:photos, :invalid_type, filename: photo.filename) unless Container::PHOTO_CONTENT_TYPES.include?(photo.blob.content_type)
-      errors.add(:photos, :too_large, filename: photo.filename, max: Container::PHOTO_MAX_SIZE / 1.megabyte) if photo.blob.byte_size > Container::PHOTO_MAX_SIZE
+      attachments.each do |photo|
+        errors.add(name, :invalid_type, filename: photo.filename) unless Container::PHOTO_CONTENT_TYPES.include?(photo.blob.content_type)
+        errors.add(name, :too_large, filename: photo.filename, max: Container::PHOTO_MAX_SIZE / 1.megabyte) if photo.blob.byte_size > Container::PHOTO_MAX_SIZE
+      end
+      errors.add(name, :too_many, max: Container::MAX_PHOTOS_PER_UPLOAD) if attachments.count > Container::MAX_PHOTOS_PER_UPLOAD
     end
-    errors.add(:photos, :too_many, max: Container::MAX_PHOTOS_PER_UPLOAD) if photos.count > Container::MAX_PHOTOS_PER_UPLOAD
   end
 
   def prevent_modification

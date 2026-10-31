@@ -101,6 +101,44 @@ class GateController < ApplicationController
     redirect_to(@pass ? gate_movement_path(@pass) : gate_path, alert: t("gate.errors.photos_invalid"))
   end
 
+  def upload_exit_photos
+    @pass = MovementPass.find(params[:id])
+    authorize @pass, :gate?
+    movement = exit_photos_movement
+    return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless movement
+
+    files = Array(params[:photos]).compact_blank
+    return redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_missing") if files.empty?
+    if movement.exit_photos_attachments.count + files.size > Container::MAX_PHOTOS_PER_UPLOAD
+      return redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_too_many", max: Container::MAX_PHOTOS_PER_UPLOAD)
+    end
+
+    blobs = files.map { |file| exit_photo_blob(file) }
+    invalid = blobs.find { |blob| Container::PHOTO_CONTENT_TYPES.exclude?(blob.content_type) || blob.byte_size > Container::PHOTO_MAX_SIZE }
+    if invalid
+      blobs.each(&:purge_later)
+      return redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_invalid")
+    end
+
+    # El movimiento es inmutable: se crean los adjuntos sin guardar el registro.
+    blobs.each { |blob| ActiveStorage::Attachment.create!(name: "exit_photos", record: movement, blob:) }
+    redirect_to gate_movement_path(@pass), notice: t("flash.gate.photos_uploaded", count: files.size)
+  rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+    redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_invalid")
+  end
+
+  def remove_exit_photo
+    @pass = MovementPass.find(params[:id])
+    authorize @pass, :gate?
+    movement = exit_photos_movement
+    return redirect_to gate_path, alert: t("gate.errors.pass_unusable") unless movement
+
+    movement.exit_photos_attachments.find(params[:photo_id]).purge_later
+    redirect_to gate_movement_path(@pass), notice: t("flash.gate.photo_removed")
+  rescue ActiveRecord::RecordNotFound
+    redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_invalid")
+  end
+
   def complete
     @pass = MovementPass.find(params[:id])
     authorize @pass, :gate?
@@ -132,6 +170,19 @@ class GateController < ApplicationController
     path.split("/").reject(&:blank?).last.to_s
   rescue URI::InvalidURIError
     value
+  end
+
+  # Las fotos de salida solo se aceptan en el segundo escaneo, cuando el movimiento físico ya existe.
+  def exit_photos_movement
+    return unless @pass.usable? && @pass.entered_at? && @pass.exit_scanned_at?
+
+    @pass.movement
+  end
+
+  def exit_photo_blob(file)
+    return ActiveStorage::Blob.find_signed!(file) if file.is_a?(String)
+
+    ActiveStorage::Blob.create_and_upload!(io: file, filename: file.original_filename, content_type: file.content_type)
   end
 
   def authorize_gate

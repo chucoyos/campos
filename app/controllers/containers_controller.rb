@@ -13,7 +13,7 @@ class ContainersController < ApplicationController
   def show
     @photo_counts = policy(@container).photos? ? ActiveStorage::Attachment.where(record: @container).group(:name).count : {}
     @movements = @container.movements.includes(
-      :from_yard_slot, :to_yard_slot, :user, :photos_attachments, movement_pass: :vehicles
+      :from_yard_slot, :to_yard_slot, :user, :photos_attachments, :exit_photos_attachments, movement_pass: :vehicles
     ).order(created_at: :desc)
     load_container_cargo
   end
@@ -102,6 +102,7 @@ class ContainersController < ApplicationController
   def movement_photos
     @movement = @container.movements.find(params[:id])
     @photos = @movement.photos_attachments.includes(:blob).order(:id)
+    @exit_photos = @movement.exit_photos_attachments.includes(:blob).order(:id)
   end
 
   private

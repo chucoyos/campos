@@ -71,6 +71,8 @@ Rails.application.routes.draw do
   get "gate/movements/:id", to: "gate#show", as: :gate_movement
   post "gate/movements/:id/photos", to: "gate#upload_photos", as: :gate_movement_photos
   delete "gate/movements/:id/photos/:photo_id", to: "gate#remove_photo", as: :remove_gate_movement_photo
+  post "gate/movements/:id/exit_photos", to: "gate#upload_exit_photos", as: :gate_movement_exit_photos
+  delete "gate/movements/:id/exit_photos/:photo_id", to: "gate#remove_exit_photo", as: :remove_gate_movement_exit_photo
   post "gate/complete/:id", to: "gate#complete", as: :complete_gate_movement
   get "crane", to: "crane#index", as: :crane
   get "crane/rehandles/search", to: "crane#search_rehandles", as: :search_crane_rehandles

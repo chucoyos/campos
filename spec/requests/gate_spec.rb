@@ -132,6 +132,38 @@ RSpec.describe "Garita", type: :request do
     expect(container.reload.current_yard_slot).to be_nil
   end
 
+  it "permite fotos opcionales de salida en el segundo escaneo, adjuntas al movimiento" do
+    container.update!(current_yard_slot: slot)
+    output_pass = create(:movement_pass, :standalone, container:, movement_type: "salida", load_status: nil)
+    png = -> { fixture_file_upload(Rails.root.join("public/icon.png"), "image/png") }
+
+    post scan_gate_pass_path, params: { token: output_pass.token }
+    post complete_gate_movement_path(output_pass)
+    CraneTaskService.complete(work_order: WorkOrder.find_by!(movement_pass: output_pass), user: create(:user, :grua))
+    movement = output_pass.reload.movement
+
+    post gate_movement_exit_photos_path(output_pass), params: { photos: [ png.call ] }
+    expect(movement.reload.exit_photos.count).to eq(0)
+
+    post scan_gate_pass_path, params: { token: output_pass.token }
+    get gate_movement_path(output_pass)
+    expect(response.body).to include(I18n.t("gate.show.exit_photos_title"))
+
+    post gate_movement_exit_photos_path(output_pass), params: { photos: [ png.call, png.call ] }
+    expect(movement.reload.exit_photos.count).to eq(2)
+    expect(movement.photos.count).to eq(0)
+
+    delete remove_gate_movement_exit_photo_path(output_pass, photo_id: movement.exit_photos_attachments.first.id)
+    expect(movement.reload.exit_photos_attachments.count).to eq(1)
+
+    post complete_gate_movement_path(output_pass)
+    expect(output_pass.reload).to be_completado
+    expect(movement.reload.exit_photos.count).to eq(1)
+
+    post gate_movement_exit_photos_path(output_pass), params: { photos: [ png.call ] }
+    expect(movement.reload.exit_photos.count).to eq(1)
+  end
+
   it "transfiere las fotos del pase al historial al confirmar el movimiento" do
     photo = ActiveStorage::Blob.create_and_upload!(
       io: StringIO.new(png), filename: "evidencia.png", content_type: "image/png"

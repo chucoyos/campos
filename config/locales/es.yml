@@ -254,6 +254,7 @@ es:
       to: "Posición de destino"
       operator: "Registrado por"
       photos_empty: "Este movimiento no tiene fotografías."
+      exit_photos_title: "Salida del camión"
     form:
       master_bl_prompt: "Sin MBL (solo resguardo)"
       for_master_bl: "Contenedor del MBL %{number}. Inicia como Activo y avanza con el flujo operativo."
@@ -929,6 +930,10 @@ es:
       upload_photos: "Subir fotografías"
       photos_empty: "Aún no se han agregado fotografías a este movimiento."
       confirm_remove_photo: "¿Quitar esta fotografía del pase?"
+      exit_photos_title: "Evidencia de salida (opcional)"
+      exit_photos_hint: "Fotografía el camión saliendo con (o sin) el contenedor. Se guardan en el historial del movimiento. Máximo 30 fotografías, JPG, PNG o WebP de hasta 10 MB."
+      exit_photos_empty: "Aún no hay fotografías de salida."
+      confirm_remove_exit_photo: "¿Quitar esta fotografía de salida?"
       search_location: "Buscar posición disponible"
       search_placeholder: "Código, bloque, área o sección"
       selected_location: "Posición seleccionada"
