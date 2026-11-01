@@ -1,19 +1,6 @@
-<%= link_to user_path(user), title: t(".show"), aria: { label: t(".show_user", email: user.email) },
-      class: "flex h-12 w-12 items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-sky-50 hover:text-sky-600" do %>
-  <%= material_icon "visibility" %>
-<% end %>
-<%= link_to edit_user_path(user), title: t(".edit"), aria: { label: t(".edit_user", email: user.email) },
-      class: "flex h-12 w-12 items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600" do %>
-  <%= material_icon "edit" %>
-<% end %>
-<% if policy(user).destroy? %>
-  <%= button_to user_path(user), method: :delete, title: t(".destroy"), aria: { label: t(".destroy_user", email: user.email) },
-        form: { data: { turbo_confirm: t(".confirm_destroy", email: user.email) } },
-        class: "flex h-12 w-12 cursor-pointer items-center justify-center rounded-2xl text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600" do %>
-    <%= material_icon "delete" %>
-  <% end %>
-<% else %>
-  <span title="<%= t(".cannot_destroy_self") %>" class="flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-2xl text-slate-300">
-    <%= material_icon "delete" %>
-  </span>
-<% end %>
+<%= render "shared/row_actions", label: t("shared.actions.title_named", name: user.email), items: [
+  { label: t("shared.actions.show"), icon: "visibility", href: user_path(user) },
+  { label: t("shared.actions.edit"), icon: "edit", href: edit_user_path(user) },
+  (policy(user).destroy? ? { label: t("shared.actions.destroy"), icon: "delete", href: user_path(user), method: :delete,
+                             confirm: t(".confirm_destroy", email: user.email), tone: :danger } : nil)
+] %>
