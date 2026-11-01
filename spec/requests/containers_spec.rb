@@ -16,6 +16,16 @@ RSpec.describe "Containers", type: :request do
 
     let(:client) { create(:client) }
 
+    it "agrupa ver, editar y eliminar en un menú de acciones" do
+      container = create(:container)
+      get containers_path
+      doc = Nokogiri::HTML(response.body)
+      menu = doc.at_css("[data-controller='row-actions']")
+      expect(menu.at_css("a[href='#{container_path(container)}']")).to be_present
+      expect(menu.at_css("a[href='#{edit_container_path(container)}']")).to be_present
+      expect(menu.at_css("form[action='#{container_path(container)}'] input[value='delete']")).to be_present
+    end
+
     it "lista primero los contenedores más recientes" do
       old = create(:container, created_at: 2.days.ago)
       recent = create(:container, created_at: 1.hour.ago)

@@ -190,6 +190,7 @@ es:
       summary: "Mostrando %{from}–%{to} de %{count}"
     actions:
       title: "Acciones"
+      title_named: "Acciones de %{name}"
       show: "Ver"
       edit: "Editar"
       destroy: "Eliminar"
