@@ -25,7 +25,7 @@ class YardAreasController < ApplicationController
     if @yard_area.save
       redirect_to @yard_area, notice: t("flash.yard_areas.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class YardAreasController < ApplicationController
     if @yard_area.update(yard_area_params)
       redirect_to @yard_area, notice: t("flash.yard_areas.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

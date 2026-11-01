@@ -8,7 +8,7 @@ class GateController < ApplicationController
     @token = extract_token(params[:token])
     if @token.blank?
       @error = t("gate.errors.token_required")
-      return render :index, status: :unprocessable_entity
+      return render :index, status: :unprocessable_content
     end
 
     @pass = MovementPass.find_by(token: @token)
@@ -24,11 +24,11 @@ class GateController < ApplicationController
     end
     unless @pass.usable?
       @error = t("gate.errors.pass_unusable")
-      return render :index, status: :unprocessable_entity
+      return render :index, status: :unprocessable_content
     end
     if @pass.entered_at? && !@pass.exit_scanned_at?
       @error = t("gate.errors.movement_not_completed")
-      return render :index, status: :unprocessable_entity
+      return render :index, status: :unprocessable_content
     end
 
     redirect_to gate_movement_path(@pass)
@@ -83,7 +83,7 @@ class GateController < ApplicationController
       redirect_to gate_movement_path(@pass), notice: t("flash.gate.photos_uploaded", count: files.size)
     else
       load_location_options
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     redirect_to gate_movement_path(@pass), alert: t("gate.errors.photos_invalid")
@@ -160,7 +160,7 @@ class GateController < ApplicationController
 
     @error = error.message
     load_location_options
-    render :show, status: :unprocessable_entity
+    render :show, status: :unprocessable_content
   end
 
   private

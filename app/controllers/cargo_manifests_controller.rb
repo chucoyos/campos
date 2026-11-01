@@ -30,7 +30,7 @@ class CargoManifestsController < ApplicationController
         notice: t("flash.cargo_manifests.create"))
     else
       load_form_options
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -45,7 +45,7 @@ class CargoManifestsController < ApplicationController
       redirect_to @cargo_manifest, notice: t("flash.cargo_manifests.update")
     else
       load_form_options
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -65,7 +65,7 @@ class CargoManifestsController < ApplicationController
   rescue AASM::InvalidTransition
     @cargo_manifest.errors.add(:base, :cannot_confirm)
     load_show_data
-    render :show, status: :unprocessable_entity
+    render :show, status: :unprocessable_content
   end
 
   def reopen
@@ -89,7 +89,7 @@ class CargoManifestsController < ApplicationController
     else
       @import_errors = result.errors
       load_show_data
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

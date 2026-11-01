@@ -25,7 +25,7 @@ class ContainerAssignmentsController < ApplicationController
       @assignment.errors.add(:container, :blank) if ids.empty?
       @errors = @created.flat_map { |item| item.errors.full_messages.map { |message| "#{item.container.number}: #{message}" } }
       load_form_data
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

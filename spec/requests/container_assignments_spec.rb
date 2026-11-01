@@ -54,7 +54,7 @@ RSpec.describe "Asignaciones a transporte", type: :request do
           container_assignment: { carrier_id: carrier.id, operation: "ingreso" }
         }
       }.not_to change(ContainerAssignment, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(containers.first.number)
     end
 
@@ -62,7 +62,7 @@ RSpec.describe "Asignaciones a transporte", type: :request do
       expect {
         post container_assignments_path, params: { master_bl_id: master_bl.id, container_assignment: { carrier_id: carrier.id, operation: "salida" } }
       }.not_to change(ContainerAssignment, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "cancela solo asignaciones pendientes" do

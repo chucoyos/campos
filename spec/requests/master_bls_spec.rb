@@ -30,7 +30,7 @@ RSpec.describe "MasterBls", type: :request do
 
     it "rejects a duplicate number" do
       expect { post master_bls_path, params: { master_bl: { number: record.number, client_id: client.id } } }.not_to change(MasterBl, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "updates a record" do
@@ -87,13 +87,13 @@ RSpec.describe "MasterBls", type: :request do
     it "shows row errors and imports nothing when the file is invalid" do
       file = build_xlsx([ [ "MSKU1234567", 20, "HQ" ], [ "MALO", 20, "HQ" ] ])
       expect { post import_master_bl_path(record), params: { file: file } }.not_to change(Container, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include("Fila 3")
     end
 
     it "requires a file" do
       post import_master_bl_path(record)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).to include(I18n.t("container_import.errors.no_file"))
     end
 

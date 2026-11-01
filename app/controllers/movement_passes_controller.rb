@@ -26,7 +26,7 @@ class MovementPassesController < ApplicationController
     if @pass.save
       redirect_to movement_pass_path(@pass), notice: t("flash.movement_passes.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 

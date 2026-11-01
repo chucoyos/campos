@@ -34,7 +34,7 @@ RSpec.describe "Clients", type: :request do
 
     it "rejects a blank name" do
       expect { post clients_path, params: { client: { name: "" } } }.not_to change(Client, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "updates a record" do
@@ -56,7 +56,7 @@ RSpec.describe "Clients", type: :request do
 
     it "rechaza un color inválido" do
       patch client_path(record), params: { client: { container_color: "rojo" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "does not delete a client that has MBLs" do

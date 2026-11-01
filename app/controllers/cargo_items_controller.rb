@@ -17,7 +17,7 @@ class CargoItemsController < ApplicationController
       redirect_back_or_to @cargo_manifest, notice: t("flash.cargo_manifests.item_created")
     else
       load_manifest_items
-      render "cargo_manifests/show", status: :unprocessable_entity
+      render "cargo_manifests/show", status: :unprocessable_content
     end
   end
 
@@ -27,7 +27,7 @@ class CargoItemsController < ApplicationController
       redirect_back_or_to @cargo_manifest, notice: t("flash.cargo_manifests.item_updated")
     else
       load_manifest_items
-      render "cargo_manifests/show", status: :unprocessable_entity
+      render "cargo_manifests/show", status: :unprocessable_content
     end
   end
 

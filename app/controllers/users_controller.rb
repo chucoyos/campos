@@ -23,7 +23,7 @@ class UsersController < ApplicationController
     if @user.save
       redirect_to users_path, notice: t("flash.users.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -37,7 +37,7 @@ class UsersController < ApplicationController
     if @user.update(attrs)
       redirect_to users_path, notice: t("flash.users.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

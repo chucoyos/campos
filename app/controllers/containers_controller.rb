@@ -33,7 +33,7 @@ class ContainersController < ApplicationController
     if @container.save
       redirect_to (@container.master_bl || @container), notice: t("flash.containers.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -44,7 +44,7 @@ class ContainersController < ApplicationController
     if update_container
       redirect_to containers_path, notice: t("flash.containers.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

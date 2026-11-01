@@ -25,7 +25,7 @@ class CarriersController < ApplicationController
     if @carrier.save
       redirect_to carriers_path, notice: t("flash.carriers.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class CarriersController < ApplicationController
     if @carrier.update(carrier_params)
       redirect_to carriers_path, notice: t("flash.carriers.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

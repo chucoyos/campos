@@ -16,7 +16,7 @@ class WarehouseSlotsController < ApplicationController
   rescue AASM::InvalidTransition, ActiveRecord::RecordInvalid => e
     load_slot_data
     flash.now[:alert] = e.respond_to?(:record) ? e.record.errors.full_messages.to_sentence : t("flash.warehouse.invalid_transition")
-    render :show, status: :unprocessable_entity
+    render :show, status: :unprocessable_content
   end
 
   private

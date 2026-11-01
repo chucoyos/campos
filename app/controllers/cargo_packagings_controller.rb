@@ -17,7 +17,7 @@ class CargoPackagingsController < ApplicationController
     if @cargo_packaging.save
       redirect_to cargo_packagings_path, notice: t("flash.cargo_packagings.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -28,7 +28,7 @@ class CargoPackagingsController < ApplicationController
     if @cargo_packaging.update(cargo_packaging_params)
       redirect_to cargo_packagings_path, notice: t("flash.cargo_packagings.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

@@ -96,7 +96,7 @@ RSpec.describe "Garita", type: :request do
     expect(pass.reload).to be_completado
 
     post scan_gate_pass_path, params: { token: pass.token }
-    expect(response).to have_http_status(:unprocessable_entity)
+    expect(response).to have_http_status(:unprocessable_content)
     expect(response.body).to include(I18n.t("gate.errors.pass_unusable"))
   end
 

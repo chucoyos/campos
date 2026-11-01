@@ -25,7 +25,7 @@ class ClientsController < ApplicationController
     if @client.save
       redirect_to clients_path, notice: t("flash.clients.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class ClientsController < ApplicationController
     if @client.update(client_params)
       redirect_to(params[:from] == "show" ? @client : clients_path, notice: t("flash.clients.update"))
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

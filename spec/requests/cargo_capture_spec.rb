@@ -60,7 +60,7 @@ RSpec.describe "Cargo capture", type: :request do
           cargo_item: { cargo_packaging_id: box.id, description: "Cajas", quantity: 3, generate_qr: "1" }
         }
       end.not_to change(CargoItem, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 
@@ -103,7 +103,7 @@ RSpec.describe "Cargo capture", type: :request do
 
       patch confirm_cargo_manifest_path(empty)
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(empty.reload).to be_draft
     end
 

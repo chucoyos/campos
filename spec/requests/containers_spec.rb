@@ -41,7 +41,7 @@ RSpec.describe "Containers", type: :request do
 
     it "rejects an invalid number format" do
       expect { post containers_path, params: { container: { number: "ABC123", size: 20, container_type: "standard" } } }.not_to change(Container, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "requires an explicit status without MBL" do
@@ -84,7 +84,7 @@ RSpec.describe "Containers", type: :request do
       record.update!(current_yard_slot: slot)
       record.llenar!
       patch container_path(record), params: { container: { size: 40, status: "entregado" } }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(response.body).not_to include("translation missing", "Translation missing")
       expect(response.body).to include("siga en una posición de patio")
       expect(record.reload).to be_lleno

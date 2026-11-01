@@ -28,7 +28,7 @@ RSpec.describe "Carriers", type: :request do
 
     it "rejects a blank name" do
       expect { post carriers_path, params: { carrier: { name: "" } } }.not_to change(Carrier, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "updates a record" do

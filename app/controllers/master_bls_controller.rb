@@ -25,7 +25,7 @@ class MasterBlsController < ApplicationController
     if @master_bl.save
       redirect_to master_bls_path, notice: t("flash.master_bls.create")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -36,7 +36,7 @@ class MasterBlsController < ApplicationController
     if @master_bl.update(master_bl_params)
       redirect_to master_bls_path, notice: t("flash.master_bls.update")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -60,7 +60,7 @@ class MasterBlsController < ApplicationController
     else
       @import_errors = result.errors
       load_containers
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 
@@ -75,7 +75,7 @@ class MasterBlsController < ApplicationController
       @document_errors = @master_bl.errors.full_messages_for(:document)
       @master_bl.reload
       load_containers
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

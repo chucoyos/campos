@@ -57,7 +57,7 @@ RSpec.describe "Warehouse", type: :request do
     it "shows an error for an invalid section" do
       patch store_warehouse_slot_path(slot), params: { cargo_item_id: item.id, section: "Z" }
 
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
       expect(item.reload).to be_captured
     end
   end

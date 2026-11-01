@@ -89,7 +89,7 @@ RSpec.describe "Pases de movimiento", type: :request do
       expect {
         post movement_passes_path, params: { assignment_id: assignment.id, movement_pass: { vehicles_attributes: { "0" => { role: "principal", operator_name: "" } } } }
       }.not_to change(MovementPass, :count)
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "no tramita asignaciones de otro transportista" do
