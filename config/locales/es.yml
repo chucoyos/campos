@@ -875,8 +875,53 @@ es:
     unit_types:
       sencillo: "Sencillo"
       full: "Full"
+    guide:
+      title: "Guía rápida: pases de movimiento"
+      internal:
+        intro: "Un pase con QR autoriza un ingreso, una salida o un traspaleo. Garita lo escanea dos veces: al entrar y al salir."
+        sections:
+          - icon: "qr_code_scanner"
+            title: "1. Primer escaneo"
+            steps:
+              - "Garita escanea el QR y registra la entrada del camión, con fotos del contenedor."
+              - "Se crea la tarea para la grúa (o el montacargas) y el pase queda «Camión en patio»."
+          - icon: "precision_manufacturing"
+            title: "2. Movimiento en patio"
+            steps:
+              - "La grúa confirma el movimiento y el contenedor queda registrado en su ubicación."
+              - "En salidas con MBL se exige una asignación de salida pendiente."
+              - "En un traspaleo el contenedor pasa de un camión a otro, sin ocupar posición de patio."
+          - icon: "task_alt"
+            title: "3. Segundo escaneo"
+            steps:
+              - "Garita escanea de nuevo para verificar la salida del camión."
+              - "Puede agregar fotos de salida, que son opcionales, y completar el pase."
+              - "Un pase no usado vence y se puede cancelar mientras está vigente."
+        tip: "Un contenedor solo puede tener un pase vigente por tipo de movimiento."
+      requester:
+        intro: "El pase con QR es tu autorización para ingresar o sacar un contenedor. Sin pase no se permite el paso en garita."
+        sections:
+          - icon: "add_circle"
+            title: "1. Solicitar el pase"
+            steps:
+              - "Pulsa «Nueva solicitud» y elige tu asignación pendiente o un contenedor de resguardo."
+              - "Captura operador, placas, tipo de unidad y, si quieres, el número económico."
+              - "En un traspaleo captura también los datos del camión de destino."
+          - icon: "picture_as_pdf"
+            title: "2. Descargar el QR"
+            steps:
+              - "Abre el pase y descarga el PDF con el QR."
+              - "Muéstralo en garita al llegar y de nuevo al salir; el pase vence si no se usa a tiempo."
+          - icon: "cancel"
+            title: "3. Cancelar si hace falta"
+            steps:
+              - "Mientras el pase está vigente y el camión no ha entrado, puedes cancelarlo y solicitar uno nuevo."
+        tip: "Verifica los datos del camión antes de emitir el pase: garita los compara al escanear el QR."
     index:
       title: "Pases de movimiento"
+      description:
+        internal: "Consulta los pases con QR emitidos para ingreso, salida y traspaleo, y su avance desde la garita hasta la grúa."
+        requester: "Solicita el pase de tus contenedores con los datos del camión y descárgalo en PDF para mostrar el QR en garita."
       new: "Nueva solicitud"
       search: "Contenedor"
       empty: "No hay pases."

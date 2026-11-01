@@ -16,6 +16,12 @@ RSpec.describe "Pases de movimiento", type: :request do
   context "como transporte" do
     before { sign_in create(:user, :transporte, carrier: carrier) }
 
+    it "muestra la descripción y la guía para quien solicita" do
+      get movement_passes_path
+      expect(response.body).to include(I18n.t("movement_passes.index.description.requester"), I18n.t("movement_passes.guide.requester.intro"))
+      expect(response.body).not_to include(I18n.t("movement_passes.guide.internal.intro"))
+    end
+
     it "lista sus asignaciones pendientes para tramitar" do
       assignment
       create(:container_assignment)
@@ -204,6 +210,12 @@ RSpec.describe "Pases de movimiento", type: :request do
 
   context "como Seguridad" do
     before { sign_in create(:user, :seguridad) }
+
+    it "muestra la descripción y la guía interna" do
+      get movement_passes_path
+      expect(response.body).to include(I18n.t("movement_passes.index.description.internal"), I18n.t("movement_passes.guide.internal.intro"))
+      expect(response.body).not_to include(I18n.t("movement_passes.guide.requester.intro"))
+    end
 
     it "consulta pases pero no puede emitirlos" do
       pass = create(:movement_pass)
