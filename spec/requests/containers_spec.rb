@@ -16,15 +16,27 @@ RSpec.describe "Containers", type: :request do
 
     let(:client) { create(:client) }
 
+    it "lista primero los contenedores más recientes" do
+      old = create(:container, created_at: 2.days.ago)
+      recent = create(:container, created_at: 1.hour.ago)
+      get containers_path
+      expect(response.body.index(recent.number)).to be < response.body.index(old.number)
+    end
+
     it "creates a record without MBL" do
       expect { post containers_path, params: { container: { number: "msku1234567", size: 40, container_type: "hq", status: "vacio", client_id: client.id } } }.to change(Container, :count).by(1)
       expect(Container.last).to have_attributes(number: "MSKU1234567", size: 40, container_type: "hq", status: "vacio", master_bl: nil, client_id: client.id)
       expect(flash[:notice]).to eq(I18n.t("flash.containers.create"))
+      expect(response).to redirect_to(container_path(Container.last))
+
+      follow_redirect!
+      expect(response.body).not_to include(I18n.t("cargo_manifests.show.items_title"))
     end
 
     it "creates a record linked to an MBL as activo" do
       post containers_path, params: { container: { number: "MSKU7654321", size: 20, container_type: "standard", status: "vacio", master_bl_id: master_bl.id } }
       expect(Container.last).to have_attributes(master_bl: master_bl, status: "activo")
+      expect(response).to redirect_to(master_bl)
     end
 
     it "rejects an invalid number format" do

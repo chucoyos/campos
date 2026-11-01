@@ -8,6 +8,8 @@ class MovementPassesController < ApplicationController
 
   def new
     authorize MovementPass
+    return redirect_to movement_passes_path, alert: t("movement_passes.new.carrier_required") if carrier_required?
+
     if params[:assignment_id].present? || params[:container_id].present?
       @pass = build_pass
       authorize @pass, :create?
@@ -19,6 +21,7 @@ class MovementPassesController < ApplicationController
   def create
     @pass = build_pass(pass_params)
     authorize @pass
+    return redirect_to movement_passes_path, alert: t("movement_passes.new.carrier_required") if carrier_required?
 
     if @pass.save
       redirect_to movement_pass_path(@pass), notice: t("flash.movement_passes.create")
@@ -74,16 +77,23 @@ class MovementPassesController < ApplicationController
   # Un formulario por rol de vehículo; el traspaleo exige un segundo camión.
   def prepare_vehicles(pass, assignment)
     roles = pass.movement_type == "traspaleo" ? MovementPassVehicle::ROLES : %w[principal]
-    default_company = assignment&.carrier&.name || current_user.carrier&.name
+    default_carrier_id = assignment&.carrier_id || current_user.carrier_id
     roles.each do |role|
-      next if pass.vehicle(role)
-
-      pass.vehicles.build(role: role, company_name: role == "principal" ? default_company : nil)
+      pass.vehicles.build(role: role) unless pass.vehicle(role)
+    end
+    pass.vehicles.each do |vehicle|
+      vehicle.carrier_id = current_user.carrier_id unless current_user.admin?
+      vehicle.carrier_id ||= default_carrier_id if vehicle.role == "principal"
     end
   end
 
+  # Solo el admin elige libremente; el resto debe tener un transportista vinculado.
+  def carrier_required?
+    !current_user.admin? && current_user.carrier_id.blank?
+  end
+
   def pass_params
-    params.fetch(:movement_pass, {}).permit(:load_status, vehicles_attributes: %i[role company_name operator_name plate unit_type])
+    params.fetch(:movement_pass, {}).permit(:load_status, vehicles_attributes: %i[role carrier_id economic_number operator_name plate unit_type])
   end
 
   def load_options

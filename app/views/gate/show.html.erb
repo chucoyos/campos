@@ -30,6 +30,8 @@
     <dl class="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
       <div><dt class="text-slate-500"><%= t(".operator") %></dt><dd class="font-medium text-slate-900"><%= @pass.vehicle("principal")&.operator_name %></dd></div>
       <div><dt class="text-slate-500"><%= t(".plate") %></dt><dd class="font-medium text-slate-900"><%= @pass.vehicle("principal")&.plate %></dd></div>
+      <div><dt class="text-slate-500"><%= MovementPassVehicle.human_attribute_name(:carrier_id) %></dt><dd class="font-medium text-slate-900"><%= @pass.vehicle("principal")&.carrier_name %></dd></div>
+      <div><dt class="text-slate-500"><%= MovementPassVehicle.human_attribute_name(:economic_number) %></dt><dd class="font-medium text-slate-900"><%= @pass.vehicle("principal")&.economic_number.presence || "—" %></dd></div>
       <% if @pass.client %>
         <div><dt class="text-slate-500"><%= t(".client") %></dt><dd class="font-medium text-slate-900"><%= @pass.client.name %></dd></div>
       <% end %>
@@ -43,7 +45,7 @@
         <% @pass.vehicles.sort_by { |vehicle| MovementPassVehicle::ROLES.index(vehicle.role) }.each do |vehicle| %>
           <div class="rounded-2xl bg-slate-50 p-4 text-sm">
             <p class="font-semibold text-slate-900"><%= t("movement_passes.pdf.vehicle_#{vehicle.role}") %></p>
-            <p class="mt-1"><%= vehicle.operator_name %> · <%= vehicle.plate %></p>
+            <p class="mt-1"><%= vehicle.carrier_name %> · <%= vehicle.operator_name %> · <%= vehicle.plate %><% if vehicle.economic_number.present? %> · <%= vehicle.economic_number %><% end %></p>
           </div>
         <% end %>
       </div>

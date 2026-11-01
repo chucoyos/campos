@@ -61,7 +61,8 @@ class MovementPassPdf
       pdf.move_down 10
       pdf.text safe(t("vehicle_#{vehicle.role}")), size: 14, style: :bold
       definition_list(pdf, [
-        [ MovementPassVehicle.human_attribute_name(:company_name), vehicle.company_name ],
+        [ MovementPassVehicle.human_attribute_name(:carrier_id), vehicle.carrier_name ],
+        [ MovementPassVehicle.human_attribute_name(:economic_number), vehicle.economic_number.presence || "-" ],
         [ MovementPassVehicle.human_attribute_name(:operator_name), vehicle.operator_name ],
         [ MovementPassVehicle.human_attribute_name(:plate), vehicle.plate ],
         [ MovementPassVehicle.human_attribute_name(:unit_type), I18n.t("movement_passes.unit_types.#{vehicle.unit_type}") ]

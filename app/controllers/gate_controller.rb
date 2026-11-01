@@ -50,7 +50,7 @@ class GateController < ApplicationController
   end
 
   def show
-    @pass = MovementPass.find(params[:id])
+    @pass = MovementPass.includes(vehicles: :carrier).find(params[:id])
     authorize @pass, :gate?
     @pass.with_lock { @pass.vencer! if @pass.may_vencer? }
     unless @pass.usable?

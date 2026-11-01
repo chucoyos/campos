@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :movement_pass_vehicle do
     role { "principal" }
-    company_name { "Transportes Golfo" }
+    carrier
     operator_name { "Juan Pérez" }
     sequence(:plate) { |n| "ABC#{n.to_s.rjust(3, '0')}" }
     unit_type { "sencillo" }

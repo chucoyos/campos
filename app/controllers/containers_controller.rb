@@ -7,13 +7,13 @@ class ContainersController < ApplicationController
 
   def index
     authorize Container
-    @pagy, @containers = paginate(apply_filters(policy_scope(Container).includes(:master_bl)).order(:number))
+    @pagy, @containers = paginate(apply_filters(policy_scope(Container).includes(:master_bl)).order(created_at: :desc, id: :desc))
   end
 
   def show
     @photo_counts = policy(@container).photos? ? ActiveStorage::Attachment.where(record: @container).group(:name).count : {}
     @movements = @container.movements.includes(
-      :from_yard_slot, :to_yard_slot, :user, :photos_attachments, :exit_photos_attachments, movement_pass: :vehicles
+      :from_yard_slot, :to_yard_slot, :user, :photos_attachments, :exit_photos_attachments, movement_pass: { vehicles: :carrier }
     ).order(created_at: :desc)
     load_container_cargo
   end
@@ -31,7 +31,7 @@ class ContainersController < ApplicationController
     authorize @container
 
     if @container.save
-      redirect_to (@container.master_bl || containers_path), notice: t("flash.containers.create")
+      redirect_to (@container.master_bl || @container), notice: t("flash.containers.create")
     else
       render :new, status: :unprocessable_entity
     end

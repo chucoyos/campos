@@ -77,10 +77,14 @@
       <section class="rounded-2xl border border-slate-200 p-4">
         <h2 class="mb-2 flex items-center gap-2 font-semibold text-slate-900"><%= material_icon "local_shipping", classes: "text-indigo-600" %> <%= t("movement_passes.pdf.vehicle_#{vehicle.role}") %></h2>
         <dl class="grid gap-2 text-sm sm:grid-cols-2">
-          <% %i[company_name operator_name plate unit_type].each do |attribute| %>
+          <% %i[carrier_id economic_number operator_name plate unit_type].each do |attribute| %>
             <div>
               <dt class="text-slate-500"><%= MovementPassVehicle.human_attribute_name(attribute) %></dt>
-              <dd class="font-medium"><%= attribute == :unit_type ? t("movement_passes.unit_types.#{vehicle.unit_type}") : vehicle.public_send(attribute) %></dd>
+              <dd class="font-medium"><%= case attribute
+                                                      when :unit_type then t("movement_passes.unit_types.#{vehicle.unit_type}")
+                                                      when :carrier_id then vehicle.carrier_name
+                                                      else vehicle.public_send(attribute).presence || "—"
+                                                      end %></dd>
             </div>
           <% end %>
         </dl>

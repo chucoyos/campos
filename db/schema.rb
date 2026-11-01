@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_31_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_230000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -222,12 +222,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_170000) do
   create_table "movement_pass_vehicles", force: :cascade do |t|
     t.bigint "movement_pass_id", null: false
     t.string "role", null: false
-    t.string "company_name", null: false
     t.string "operator_name", null: false
     t.string "plate", null: false
     t.string "unit_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "carrier_id", null: false
+    t.string "economic_number"
+    t.index ["carrier_id"], name: "index_movement_pass_vehicles_on_carrier_id"
     t.index ["movement_pass_id", "role"], name: "index_movement_pass_vehicles_on_movement_pass_id_and_role", unique: true
     t.index ["movement_pass_id"], name: "index_movement_pass_vehicles_on_movement_pass_id"
     t.check_constraint "role::text = ANY (ARRAY['principal'::character varying, 'destino'::character varying]::text[])", name: "movement_pass_vehicles_role_check"
@@ -476,6 +478,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_170000) do
   add_foreign_key "deconsolidations", "containers"
   add_foreign_key "deconsolidations", "users", column: "created_by_id"
   add_foreign_key "master_bls", "clients"
+  add_foreign_key "movement_pass_vehicles", "carriers"
   add_foreign_key "movement_pass_vehicles", "movement_passes", on_delete: :cascade
   add_foreign_key "movement_passes", "carriers"
   add_foreign_key "movement_passes", "clients"

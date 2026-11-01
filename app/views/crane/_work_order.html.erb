@@ -40,7 +40,8 @@
       <% if work_order.traspaleo? %>
         <div class="sm:col-span-2 font-semibold text-slate-900"><%= t("movement_passes.pdf.vehicle_#{vehicle.role}") %></div>
       <% end %>
-      <div><dt class="text-slate-500"><%= t(".transport") %></dt><dd class="font-medium text-slate-900"><%= vehicle.company_name %></dd></div>
+      <div><dt class="text-slate-500"><%= t(".transport") %></dt><dd class="font-medium text-slate-900"><%= vehicle.carrier_name %></dd></div>
+      <div><dt class="text-slate-500"><%= MovementPassVehicle.human_attribute_name(:economic_number) %></dt><dd class="font-medium text-slate-900"><%= vehicle.economic_number.presence || "—" %></dd></div>
       <div><dt class="text-slate-500"><%= t(".operator") %></dt><dd class="font-medium text-slate-900"><%= vehicle.operator_name %></dd></div>
       <div><dt class="text-slate-500"><%= t(".plate") %></dt><dd class="font-medium text-slate-900"><%= vehicle.plate %></dd></div>
       <div><dt class="text-slate-500"><%= t(".unit") %></dt><dd class="font-medium text-slate-900"><%= t("movement_passes.unit_types.#{vehicle.unit_type}") %></dd></div>

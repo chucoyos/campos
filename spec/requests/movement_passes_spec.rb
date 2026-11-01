@@ -5,7 +5,7 @@ RSpec.describe "Pases de movimiento", type: :request do
   let(:client) { create(:client) }
   let(:assignment) { create(:container_assignment, carrier: carrier) }
   let(:vehicle_params) do
-    { "0" => { role: "principal", company_name: "Transportes Golfo", operator_name: "Ana López", plate: "xyz-123", unit_type: "full" } }
+    { "0" => { role: "principal", carrier_id: carrier.id, economic_number: "eco-12", operator_name: "Ana López", plate: "xyz-123", unit_type: "full" } }
   end
 
   it "requiere sesión" do
@@ -118,10 +118,17 @@ RSpec.describe "Pases de movimiento", type: :request do
     end
   end
 
+  it "fuerza el transportista del usuario aunque se envíe otro" do
+    sign_in create(:user, :transporte, carrier: carrier)
+    post movement_passes_path, params: { assignment_id: assignment.id,
+                                         movement_pass: { vehicles_attributes: { "0" => vehicle_params["0"].merge(carrier_id: create(:carrier).id) } } }
+    expect(MovementPass.last.vehicle("principal")).to have_attributes(carrier: carrier, economic_number: "ECO-12")
+  end
+
   context "como cliente con contenedor de resguardo" do
     let(:container) { create(:container, client: client) }
 
-    before { sign_in create(:user, :cliente, client: client) }
+    before { sign_in create(:user, :cliente, client: client, carrier: carrier) }
 
     it "no ofrece contenedores cuyo ciclo ya terminó" do
       kept = container
@@ -150,7 +157,7 @@ RSpec.describe "Pases de movimiento", type: :request do
       get new_movement_pass_path(container_id: container.id, movement_type: "traspaleo")
       expect(response.body).to include("vehicles_attributes][1]")
 
-      vehicles = vehicle_params.merge("1" => { role: "destino", company_name: "Otra", operator_name: "Luis", plate: "DEF456", unit_type: "sencillo" })
+      vehicles = vehicle_params.merge("1" => { role: "destino", carrier_id: carrier.id, operator_name: "Luis", plate: "DEF456", unit_type: "sencillo" })
       expect {
         post movement_passes_path, params: { container_id: container.id, movement_type: "traspaleo", movement_pass: { vehicles_attributes: vehicles } }
       }.to change(MovementPass, :count).by(1)
@@ -168,9 +175,30 @@ RSpec.describe "Pases de movimiento", type: :request do
     end
 
     it "no inventa traspaleo en el flujo MBL" do
+      sign_in create(:user, :cliente, client: client, carrier: create(:carrier))
       expect {
         post movement_passes_path, params: { assignment_id: assignment.id, movement_pass: { vehicles_attributes: vehicle_params } }
       }.not_to change(MovementPass, :count)
+    end
+  end
+
+  context "como cliente sin transportista vinculado" do
+    it "no puede solicitar pases" do
+      sign_in create(:user, :cliente, client: client)
+      get new_movement_pass_path
+      expect(response).to redirect_to(movement_passes_path)
+      expect(flash[:alert]).to eq(I18n.t("movement_passes.new.carrier_required"))
+    end
+  end
+
+  context "como admin" do
+    before { sign_in create(:user, :admin) }
+
+    it "elige libremente el transportista" do
+      other = create(:carrier)
+      post movement_passes_path, params: { assignment_id: assignment.id,
+                                           movement_pass: { vehicles_attributes: { "0" => vehicle_params["0"].merge(carrier_id: other.id) } } }
+      expect(MovementPass.last.vehicle("principal").carrier).to eq(other)
     end
   end
 

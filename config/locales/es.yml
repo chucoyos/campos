@@ -891,6 +891,8 @@ es:
       request: "Solicitar"
       nothing: "No hay contenedores disponibles para solicitar un pase."
       unit_prompt: "Selecciona el tipo"
+      carrier_prompt: "Selecciona un transportista"
+      carrier_required: "Tu usuario necesita un transportista vinculado para solicitar pases. Pide al administrador que lo asigne."
       submit: "Emitir pase"
     show:
       download: "Descargar PDF"
@@ -1343,7 +1345,8 @@ es:
       container:
         current_yard_slot: "Posición actual"
       movement_pass_vehicle:
-        company_name: "Empresa transportista"
+        carrier_id: "Transportista"
+        economic_number: "Número económico"
         operator_name: "Operador"
         plate: "Placas"
         unit_type: "Tipo de unidad"

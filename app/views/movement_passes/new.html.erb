@@ -49,8 +49,17 @@
             <%= vf.hidden_field :role %>
             <div class="grid gap-4 sm:grid-cols-2">
               <div>
-                <%= vf.label :company_name, class: label %>
-                <%= vf.text_field :company_name, required: true, class: input %>
+                <%= vf.label :carrier_id, class: label %>
+                <% if current_user.admin? %>
+                  <%= vf.collection_select :carrier_id, Carrier.order(:name), :id, :name, { prompt: t("movement_passes.new.carrier_prompt") }, required: true, class: input %>
+                <% else %>
+                  <%= vf.hidden_field :carrier_id %>
+                  <%= text_field_tag nil, vf.object.carrier&.name, disabled: true, class: "#{input} bg-slate-50 text-slate-600" %>
+                <% end %>
+              </div>
+              <div>
+                <%= vf.label :economic_number, class: label %>
+                <%= vf.text_field :economic_number, autocomplete: "off", class: "#{input} uppercase" %>
               </div>
               <div>
                 <%= vf.label :operator_name, class: label %>

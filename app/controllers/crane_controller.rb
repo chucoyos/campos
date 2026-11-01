@@ -11,7 +11,7 @@ class CraneController < ApplicationController
     @work_orders = queue_filter(orders_scope).where(movement_plan_id: nil)
       .or(orders_scope.where(movement_plan_id: @plans.map(&:id)))
       .order(:created_at)
-      .includes(:container, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: :vehicles)
+      .includes(:container, :from_yard_slot, :to_yard_slot, :rehandling_request, movement_pass: { vehicles: :carrier })
     @standalone_work_orders = @work_orders.reject { |order| order.movement_plan_id || order.rehandling_request_id }
     @pending_orders_by_plan = @work_orders.filter_map do |order|
       [ order.movement_plan_id, order ] if order.movement_plan_id

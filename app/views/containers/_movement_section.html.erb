@@ -31,7 +31,7 @@
         <% movement.movement_pass.vehicles.each do |vehicle| %>
           <div class="rounded-2xl bg-white p-4 text-sm">
             <p class="font-semibold text-slate-900"><%= t("movement_passes.pdf.vehicle_#{vehicle.role}") %></p>
-            <p class="mt-1 text-slate-700"><%= vehicle.operator_name %> · <%= vehicle.plate %></p>
+            <p class="mt-1 text-slate-700"><%= vehicle.carrier_name %> · <%= vehicle.operator_name %> · <%= vehicle.plate %><% if vehicle.economic_number.present? %> · <%= vehicle.economic_number %><% end %></p>
           </div>
         <% end %>
       </div>
