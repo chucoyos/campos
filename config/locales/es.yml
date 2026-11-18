@@ -43,6 +43,17 @@ es:
         admin: "En el detalle del viaje, administración reserva las partidas, asigna el transporte cuando corresponde y prepara el retiro. Para MBL, las partidas se agrupan por fecha y saldo disponible; el orden es orientativo y no indica cierre."
         customer: "Puedes crear viajes de carga general con tu propio transporte o solicitar que administración lo asigne. Los viajes de MBL los crea administración."
         pass: "Una vez preparado el viaje, se puede solicitar el pase QR según la modalidad de transporte."
+      trip_guide:
+        title: "Guía rápida: viaje de despacho"
+        intro: "Un viaje organiza un retiro de mercancía de MBL o de carga general. Consulta aquí su estado, transporte y mercancía reservada."
+        reserve: "Para reservar, elige una instrucción, una partida compatible y la cantidad; repite para agregar otras partidas. Reservar no confirma que la mercancía se haya cargado."
+        mbl: "En viajes de MBL, las partidas se agrupan por MBL: primero los más antiguos y, para el mismo día, los de menor saldo disponible. Puedes elegir otro; el saldo no garantiza el cierre del MBL."
+        prepare: "Asigna el transportista cuando corresponda y prepara el viaje. Se necesita al menos una reserva y un transporte válido."
+        assigned_pass: "Cuando el viaje esté preparado, administración o el transportista asignado puede solicitar el pase QR con los datos del vehículo."
+        customer_pass: "Cuando el viaje esté preparado, administración o el cliente titular puede solicitar el pase QR para su transporte propio con los datos del vehículo."
+        loading: "Garita escanea el pase al ingresar; Montacargas reporta la carga y administración la confirma. Garita realiza un segundo escaneo para la salida. Lo no cargado se libera; una salida sin carga requiere motivo."
+        cancel: "Administración puede cancelar el viaje antes del ingreso y liberar sus reservas."
+        availability: "Las acciones visibles dependen de tu rol y del estado del viaje. La disponibilidad puede cambiar antes de reservar."
       criterion: "Solicitar por"
       criteria:
         all: "Todo el contenedor"

@@ -121,6 +121,28 @@ RSpec.describe "Despacho de mercancía", type: :request do
     end
   end
 
+  it "shows a role- and origin-appropriate quick guide on trip details" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 6)
+    own_trip = dispatch_request.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: client_user)
+    carrier = create(:carrier)
+    mbl_trip = dispatch_request.trips.create!(origin_type: "mbl", carrier: carrier, created_by: admin)
+    carrier_user = create(:user, :transporte, carrier: carrier)
+
+    [ [ admin, mbl_trip ], [ client_user, own_trip ], [ carrier_user, mbl_trip ], [ admin, own_trip ] ].each do |user, trip|
+      sign_in user
+      get cargo_dispatch_trip_path(trip)
+      expect(response).to have_http_status(:ok)
+      document = Nokogiri::HTML(response.body)
+      expect(document.at_css('button[data-action="modal#open"]')).to be_present
+      guide = document.at_css('dialog[aria-labelledby="quick-guide-title"]')
+      expect(guide.text).to include("Guía rápida: viaje de despacho", "Garita escanea", "Las acciones visibles dependen")
+      expect(guide.text).to include(trip.transport_mode == "customer" ? "cliente titular" : "transportista asignado")
+      expect(guide.text.include?("Para reservar")).to eq(user.admin?)
+      expect(guide.text.include?("En viajes de MBL")).to eq(user.admin? && trip.origin_type == "mbl")
+    end
+  end
+
   it "groups available MBL cargo by registration day and total balance without restricting manual choices" do
     dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
     instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 30)

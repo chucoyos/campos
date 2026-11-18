@@ -1,7 +1,12 @@
 <div class="mx-auto max-w-5xl space-y-5">
   <%= link_to t("shared.actions.back"), cargo_dispatch_trips_path, class: "text-indigo-700" %>
-  <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.trip_number", number: @trip.id) %></h1>
-  <p class="text-slate-600"><%= t("cargo_dispatch.ui.origins.#{@trip.origin_type}") %> · <%= t("cargo_dispatch.ui.trip_statuses.#{@trip.status}") %> · <%= @trip.carrier&.name || @trip.transport_name %></p>
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.trip_number", number: @trip.id) %></h1>
+      <p class="mt-2 text-slate-600"><%= t("cargo_dispatch.ui.origins.#{@trip.origin_type}") %> · <%= t("cargo_dispatch.ui.trip_statuses.#{@trip.status}") %> · <%= @trip.carrier&.name || @trip.transport_name %></p>
+    </div>
+    <%= render "guide" %>
+  </header>
   <% if @weight_instructions %>
     <% @weight_instructions.each do |instruction| %>
       <% allocated = @weight_totals.fetch(instruction.id, 0) %>

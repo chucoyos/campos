@@ -1,0 +1,19 @@
+<% scope = "cargo_dispatch.ui.trip_guide" %>
+<%= render "shared/quick_guide", title: t("#{scope}.title") do %>
+  <p><%= t("#{scope}.intro") %></p>
+  <ol class="list-decimal space-y-3 pl-6">
+    <% if policy(@trip).reserve? %>
+      <li><%= t("#{scope}.reserve") %></li>
+      <% if @trip.origin_type == "mbl" %>
+        <li><%= t("#{scope}.mbl") %></li>
+      <% end %>
+      <li><%= t("#{scope}.prepare") %></li>
+    <% end %>
+    <li><%= t("#{scope}.#{@trip.transport_mode}_pass") %></li>
+    <li><%= t("#{scope}.loading") %></li>
+    <% if policy(@trip).cancel? %>
+      <li><%= t("#{scope}.cancel") %></li>
+    <% end %>
+  </ol>
+  <p class="rounded-2xl bg-sky-50 p-3 text-sky-900"><%= t("#{scope}.availability") %></p>
+<% end %>
