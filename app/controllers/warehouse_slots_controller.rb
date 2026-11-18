@@ -32,7 +32,7 @@ class WarehouseSlotsController < ApplicationController
 
   # Líneas de capturas confirmadas que aún no están en esta ubicación (incluye reubicaciones).
   def movable_items
-    CargoItem.joins(:cargo_manifest).where(cargo_manifests: { status: "confirmed" })
+    CargoItem.joins(:cargo_manifest).where(status: %w[captured stored], cargo_manifests: { status: "confirmed" })
              .where("cargo_items.warehouse_slot_id IS DISTINCT FROM ?", @slot.id)
   end
 end

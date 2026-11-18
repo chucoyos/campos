@@ -1,0 +1,15 @@
+<div class="mx-auto max-w-5xl space-y-5">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.requests") %></h1>
+    <%= link_to t("cargo_dispatch.ui.new_request"), new_cargo_dispatch_request_path, class: "flex min-h-12 items-center rounded-full bg-indigo-600 px-5 text-white hover:bg-indigo-700" %>
+  </div>
+  <ul class="space-y-3">
+    <% @requests.each do |request_record| %>
+      <li class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <%= link_to "##{request_record.id} · #{request_record.destination}", cargo_dispatch_request_path(request_record), class: "font-semibold text-indigo-700" %>
+        <p class="text-sm text-slate-600"><%= request_record.client.name %> · <%= l(request_record.created_at, format: :short) %></p>
+      </li>
+    <% end %>
+  </ul>
+  <%= render "shared/pagination", pagy: @pagy %>
+</div>

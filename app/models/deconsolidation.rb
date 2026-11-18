@@ -41,9 +41,9 @@ class Deconsolidation < ApplicationRecord
     container.cargo_manifest ? container.cargo_manifest.cargo_items : CargoItem.none
   end
 
-  def pending_cargo_items = cargo_items.where.not(status: "stored")
+  def pending_cargo_items = cargo_items.where(status: "captured")
 
-  def stored_count = cargo_items.where(status: "stored").count
+  def stored_count = cargo_items.where(status: %w[stored dispatched]).count
 
   def total_count = cargo_items.count
 

@@ -1,0 +1,12 @@
+<% scope = "cargo_dispatch.ui" %>
+<%= render "shared/quick_guide", title: t("#{scope}.quick_guide_title") do %>
+  <p><%= t("#{scope}.request_intro") %></p>
+
+  <ol class="list-decimal space-y-3 pl-6">
+    <% %w[request_guide_select request_guide_admin request_guide_pickup].each do |key| %>
+      <li><%= t("#{scope}.#{key}") %></li>
+    <% end %>
+  </ol>
+
+  <p class="rounded-2xl bg-sky-50 p-3 text-sky-900"><%= t("#{scope}.preferred_containers_hint") %></p>
+<% end %>

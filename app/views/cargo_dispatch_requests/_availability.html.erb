@@ -1,0 +1,22 @@
+<section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
+  <h2 class="flex items-center gap-2 text-xl font-semibold"><%= material_icon "warehouse", classes: "text-sky-800" %> <%= t("cargo_dispatch.ui.availability_title") %></h2>
+  <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.availability_hint") %></p>
+  <% if availability.empty? %>
+    <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.no_availability") %></p>
+  <% else %>
+    <ul class="space-y-2">
+      <% availability.each do |row| %>
+        <li class="rounded-2xl bg-slate-50 p-3 text-sm text-slate-700">
+          <strong><%= row.container_number ? "#{row.master_bl_number} · #{row.container_number}" : t("cargo_dispatch.ui.origins.general") %></strong>
+          · <%= row.packaging_name %> · <%= t("cargo_dispatch.ui.available", count: row.available_units) %>
+          <% if row.known_weight %>
+            · <%= t("cargo_dispatch.ui.known_weight", weight: number_with_precision(row.known_weight, precision: 3)) %>
+          <% end %>
+          <% if row.unknown_weight_units.positive? %>
+            · <%= t("cargo_dispatch.ui.unknown_weight", count: row.unknown_weight_units) %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

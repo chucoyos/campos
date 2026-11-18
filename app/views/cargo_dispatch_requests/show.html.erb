@@ -1,0 +1,113 @@
+<div class="mx-auto max-w-5xl space-y-5">
+  <%= link_to t("shared.actions.back"), cargo_dispatch_requests_path, class: "text-indigo-700" %>
+  <header class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.request_number", number: @request.id) %></h1>
+      <p class="mt-2 text-slate-600"><%= @request.client.name %> · <%= @request.destination %></p>
+    </div>
+    <%= render "cargo_dispatch_requests/detail_guide" %>
+  </header>
+  <section aria-labelledby="requested-cargo-title" class="space-y-4 rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm sm:p-6">
+    <div class="flex items-start gap-4">
+      <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-800 text-white"><%= material_icon "inventory_2" %></span>
+      <div>
+        <h2 id="requested-cargo-title" class="text-xl font-bold text-sky-950 sm:text-2xl"><%= t("cargo_dispatch.ui.requested_cargo") %></h2>
+        <p class="mt-1 text-sm text-sky-900"><%= t("cargo_dispatch.ui.requested_cargo_hint") %></p>
+      </div>
+    </div>
+    <% @instructions.each do |instruction| %>
+      <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+        <div class="min-w-0 flex-1 basis-48 space-y-2">
+          <span class="inline-flex items-center gap-1 rounded-lg bg-sky-100 px-2 py-1 text-xs font-semibold text-sky-900">
+            <%= material_icon(instruction.criterion == "weight" ? "scale" : "inventory_2", classes: "!text-base") %>
+            <%= t("cargo_dispatch.ui.criteria.#{instruction.criterion}") %>
+          </span>
+          <% if instruction.quantity %>
+            <p class="text-xl font-bold text-slate-900"><%= packaging_quantity_label(instruction.cargo_packaging, instruction.quantity) %></p>
+          <% elsif instruction.weight_kg %>
+            <p class="text-xl font-bold text-slate-900"><%= instruction.weight_kg %> kg</p>
+          <% end %>
+          <% if instruction.preferred_containers.any? %>
+            <p class="break-words text-sm text-slate-600"><%= t("cargo_dispatch.ui.preferred_container_list", containers: instruction.preferred_containers.map(&:number).join(", ")) %></p>
+          <% elsif instruction.container_id.present? %>
+            <p class="break-words text-sm text-slate-600"><%= t("cargo_dispatch.ui.legacy_container", container: instruction.container.number) %></p>
+          <% end %>
+        </div>
+        <% if policy(@request).remove_instruction? %>
+          <% if @allocated_instruction_ids.include?(instruction.id) %>
+            <span class="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700"><%= t("cargo_dispatch.ui.instruction_has_history") %></span>
+          <% else %>
+            <%= button_to remove_instruction_cargo_dispatch_request_path(@request, instruction_id: instruction.id), method: :delete,
+                  form: { data: { turbo_confirm: t("cargo_dispatch.ui.remove_instruction_confirm") } },
+                  class: "inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full px-4 text-red-700 transition-all duration-200 ease-out hover:bg-red-50 active:scale-95",
+                  aria: { label: t("cargo_dispatch.ui.remove_instruction_label", id: instruction.id) } do %>
+              <%= material_icon "delete" %> <%= t("cargo_dispatch.ui.remove_instruction") %>
+            <% end %>
+          <% end %>
+        <% end %>
+      </div>
+    <% end %>
+    <% if @instructions.empty? %><p class="rounded-2xl bg-white p-4 text-sm text-slate-600"><%= t("cargo_dispatch.ui.no_requested_cargo") %></p><% end %>
+  </section>
+  <section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
+    <h2 class="flex items-center gap-2 text-xl font-semibold"><%= material_icon "local_shipping", classes: "text-sky-800" %> <%= t("cargo_dispatch.ui.trips") %></h2>
+    <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.trips_hint") %></p>
+    <% @trips.each do |trip| %>
+      <%= link_to "#{t('cargo_dispatch.ui.trip_number', number: trip.id)} · #{t("cargo_dispatch.ui.trip_statuses.#{trip.status}")}", cargo_dispatch_trip_path(trip), class: "flex min-h-12 items-center rounded-2xl bg-slate-50 p-3 text-indigo-700 transition-all duration-200 ease-out hover:bg-sky-50" %>
+    <% end %>
+    <% if @trips.empty? %><p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.no_trips") %></p><% end %>
+  </section>
+  <section class="space-y-3 rounded-3xl border border-sky-200 bg-sky-50 p-5">
+    <h2 class="text-xl font-semibold text-sky-950"><%= t("cargo_dispatch.ui.actions") %></h2>
+    <% if policy(@request).add_instruction? %>
+      <details class="group rounded-2xl border border-sky-200 bg-white">
+        <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-2xl px-4 py-3 font-semibold text-indigo-700 transition-all duration-200 ease-out hover:bg-sky-50 [&::-webkit-details-marker]:hidden">
+          <%= material_icon "add_box" %> <%= t("cargo_dispatch.ui.add_cargo") %>
+          <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
+        </summary>
+        <div class="space-y-3 border-t border-slate-100 p-4">
+          <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.add_cargo_hint") %></p>
+          <%= form_with url: add_instruction_cargo_dispatch_request_path(@request),
+                data: { controller: "cargo-dispatch-request" }, class: "space-y-3" do %>
+            <%= render "instruction_fields", containers: @containers, packagings: @packagings %>
+            <%= button_tag t("cargo_dispatch.ui.add_cargo"), class: "min-h-12 cursor-pointer rounded-full border border-indigo-600 px-5 text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-50 active:scale-95" %>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
+    <details class="group rounded-2xl border border-sky-200 bg-white">
+      <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-2xl px-4 py-3 font-semibold text-indigo-700 transition-all duration-200 ease-out hover:bg-sky-50 [&::-webkit-details-marker]:hidden">
+        <%= material_icon "local_shipping" %> <%= t("cargo_dispatch.ui.create_trip") %>
+        <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
+      </summary>
+      <div class="space-y-3 border-t border-slate-100 p-4">
+        <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.create_trip_hint") %></p>
+        <%= form_with url: cargo_dispatch_request_cargo_dispatch_trips_path(@request), scope: :cargo_dispatch_trip, class: "grid gap-3 sm:grid-cols-2" do |f| %>
+          <% if current_user.admin? %>
+            <%= f.label :origin_type, t("cargo_dispatch.ui.origin") %>
+            <%= f.select :origin_type, %w[mbl general].map { |v| [ t("cargo_dispatch.ui.origins.#{v}"), v ] }, {}, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+            <%= f.label :transport_mode, t("cargo_dispatch.ui.transport_mode") %>
+            <%= f.select :transport_mode, %w[assigned customer].map { |v| [ t("cargo_dispatch.ui.transport_modes.#{v}"), v ] }, {}, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+            <%= f.label :carrier_id, Carrier.model_name.human %>
+            <%= f.collection_select :carrier_id, @carriers, :id, :name, { include_blank: t("cargo_dispatch.ui.unspecified") }, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+          <% else %>
+            <%= f.hidden_field :origin_type, value: "general" %>
+            <p class="text-sm text-slate-600 sm:col-span-2"><%= t("cargo_dispatch.ui.customer_trip_hint") %></p>
+            <%= f.label :transport_mode, t("cargo_dispatch.ui.transport_mode") %>
+            <%= f.select :transport_mode, %w[customer assigned].map { |v| [ t("cargo_dispatch.ui.transport_modes.#{v}"), v ] }, {}, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+          <% end %>
+          <%= f.label :transport_name, t("cargo_dispatch.ui.transport_name") %>
+          <%= f.text_field :transport_name, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+          <%= f.button t("cargo_dispatch.ui.create_trip"), class: "min-h-12 rounded-full bg-indigo-600 px-5 text-white transition-all duration-200 ease-out hover:bg-indigo-700 active:scale-95 sm:col-span-2" %>
+        <% end %>
+      </div>
+    </details>
+  </section>
+  <details class="group rounded-3xl border border-slate-200 bg-white">
+    <summary class="flex min-h-12 cursor-pointer list-none items-center gap-2 rounded-3xl px-5 py-3 font-semibold text-slate-900 transition-all duration-200 ease-out hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+      <%= material_icon "warehouse", classes: "text-sky-800" %> <%= t("cargo_dispatch.ui.consult_inventory") %>
+      <%= material_icon "expand_more", classes: "ml-auto transition-transform duration-200 group-open:rotate-180" %>
+    </summary>
+    <%= render "availability", availability: @availability %>
+  </details>
+</div>

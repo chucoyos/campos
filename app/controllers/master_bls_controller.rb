@@ -5,7 +5,13 @@ class MasterBlsController < ApplicationController
 
   def index
     authorize MasterBl
-    @pagy, @master_bls = paginate(apply_filters(policy_scope(MasterBl).includes(:client)).order(:number))
+    scope = apply_filters(policy_scope(MasterBl).with_dispatch_inventory.includes(:client))
+    scope = if params[:sort] == "available"
+      scope.order(Arel.sql("COALESCE(dispatch_inventory.available_units, 0) ASC"), :created_at, :id)
+    else
+      scope.order(:created_at, :id)
+    end
+    @pagy, @master_bls = paginate(scope)
   end
 
   def show
@@ -95,13 +101,38 @@ class MasterBlsController < ApplicationController
   def filter_fields
     fields = [
       { name: "q", type: :text, label: t("filters.number"),
-        apply: ->(scope, value) { scope.where("master_bls.number ILIKE ?", like(value)) } }
+        apply: ->(scope, value) { scope.where("master_bls.number ILIKE ?", like(value)) } },
+      { name: "availability", type: :select, label: t("master_bls.inventory.availability"),
+        options: %w[available unavailable uncaptured].map { |value| [ t("master_bls.inventory.#{value}"), value ] },
+        apply: ->(scope, value) {
+          case value
+          when "available" then scope.where("COALESCE(dispatch_inventory.available_units, 0) > 0")
+          when "unavailable" then scope.where("COALESCE(dispatch_inventory.captured_units, 0) > 0 AND COALESCE(dispatch_inventory.available_units, 0) = 0")
+          when "uncaptured" then scope.where("COALESCE(dispatch_inventory.captured_units, 0) = 0")
+          end
+        } },
+      { name: "sort", type: :select, label: t("master_bls.inventory.order"),
+        options: [ [ t("master_bls.inventory.oldest"), "oldest" ], [ t("master_bls.inventory.least_available"), "available" ] ],
+        apply: ->(scope, _) { scope } },
+      { name: "from_date", type: :date, label: t("master_bls.inventory.from_date"),
+        apply: ->(scope, value) { date_filter(scope, value, :from) } },
+      { name: "to_date", type: :date, label: t("master_bls.inventory.to_date"),
+        apply: ->(scope, value) { date_filter(scope, value, :to) } }
     ]
     return fields unless current_user.admin?
 
     fields << { name: "client_id", type: :select, label: MasterBl.human_attribute_name(:client),
                 options: Client.order(:name).pluck(:name, :id),
                 apply: ->(scope, value) { scope.where(client_id: value) } }
+  end
+
+  def date_filter(scope, value, direction)
+    date = Date.iso8601(value)
+    boundary = direction == :from ? date.in_time_zone.beginning_of_day : date.in_time_zone.end_of_day
+    direction == :from ? scope.where("master_bls.created_at >= ?", boundary) : scope.where("master_bls.created_at <= ?", boundary)
+  rescue Date::Error
+    flash.now[:alert] = t("master_bls.inventory.invalid_date")
+    scope.none
   end
 
   def load_containers

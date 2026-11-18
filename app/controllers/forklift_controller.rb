@@ -2,6 +2,8 @@ class ForkliftController < ApplicationController
   before_action { authorize :forklift, action_name == "index" ? :index? : :"#{action_name}?" }
 
   def index
+    @dispatch_trips = CargoDispatchTrip.where(status: "in_yard").includes(:carrier, :passes,
+      allocations: { cargo_item: [ :cargo_packaging, :warehouse_slot ] }).order(:id)
     @item = movable_items.find_by(id: params[:item_id]) if params[:item_id].present?
     @slot_codes = WarehouseSlot.enabled.order(:code).pluck(:code) if @item
     @deconsolidations = Deconsolidation.where(status: "desconsolidando").includes(container: :master_bl).order(:id)
@@ -43,7 +45,7 @@ class ForkliftController < ApplicationController
   private
 
   def movable_items
-    CargoItem.joins(:cargo_manifest).where(cargo_manifests: { status: "confirmed" })
+    CargoItem.joins(:cargo_manifest).where(status: %w[captured stored], cargo_manifests: { status: "confirmed" })
   end
 
   def awaiting_opening?(item)

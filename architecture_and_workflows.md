@@ -70,8 +70,21 @@ La aplicación **Soluciones Campos** es una plataforma web logística diseñada 
    * Carga del material y liberación del camión.
 4. **Facturación Unificada:**
    * El sistema monitorea el despacho acumulado de la mercancía de un MBL.
-   * **Condición de cierre:** Cuando se despacha la *totalidad* de la mercancía perteneciente a todas las unidades de un MBL, el sistema **crea automáticamente el Servicio Único**.
-   * La facturación se ejecuta de forma manual en una fase posterior.
+   * **Condición de cierre prevista, aún no implementada:** cuando se despache la *totalidad* de la mercancía de un MBL, crear el Servicio Único; la facturación será manual.
+
+### Despacho implementado
+
+El cliente indica el total deseado por cantidad de embalaje o peso y puede seleccionar uno o varios contenedores como referencias preferidas. Los contenedores se filtran por el cliente seleccionado; no limitan la reserva. Administración decide de qué partidas completar el objetivo y puede tomar mercancía de otros contenedores/MBL del mismo cliente. Las solicitudes por peso admiten solo partidas con peso conocido y muestran la diferencia entre el objetivo y el peso real reservado o despachado. Las instrucciones históricas de contenedor completo o medio se conservan para consulta, pero no se ofrecen en solicitudes nuevas. Un viaje contiene mercancía de MBL o carga general, nunca ambas; una solicitud puede tener varios viajes.
+
+El cliente titular o administración puede eliminar instrucciones sin historial de reservas mientras la solicitud esté pendiente o en proceso; las que tienen reservas, incluso liberadas o confirmadas, se conservan para trazabilidad. Eliminar una instrucción no elimina mercancía de bodega; una solicitud puede quedar sin instrucciones y recibir otras posteriormente.
+
+Al solicitar o consultar un despacho se muestra la mercancía confirmada y ubicada disponible por origen y embalaje, descontando reservas y despachos. Se informa el peso conocido por separado de las unidades sin peso registrado; la disponibilidad puede cambiar antes de reservar.
+
+Administración asigna el transportista para mercancía de MBL. Para carga general el cliente puede proporcionar transporte en texto libre o solicitar que administración asigne uno del catálogo. Solo el cliente titular emite el pase para su transporte propio; para transporte asignado lo emite el transportista correspondiente o administración. El pase QR se escanea en Garita al entrar y al salir. El ingreso habilita una cola independiente en Montacargas, sin generar una orden de Grúa; Montacargas reporta las cantidades cargadas y administración confirma lo efectivamente cargado. La salida requiere la confirmación de carga y el segundo escaneo. Una salida sin carga requiere motivo administrativo.
+
+Las reservas impiden asignar la misma mercancía a otro viaje. Al confirmar una carga parcial se descuenta solo lo cargado y se libera lo no cargado; el resto puede asignarse a otro viaje. Cancelar o vencer un pase antes del ingreso conserva la reserva; administración puede cancelar el viaje antes del ingreso y liberarla. Los eventos y las partidas confirmadas conservan usuario, cantidades y ubicación de origen. Una partida totalmente despachada deja de aparecer en bodega, pero su captura permanece para trazabilidad.
+
+El listado de MBL se ordena por fecha de registro, con filtros de fecha, cliente y disponibilidad y opción de ordenar por menor saldo. Un MBL sin captura se distingue de uno sin disponibilidad; ninguno se considera cerrado automáticamente. El cierre automático, servicio y facturación siguen pendientes.
 
 ### Captura inicial de mercancías
 
@@ -79,7 +92,7 @@ La mercancía se registra en un manifiesto asociado a un cliente. Si procede de 
 
 El catálogo inicial de embalajes distingue unidades individuales (pallet y rollo) de cantidades agrupadas (caja). Cada pallet y rollo se captura individualmente y requiere su peso; el QR interno es opcional para ambos. El identificador de origen es opcional y aplica a cualquier embalaje. Las cajas se registran en líneas agrupadas por descripción y cantidad, sin peso por unidad.
 
-Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. El ciclo `draft → confirmed` se gestiona con AASM; un administrador puede reabrir la captura. Cada confirmación y reapertura se registra en `cargo_manifest_events` (usuario, fecha, estado origen y destino, inmutable) y el historial solo lo ve el administrador. Los cambios de líneas no se auditan. Esta etapa no registra recepción verificada ni descuentos por despacho; esos procesos usarán este registro como base en una fase posterior.
+Los registros pueden capturarse manualmente o importarse desde Excel de forma transaccional. Al confirmar la captura, sus líneas quedan bloqueadas para edición. El ciclo `draft → confirmed` se gestiona con AASM; un administrador puede reabrir la captura mientras no tenga historial de reservas o despacho. Cada confirmación y reapertura se registra en `cargo_manifest_events` (usuario, fecha, estado origen y destino, inmutable) y el historial solo lo ve el administrador. Los cambios de líneas no se auditan. La recepción verificada sigue pendiente.
 
 ### Ubicaciones en bodega
 

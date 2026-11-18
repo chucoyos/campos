@@ -5,6 +5,15 @@ module CargoItemsHelper
     material_icon(PACKAGING_ICONS.fetch(cargo_packaging.code, "inventory_2"))
   end
 
+  def packaging_quantity_label(packaging, quantity)
+    name = packaging.name.downcase
+    if %w[rollo caja pallet].include?(name)
+      t("cargo_dispatch.ui.packaging_quantities.#{name}", count: quantity)
+    else
+      t("cargo_dispatch.ui.packaging_quantities.other", count: quantity, packaging: packaging.name)
+    end
+  end
+
   def manifest_icon(cargo_manifest)
     material_icon(cargo_manifest.container ? "inventory_2" : "local_shipping")
   end

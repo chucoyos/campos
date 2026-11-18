@@ -1,0 +1,106 @@
+<div class="mx-auto max-w-5xl space-y-5">
+  <%= link_to t("shared.actions.back"), cargo_dispatch_trips_path, class: "text-indigo-700" %>
+  <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.trip_number", number: @trip.id) %></h1>
+  <p class="text-slate-600"><%= t("cargo_dispatch.ui.origins.#{@trip.origin_type}") %> · <%= t("cargo_dispatch.ui.trip_statuses.#{@trip.status}") %> · <%= @trip.carrier&.name || @trip.transport_name %></p>
+  <% if @weight_instructions %>
+    <% @weight_instructions.each do |instruction| %>
+      <% allocated = @weight_totals.fetch(instruction.id, 0) %>
+      <p class="rounded-2xl bg-slate-50 p-3 text-sm text-slate-700"><%= t("cargo_dispatch.ui.weight_progress", target: number_with_precision(instruction.weight_kg, precision: 3), allocated: number_with_precision(allocated, precision: 3), difference: number_with_precision(allocated - instruction.weight_kg, precision: 3)) %></p>
+    <% end %>
+  <% end %>
+  <% if @instructions.present? %>
+    <section class="space-y-3 rounded-3xl border border-sky-200 bg-sky-50 p-5">
+      <h2 class="flex items-center gap-2 text-lg font-semibold text-sky-950"><%= material_icon "inventory_2" %> <%= t("cargo_dispatch.ui.instructions") %></h2>
+      <p class="text-sm text-sky-900"><%= t("cargo_dispatch.ui.allocation_preference_hint") %></p>
+      <% @instructions.each do |instruction| %>
+        <p class="rounded-2xl bg-white/80 p-3 text-sm text-slate-700">
+          <%= t("cargo_dispatch.ui.criteria.#{instruction.criterion}") %> ·
+          <% if instruction.criterion == "quantity" %>
+            <%= packaging_quantity_label(instruction.cargo_packaging, instruction.quantity) %>
+          <% elsif instruction.criterion == "weight" %>
+            <%= t("cargo_dispatch.ui.requested_weight", weight: number_with_precision(instruction.weight_kg, precision: 3)) %>
+          <% end %>
+          <% if instruction.preferred_containers.any? %>
+            · <%= t("cargo_dispatch.ui.preferred_container_list", containers: instruction.preferred_containers.map(&:number).join(", ")) %>
+          <% elsif instruction.container_id.present? %>
+            · <%= t("cargo_dispatch.ui.legacy_container", container: instruction.container.number) %>
+          <% end %>
+        </p>
+      <% end %>
+    </section>
+  <% end %>
+  <% if policy(@trip).cancel? && @trip.may_cancel? %>
+    <%= button_to t("cargo_dispatch.ui.cancel_trip"), cancel_cargo_dispatch_trip_path(@trip), method: :patch,
+          data: { turbo_confirm: t("cargo_dispatch.ui.cancel_trip_prompt") }, class: "min-h-12 cursor-pointer rounded-full px-5 text-red-700 hover:bg-red-50" %>
+  <% end %>
+  <% if @carriers %>
+    <%= form_with url: assign_carrier_cargo_dispatch_trip_path(@trip), method: :patch, class: "flex flex-wrap gap-3 rounded-2xl bg-slate-50 p-4" do %>
+      <%= label_tag :carrier_id, Carrier.model_name.human, class: "self-center" %>
+      <%= select_tag :carrier_id, options_from_collection_for_select(@carriers, :id, :name, @trip.carrier_id), include_blank: t("cargo_dispatch.ui.choose"), required: true, class: "min-h-12 flex-1 rounded-lg border border-slate-300 px-3" %>
+      <%= button_tag t("cargo_dispatch.ui.assign_carrier"), class: "min-h-12 cursor-pointer rounded-full bg-indigo-600 px-5 text-white" %>
+    <% end %>
+  <% end %>
+  <section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
+    <h2 class="text-xl font-semibold"><%= t("cargo_dispatch.ui.allocations") %></h2>
+    <% @allocations.each do |allocation| %>
+      <div class="rounded-xl bg-slate-50 p-3">
+        <%= allocation.cargo_item.description %> · <%= allocation.cargo_item.cargo_packaging.name %> · <%= allocation.cargo_item.identifier_label %>
+        · <%= t("cargo_dispatch.ui.reserved_quantity", count: allocation.reserved_quantity) %>
+        · <%= allocation.reported_at? ? t("cargo_dispatch.ui.reported_quantity", count: allocation.reported_quantity) : t("cargo_dispatch.ui.not_reported") %>
+      </div>
+    <% end %>
+    <% if @items %>
+      <% if @trip.origin_type == "mbl" %>
+        <%= link_to t("cargo_dispatch.ui.compare_mbl"), master_bls_path(availability: "available", sort: "available"), class: "inline-flex min-h-12 items-center gap-2 text-indigo-700" %>
+      <% end %>
+      <%= form_with url: reserve_cargo_dispatch_trip_path(@trip), class: "grid gap-3 border-t border-slate-200 pt-4" do %>
+        <%= label_tag :instruction_id, t("cargo_dispatch.ui.instruction") %>
+        <%= select_tag :instruction_id, options_for_select(@instructions.map { |instruction|
+          summary = if instruction.criterion == "quantity"
+            packaging_quantity_label(instruction.cargo_packaging, instruction.quantity)
+          elsif instruction.criterion == "weight"
+            t("cargo_dispatch.ui.requested_weight", weight: number_with_precision(instruction.weight_kg, precision: 3))
+          else
+            instruction.container&.number
+          end
+          [ "#{t("cargo_dispatch.ui.criteria.#{instruction.criterion}")} · #{summary} · ##{instruction.id}", instruction.id ]
+        }), class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <%= label_tag :cargo_item_id, t("cargo_dispatch.ui.item") %>
+        <%= select_tag :cargo_item_id, options_for_select(@items.map { |item|
+          container = item.cargo_manifest.container
+          origin = container ? "#{container.master_bl.number} · #{container.number} · #{l(container.master_bl.created_at, format: :short)}" : t("cargo_dispatch.ui.origins.general")
+          weight = item.weight_kg ? " · #{number_with_precision(item.weight_kg, precision: 3)} kg" : ""
+          [ "#{origin} · #{item.identifier_label} · #{item.description} · #{item.cargo_packaging.name}#{weight} · #{item.location_label} · #{t('cargo_dispatch.ui.available', count: item.quantity - @reserved.fetch(item.id, 0) - @loaded.fetch(item.id, 0))}", item.id ]
+        }), class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <%= label_tag :quantity, t("cargo_dispatch.ui.quantity") %>
+        <%= number_field_tag :quantity, 1, min: 1, step: 1, required: true, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <%= button_tag t("cargo_dispatch.ui.reserve"), class: "min-h-12 cursor-pointer rounded-full bg-indigo-600 px-5 text-white hover:bg-indigo-700" %>
+      <% end %>
+      <%= button_to t("cargo_dispatch.ui.prepare"), prepare_cargo_dispatch_trip_path(@trip), method: :patch, class: "min-h-12 cursor-pointer rounded-full border border-indigo-600 px-5 text-indigo-700" %>
+    <% end %>
+  </section>
+  <% if policy(@trip).confirm_loading? && @trip.in_yard? %>
+    <%= form_with url: confirm_loading_cargo_dispatch_trip_path(@trip), method: :patch, class: "space-y-3 rounded-3xl border border-amber-200 bg-amber-50 p-5" do %>
+      <%= label_tag :reason, t("cargo_dispatch.ui.reason") %>
+      <%= text_field_tag :reason, nil, class: "min-h-12 w-full rounded-lg border border-slate-300 px-3" %>
+      <%= button_tag t("cargo_dispatch.ui.confirm_loading"), data: { turbo_confirm: t("cargo_dispatch.ui.confirm_loading_prompt") }, class: "min-h-12 cursor-pointer rounded-full bg-emerald-700 px-5 text-white" %>
+    <% end %>
+  <% end %>
+  <% if policy(@trip).issue_pass? && @trip.prepared? %>
+    <section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
+      <h2 class="text-xl font-semibold"><%= t("cargo_dispatch.ui.issue_pass") %></h2>
+      <%= form_with url: issue_pass_cargo_dispatch_trip_path(@trip), scope: :cargo_dispatch_pass, class: "grid gap-3 sm:grid-cols-2" do |f| %>
+        <% %i[operator_name plate economic_number].each do |attribute| %>
+          <%= f.label attribute, MovementPassVehicle.human_attribute_name(attribute) %>
+          <%= f.text_field attribute, required: attribute != :economic_number, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <% end %>
+        <%= f.label :unit_type, MovementPassVehicle.human_attribute_name(:unit_type) %>
+        <%= f.select :unit_type, MovementPassVehicle::UNIT_TYPES.map { |v| [ t("movement_passes.unit_types.#{v}"), v ] }, {}, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <%= f.button t("cargo_dispatch.ui.issue_pass"), class: "min-h-12 cursor-pointer rounded-full bg-indigo-600 px-5 text-white sm:col-span-2" %>
+      <% end %>
+    </section>
+  <% end %>
+  <% @trip.passes.order(:id).each do |pass| %>
+    <%= link_to t("cargo_dispatch.ui.pass_number", number: pass.id), cargo_dispatch_pass_path(pass), class: "block text-indigo-700" if policy(pass).show? %>
+  <% end %>
+</div>

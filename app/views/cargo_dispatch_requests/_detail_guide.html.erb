@@ -1,0 +1,12 @@
+<% scope = "cargo_dispatch.ui.detail_guide" %>
+<%= render "shared/quick_guide", title: t("cargo_dispatch.ui.quick_guide_title") do %>
+  <p><%= t("#{scope}.intro") %></p>
+  <ol class="list-decimal space-y-3 pl-6">
+    <% %w[requested inventory trips].each do |key| %>
+      <li><%= t("#{scope}.#{key}") %></li>
+    <% end %>
+    <li><%= t("#{scope}.#{current_user.admin? ? 'admin' : 'customer'}") %></li>
+    <li><%= t("#{scope}.pass") %></li>
+  </ol>
+  <p class="rounded-2xl bg-sky-50 p-3 text-sky-900"><%= t("cargo_dispatch.ui.preferred_containers_hint") %></p>
+<% end %>

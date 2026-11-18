@@ -55,6 +55,28 @@ Rails.application.routes.draw do
   resources :movement_passes, only: %i[index new create show] do
     patch :cancel, on: :member
   end
+  resources :cargo_dispatch_requests, only: %i[index new create show] do
+    post :add_instruction, on: :member
+    delete "instructions/:instruction_id", action: :remove_instruction, on: :member, as: :remove_instruction
+    resources :cargo_dispatch_trips, only: %i[create]
+  end
+  resources :cargo_dispatch_trips, only: %i[index show] do
+    member do
+      post :reserve
+      patch :assign_carrier
+      patch :prepare
+      patch :confirm_loading
+      patch :cancel
+      post :issue_pass
+    end
+  end
+  resources :cargo_dispatch_passes, only: %i[show] do
+    patch :cancel, on: :member
+  end
+  get "gate/cargo/:token", to: "cargo_dispatch_gate#open", as: :cargo_gate_pass
+  get "gate/cargo_passes/:id", to: "cargo_dispatch_gate#show", as: :cargo_gate_movement
+  post "gate/cargo_passes/:id", to: "cargo_dispatch_gate#complete", as: :complete_cargo_gate_movement
+  post "forklift/dispatch/:id/report", to: "cargo_dispatch_forklift#report", as: :report_cargo_dispatch
   resources :deconsolidations, only: %i[index show create] do
     patch :advance, on: :member
     get :labels, on: :member

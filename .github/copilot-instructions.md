@@ -57,6 +57,7 @@ Eres un desarrollador Senior especializado en **Ruby on Rails 8**, **PostgreSQL*
   - **Elevation & Surface Tonal Elevation:** En lugar de sombras pesadas tradicionales, usar elevaciones tonales M3 mediante capas de superficie (`bg-surface-container-low`, `bg-surface-container-high`) combinadas con sombras sutiles de Tailwind (`shadow-sm` para nivel 1, `shadow-md` para nivel 2 en estados interactivos).
   - **Iconography:** Usar exclusivamente **Google Material Symbols** (Outlined/Filled) mediante el helper `material_icon("nombre_icono")`, seleccionando metáforas visuales claras del sector (ej. `directions_boat`, `anchor`, `inventory_2`, `forklift`, `precision_manufacturing`, `local_shipping`, `qr_code_scanner`, `minor_crash`).
   - **Motion (Micro-interacciones):** Integrar animaciones y transiciones con curva M3 estándar (`transition-all duration-200 ease-out` o `active:scale-95`) en botones, cards seleccionables e indicadores de estado.
+  - **Cursor de botones:** Todos los botones deben usar `cursor-pointer`.
 - **Responsividad Total (Mobile-First & Tablet-First):**
   - **Todas las vistas deben ser 100% responsivas.**
   - Las consolas operativas (Grúa, Montacargas y Garita/Seguridad) deben estar optimizadas para pantallas táctiles de tablets y colectores de datos portátiles de patio, con objetivos de toque (*touch targets*) de al menos 48x48px y controles simplificados.

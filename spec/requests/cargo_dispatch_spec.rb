@@ -1,0 +1,386 @@
+require "rails_helper"
+
+RSpec.describe "Despacho de mercancía", type: :request do
+  let(:client) { create(:client) }
+  let(:client_user) { create(:user, :cliente, client: client) }
+  let(:admin) { create(:user, :admin) }
+  let(:security) { create(:user, :seguridad) }
+  let(:operator) { create(:user, :montacargas) }
+  let(:packaging) { create(:cargo_packaging, :box) }
+  let(:item) do
+    manifest = create(:cargo_manifest, client: client)
+    line = create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: 10, weight_kg: nil)
+    manifest.confirm_by!(admin)
+    line.store_at!(create(:warehouse_slot), "A", admin)
+    line
+  end
+
+  it "stores several preferred containers alongside one total quantity target" do
+    sign_in admin
+    containers = 2.times.map do
+      master_bl = create(:master_bl, client: client)
+      create(:container, :with_master_bl, master_bl: master_bl)
+    end
+
+    post cargo_dispatch_requests_path, params: {
+      cargo_dispatch_request: { client_id: client.id, destination: "Destino" },
+      instruction: {
+        criterion: "quantity", cargo_packaging_id: packaging.id, quantity: 75,
+        preferred_container_ids: containers.map(&:id)
+      }
+    }
+
+    request_record = CargoDispatchRequest.order(:id).last
+    expect(response).to redirect_to(cargo_dispatch_request_path(request_record))
+    instruction = request_record.instructions.sole
+    expect(instruction).to have_attributes(criterion: "quantity", quantity: 75, cargo_packaging: packaging)
+    expect(instruction.preferred_containers).to match_array(containers)
+
+    get cargo_dispatch_request_path(request_record)
+    expect(response).to have_http_status(:ok)
+  end
+
+  it "filters preference options by selected client and rejects cross-client preferences" do
+    sign_in admin
+    own_container = create(:container, :with_master_bl, master_bl: create(:master_bl, client: client))
+    other_container = create(:container, :with_master_bl)
+
+    get new_cargo_dispatch_request_path(client_id: client.id)
+    expect(response.body).to include("Guía rápida", "total por embalaje o peso", "cargo-dispatch-request#filterContainers")
+    document = Nokogiri::HTML(response.body)
+    expect(document.at_css('button[data-action="modal#open"]')).to be_present
+    expect(document.at_css('dialog[aria-labelledby="quick-guide-title"]')).to be_present
+    own_option = document.at_css(%(input[value="#{own_container.id}"]))
+    other_option = document.at_css(%(input[value="#{other_container.id}"]))
+    expect(own_option["data-client-id"]).to eq(client.id.to_s)
+    expect(other_option["data-client-id"]).not_to eq(client.id.to_s)
+
+    expect {
+      post cargo_dispatch_requests_path, params: {
+        cargo_dispatch_request: { client_id: client.id, destination: "Destino" },
+        instruction: {
+          criterion: "quantity", cargo_packaging_id: packaging.id, quantity: 5,
+          preferred_container_ids: [ other_container.id ]
+        }
+      }
+    }.not_to change(CargoDispatchRequest, :count)
+    expect(response).to have_http_status(:unprocessable_content)
+  end
+
+  it "separates the request summary from collapsed actions and inventory for the client and admin" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 6)
+    trip = dispatch_request.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: client_user)
+
+    [ client_user, admin ].each do |user|
+      sign_in user
+      get cargo_dispatch_request_path(dispatch_request)
+      expect(response).to have_http_status(:ok)
+      document = Nokogiri::HTML(response.body)
+      expect(document.at_css('button[data-action="modal#open"]')).to be_present
+      expect(document.at_css('dialog[aria-labelledby="quick-guide-title"]').text).to include(
+        user.admin? ? "administración reserva las partidas" : "Puedes crear viajes de carga general"
+      )
+      expect(document.text).to include("Mercancía solicitada", "6 Cajas", "Viaje ##{trip.id}")
+      expect(document.text).not_to include("Aún no hay viajes")
+      [ "Agregar mercancía", "Crear viaje", "Consultar mercancía disponible en bodega" ].each do |label|
+        details = document.css("details").find { |node| node.at_css("summary").text.include?(label) }
+        expect(details).to be_present
+        expect(details["open"]).to be_nil
+      end
+      expect(document.at_css(%(details form[action="#{add_instruction_cargo_dispatch_request_path(dispatch_request)}"]))).to be_present
+      expect(document.at_css(%(details form[action="#{cargo_dispatch_request_cargo_dispatch_trips_path(dispatch_request)}"]))).to be_present
+    end
+  end
+
+  it "adds a separate instruction without changing existing requested cargo" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    original = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 6)
+    sign_in client_user
+
+    expect {
+      post add_instruction_cargo_dispatch_request_path(dispatch_request), params: {
+        instruction: { criterion: "weight", weight_kg: 750 }
+      }
+    }.to change { dispatch_request.instructions.count }.by(1)
+    expect(original.reload.quantity).to eq(6)
+    expect(dispatch_request.instructions.last).to have_attributes(criterion: "weight", weight_kg: 750)
+  end
+
+  it "shows singular and plural packaging quantities in the request and trip" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    roll = create(:cargo_packaging, name: "Rollo")
+    dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: roll, quantity: 4)
+    dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 1)
+    trip = dispatch_request.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: client_user)
+    sign_in admin
+
+    [ cargo_dispatch_request_path(dispatch_request), cargo_dispatch_trip_path(trip) ].each do |path|
+      get path
+      expect(response.body).to include("4 Rollos", "1 Caja")
+    end
+  end
+
+  it "lets the owner remove one unreserved instruction, including the last one, without deleting inventory" do
+    own_item = item
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    container = create(:container, :with_master_bl, master_bl: create(:master_bl, client: client))
+    first = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 4, preferred_containers: [ container ])
+    duplicate = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 4)
+    sign_in client_user
+
+    get cargo_dispatch_request_path(dispatch_request)
+    document = Nokogiri::HTML(response.body)
+    expect(document.at_css(%(form[action="#{remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: first.id)}"][data-turbo-confirm]))).to be_present
+
+    delete remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: first.id)
+    expect(response).to redirect_to(cargo_dispatch_request_path(dispatch_request))
+    expect(flash[:notice]).to eq("Instrucción de mercancía eliminada.")
+    expect(dispatch_request.instructions.reload).to contain_exactly(duplicate)
+    expect(CargoDispatchInstructionContainer.where(cargo_dispatch_instruction_id: first.id)).to be_empty
+    expect(own_item.reload.quantity).to eq(10)
+
+    delete remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: duplicate.id)
+    get cargo_dispatch_request_path(dispatch_request)
+    expect(response.body).to include("No hay mercancía solicitada")
+  end
+
+  it "retains instructions with reservation history, including released reservations" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 3)
+    trip = dispatch_request.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: client_user)
+    CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: item.id, instruction_id: instruction.id, quantity: 3 } ])
+    sign_in admin
+
+    %w[reserved released].each do |status|
+      get cargo_dispatch_request_path(dispatch_request)
+      expect(response.body).to include("No se puede eliminar: tiene historial de reservas o despacho.")
+      expect(response.body).not_to include(remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: instruction.id))
+      expect {
+        delete remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: instruction.id)
+      }.not_to change(CargoDispatchInstruction, :count)
+      expect(flash[:alert]).to eq("No se puede eliminar: tiene historial de reservas o despacho.")
+      trip.allocations.first.release! if status == "reserved"
+    end
+  end
+
+  it "lets an administrator remove an unreserved instruction" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "weight", weight_kg: 100)
+    sign_in admin
+
+    expect {
+      delete remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: instruction.id)
+    }.to change(CargoDispatchInstruction, :count).by(-1)
+    expect(response).to redirect_to(cargo_dispatch_request_path(dispatch_request))
+  end
+
+  it "does not delete another customer's instruction or an instruction from a different request" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 2)
+    other_request = CargoDispatchRequest.create!(client: create(:client), requested_by: admin, destination: "Otro")
+    other_instruction = other_request.instructions.create!(criterion: "weight", weight_kg: 100)
+    sign_in client_user
+
+    expect {
+      delete remove_instruction_cargo_dispatch_request_path(other_request, instruction_id: other_instruction.id)
+      delete remove_instruction_cargo_dispatch_request_path(dispatch_request, instruction_id: other_instruction.id)
+    }.not_to change(CargoDispatchInstruction, :count)
+    expect(CargoDispatchInstruction.exists?(instruction.id)).to be(true)
+    expect(CargoDispatchInstruction.exists?(other_instruction.id)).to be(true)
+  end
+
+  it "shows the customer's available inventory by origin and packaging without exposing other clients" do
+    own_item = item
+    master_bl = create(:master_bl, client: client)
+    container = create(:container, :with_master_bl, master_bl: master_bl)
+    manifest = create(:cargo_manifest, client: client, container: container)
+    roll = create(:cargo_item, cargo_manifest: manifest, weight_kg: 800)
+    manifest.confirm_by!(admin)
+    roll.store_at!(own_item.warehouse_slot, "A", admin)
+
+    other_mbl = create(:master_bl)
+    other_container = create(:container, :with_master_bl, master_bl: other_mbl)
+    other_manifest = create(:cargo_manifest, client: other_mbl.client, container: other_container)
+    other_item = create(:cargo_item, cargo_manifest: other_manifest)
+    other_manifest.confirm_by!(admin)
+    other_item.store_at!(own_item.warehouse_slot, "A", admin)
+
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 6)
+    trip = dispatch_request.trips.create!(origin_type: "general", created_by: admin)
+    CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: own_item.id, instruction_id: instruction.id, quantity: 6 } ])
+
+    sign_in client_user
+    [ new_cargo_dispatch_request_path, cargo_dispatch_request_path(dispatch_request) ].each do |path|
+      get path
+      expect(response.body).to include(master_bl.number, container.number, "4 unidades disponibles",
+        "4 unidades sin peso registrado", "800,000 kg")
+      expect(response.body).not_to include(other_mbl.number, other_container.number)
+    end
+  end
+
+  it "completes a partial general-cargo pickup with the customer's transport" do
+    item
+    sign_in client_user
+    post cargo_dispatch_requests_path, params: {
+      cargo_dispatch_request: { destination: "Destino" },
+      instruction: { criterion: "quantity", cargo_packaging_id: packaging.id, quantity: 10 }
+    }
+    request_record = CargoDispatchRequest.last
+    expect(response).to redirect_to(cargo_dispatch_request_path(request_record))
+    get cargo_dispatch_request_path(request_record)
+    expect(response).to have_http_status(:ok)
+    post cargo_dispatch_request_cargo_dispatch_trips_path(request_record), params: {
+      cargo_dispatch_trip: { origin_type: "general", transport_mode: "customer", transport_name: "Propio" }
+    }
+    trip = CargoDispatchTrip.last
+    expect(response).to redirect_to(cargo_dispatch_trip_path(trip))
+
+    sign_in admin
+    post reserve_cargo_dispatch_trip_path(trip), params: {
+      instruction_id: request_record.instructions.first.id, cargo_item_id: item.id, quantity: 10
+    }
+    expect(trip.allocations.count).to eq(1)
+    get cargo_dispatch_trip_path(trip)
+    expect(response).to have_http_status(:ok)
+    patch prepare_cargo_dispatch_trip_path(trip)
+    expect(trip.reload).to be_prepared
+
+    sign_in client_user
+    post issue_pass_cargo_dispatch_trip_path(trip), params: {
+      cargo_dispatch_pass: { operator_name: "Operador", plate: "ABC123", unit_type: "sencillo" }
+    }
+    pass = trip.passes.last
+    expect(response).to redirect_to(cargo_dispatch_pass_path(pass))
+    get cargo_dispatch_pass_path(pass)
+    expect(response).to have_http_status(:ok)
+    get cargo_dispatch_pass_path(pass, format: :pdf)
+    expect(response.media_type).to eq("application/pdf")
+
+    sign_in security
+    post scan_gate_pass_path, params: { token: pass.token }
+    expect(response).to redirect_to(cargo_gate_pass_path(pass.token))
+    get cargo_gate_pass_path(pass.token)
+    follow_redirect!
+    expect(response).to have_http_status(:ok)
+    post complete_cargo_gate_movement_path(pass)
+    expect(trip.reload).to be_in_yard
+    expect(WorkOrder.where(container_id: item.cargo_manifest.container_id)).to be_empty
+
+    sign_in operator
+    get forklift_path
+    expect(response).to have_http_status(:ok)
+    post report_cargo_dispatch_path(trip), params: { allocation_id: trip.allocations.first.id, quantity: 4 }
+    expect(trip.allocations.first.reload.reported_quantity).to eq(4)
+
+    sign_in admin
+    patch confirm_loading_cargo_dispatch_trip_path(trip)
+    expect(trip.reload).to be_loaded
+    expect(item.reload).to be_stored
+
+    sign_in security
+    get cargo_gate_pass_path(pass.token)
+    expect(pass.reload.exit_scanned_at).to be_present
+    post complete_cargo_gate_movement_path(pass)
+    expect(trip.reload).to be_completed
+    expect(pass.reload).to be_completed
+    expect(trip.allocations.first.loaded_quantity).to eq(4)
+  end
+
+  it "does not allow another customer to create a trip for the request" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    sign_in create(:user, :cliente, client: create(:client))
+    expect {
+      post cargo_dispatch_request_cargo_dispatch_trips_path(request_record), params: {
+        cargo_dispatch_trip: { origin_type: "general", transport_mode: "customer", transport_name: "Otro" }
+      }
+    }.not_to change(CargoDispatchTrip, :count)
+  end
+
+  it "lets a client request an assigned carrier for general cargo" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    carrier = create(:carrier)
+    sign_in client_user
+    post cargo_dispatch_request_cargo_dispatch_trips_path(request_record), params: {
+      cargo_dispatch_trip: { origin_type: "general", transport_mode: "assigned", carrier_id: carrier.id, transport_name: "" }
+    }
+    trip = request_record.trips.last
+    expect(trip).to have_attributes(transport_mode: "assigned", carrier: nil)
+
+    sign_in admin
+    patch assign_carrier_cargo_dispatch_trip_path(trip), params: { carrier_id: carrier.id }
+    expect(trip.reload.carrier).to eq(carrier)
+  end
+
+  it "reissues an expired pass without releasing the reservation" do
+    item
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 3)
+    trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: client_user)
+    CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: item.id, instruction_id: instruction.id, quantity: 3 } ])
+    trip.prepare!
+    previous = trip.passes.create!(requested_by: client_user, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+    previous.update_columns(expires_at: 1.minute.ago)
+
+    sign_in client_user
+    post issue_pass_cargo_dispatch_trip_path(trip), params: {
+      cargo_dispatch_pass: { operator_name: "Operador", plate: "ABC123", unit_type: "sencillo" }
+    }
+
+    expect(previous.reload).to be_expired
+    expect(trip.passes.where(status: "active").count).to eq(1)
+    expect(trip.allocations.first).to be_reserved
+  end
+
+  it "allows an assigned carrier to pick up a roll from an MBL by target weight" do
+    master_bl = create(:master_bl, client: client)
+    container = create(:container, :with_master_bl, master_bl: master_bl)
+    manifest = create(:cargo_manifest, client: client, container: container)
+    roll = create(:cargo_item, cargo_manifest: manifest, weight_kg: 800, generate_qr: true)
+    manifest.confirm_by!(admin)
+    roll.store_at!(create(:warehouse_slot), "A", admin)
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = request_record.instructions.create!(
+      criterion: "weight", weight_kg: 750, preferred_containers: [ container ]
+    )
+    carrier = create(:carrier)
+    trip = request_record.trips.create!(origin_type: "mbl", transport_mode: "assigned", carrier: carrier, created_by: admin)
+
+    sign_in admin
+    get cargo_dispatch_trip_path(trip)
+    expect(response.body).to include(master_bl.number, container.number, "800,000", "Preferidos: #{container.number}")
+    post reserve_cargo_dispatch_trip_path(trip), params: { instruction_id: instruction.id, cargo_item_id: roll.id, quantity: 1 }
+    get cargo_dispatch_trip_path(trip)
+    expect(response.body).to include("750,000", "800,000", "50,000")
+    patch prepare_cargo_dispatch_trip_path(trip)
+
+    sign_in create(:user, :transporte, carrier: carrier)
+    post issue_pass_cargo_dispatch_trip_path(trip), params: {
+      cargo_dispatch_pass: { operator_name: "Operador", plate: "ABC123", unit_type: "sencillo" }
+    }
+    pass = trip.passes.last
+    expect(pass).to be_active
+
+    sign_in security
+    get cargo_gate_pass_path(pass.token)
+    post complete_cargo_gate_movement_path(pass)
+    sign_in operator
+    post report_cargo_dispatch_path(trip), params: { code: roll.qr_token, quantity: 1 }
+    sign_in admin
+    patch confirm_loading_cargo_dispatch_trip_path(trip)
+    expect(roll.reload).to be_dispatched
+  end
+
+  it "does not allow another carrier to request or view a pass" do
+    carrier = create(:carrier)
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    trip = request_record.trips.create!(origin_type: "mbl", transport_mode: "assigned", carrier: carrier, created_by: admin)
+    sign_in create(:user, :transporte, carrier: create(:carrier))
+
+    post issue_pass_cargo_dispatch_trip_path(trip), params: {
+      cargo_dispatch_pass: { operator_name: "Operador", plate: "ABC123", unit_type: "sencillo" }
+    }
+    expect(trip.passes).to be_empty
+  end
+end

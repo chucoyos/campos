@@ -10,13 +10,19 @@ class CargoItem < ApplicationRecord
   belongs_to :cargo_packaging
   belongs_to :warehouse_slot, optional: true
   has_many :movements, class_name: "CargoItemMovement", dependent: :delete_all
+  has_many :dispatch_allocations, class_name: "CargoDispatchAllocation", dependent: :restrict_with_error
 
   aasm column: :status, whiny_persistence: true do
     state :captured, initial: true
     state :stored
+    state :dispatched
 
     event :store do
       transitions from: %i[captured stored], to: :stored, guard: :manifest_confirmed?, after: :record_movement
+    end
+
+    event :dispatch do
+      transitions from: :stored, to: :dispatched, guard: :manifest_confirmed?
     end
   end
 

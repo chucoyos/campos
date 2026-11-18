@@ -12,6 +12,55 @@ RSpec.describe "MasterBls", type: :request do
       expect(response.body).to include(record.number, master_bl_path(record))
     end
 
+    it "orders by registration date and distinguishes missing capture from available cargo" do
+      record.update!(created_at: 2.days.ago)
+      newer = create(:master_bl, client: record.client, created_at: 1.day.ago)
+      container = create(:container, :with_master_bl, master_bl: newer)
+      manifest = create(:cargo_manifest, client: record.client, container: container)
+      line = create(:cargo_item, cargo_manifest: manifest)
+      manifest.confirm_by!(create(:user, :admin))
+      line.store_at!(create(:warehouse_slot), "A", create(:user, :admin))
+
+      get master_bls_path
+      expect(response.body.index(record.number)).to be < response.body.index(newer.number)
+      expect(response.body).to include("Sin captura", "1 unidad disponible")
+
+      get master_bls_path, params: { availability: "available" }
+      expect(response.body).to include(newer.number)
+      expect(response.body).not_to include(record.number)
+
+      get master_bls_path, params: { from_date: 1.day.ago.to_date.iso8601 }
+      expect(response.body).to include(newer.number)
+      expect(response.body).not_to include(record.number)
+    end
+
+    it "orders available MBLs by remaining unreserved units" do
+      older = create(:master_bl, client: record.client, created_at: 2.days.ago)
+      newer = create(:master_bl, client: record.client, created_at: 1.day.ago)
+      packaging = create(:cargo_packaging, :box)
+      admin = create(:user, :admin)
+      items = [ [ older, 8 ], [ newer, 2 ] ].map do |master_bl, quantity|
+        container = create(:container, :with_master_bl, master_bl: master_bl)
+        manifest = create(:cargo_manifest, client: master_bl.client, container: container)
+        line = create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: quantity, weight_kg: nil)
+        manifest.confirm_by!(admin)
+        line.store_at!(create(:warehouse_slot), "A", admin)
+        line
+      end
+      dispatch_request = CargoDispatchRequest.create!(client: record.client, requested_by: admin, destination: "Destino")
+      instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 5)
+      trip = dispatch_request.trips.create!(origin_type: "mbl", created_by: admin)
+      CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: items.first.id, instruction_id: instruction.id, quantity: 5 } ])
+
+      get master_bls_path, params: { availability: "available", sort: "available" }
+      expect(response.body.index(newer.number)).to be < response.body.index(older.number)
+      expect(response.body).not_to include(record.number)
+      expect(response.body).to include("5 unidades reservadas", "3 unidades disponibles")
+      mobile_cards = Nokogiri::HTML(response.body).at_css('ul[class*="md:hidden"]')
+      older_card = mobile_cards.css("li").find { |card| card.text.include?(older.number) }
+      expect(older_card.text).to include("5 unidades reservadas", "3 unidades disponibles", "8 unidades")
+    end
+
     it "shows a record" do
       get master_bl_path(record)
       expect(response.body).to include(record.number, record.client.name)

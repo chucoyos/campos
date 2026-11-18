@@ -10,6 +10,7 @@ class GateController < ApplicationController
       @error = t("gate.errors.token_required")
       return render :index, status: :unprocessable_content
     end
+    return redirect_to cargo_gate_pass_path(@token) if @token.start_with?("cargo_")
 
     @pass = MovementPass.find_by(token: @token)
     unless @pass

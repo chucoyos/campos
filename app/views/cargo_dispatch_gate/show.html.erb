@@ -1,0 +1,8 @@
+<div class="mx-auto max-w-3xl space-y-5">
+  <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.gate_title") %></h1>
+  <section class="space-y-4 rounded-3xl border border-slate-200 bg-white p-6">
+    <p><%= t("cargo_dispatch.ui.trip_number", number: @pass.cargo_dispatch_trip_id) %></p>
+    <p><%= @pass.cargo_dispatch_trip.carrier&.name || @pass.cargo_dispatch_trip.transport_name %> · <%= @pass.operator_name %> · <%= @pass.plate %></p>
+    <%= button_to @pass.entered_at? ? t("cargo_dispatch.ui.confirm_exit") : t("cargo_dispatch.ui.confirm_entry"), complete_cargo_gate_movement_path(@pass), class: "min-h-12 rounded-full bg-indigo-600 px-6 text-white hover:bg-indigo-700" %>
+  </section>
+</div>

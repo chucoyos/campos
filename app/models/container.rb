@@ -18,6 +18,7 @@ class Container < ApplicationRecord
   belongs_to :current_yard_slot, class_name: "YardSlot", optional: true
   has_one :cargo_manifest, dependent: :restrict_with_error
   has_many :assignments, class_name: "ContainerAssignment", dependent: :restrict_with_error
+  has_many :cargo_dispatch_instruction_containers, dependent: :restrict_with_error
   has_many :movement_passes, dependent: :restrict_with_error
   has_many :movements, class_name: "ContainerMovement", dependent: :restrict_with_error
 

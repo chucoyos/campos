@@ -15,7 +15,8 @@ class CargoManifest < ApplicationRecord
     end
 
     event :reopen, before: -> { self.confirmed_at = nil } do
-      transitions from: :confirmed, to: :draft, after: -> { record_event("reopen", "confirmed", "draft") }
+      transitions from: :confirmed, to: :draft, guard: :without_dispatch_allocations?,
+        after: -> { record_event("reopen", "confirmed", "draft") }
     end
   end
 
@@ -43,6 +44,10 @@ class CargoManifest < ApplicationRecord
   end
 
   def cargo_items_present? = cargo_items.exists?
+
+  def without_dispatch_allocations?
+    !CargoDispatchAllocation.joins(:cargo_item).where(cargo_items: { cargo_manifest_id: id }).exists?
+  end
 
   def record_event(event, from, to)
     events.build(user: @audit_user, event: event, from_status: from, to_status: to, created_at: Time.current)

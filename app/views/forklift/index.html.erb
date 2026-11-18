@@ -1,3 +1,4 @@
+<%= turbo_stream_from CargoDispatchTrip::STREAM %>
 <div class="mx-auto w-full max-w-3xl space-y-6">
   <div class="flex items-center gap-3">
     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-50 text-violet-700"><%= material_icon "forklift" %></span>
@@ -6,6 +7,46 @@
       <p class="text-sm text-slate-500"><%= t(".description") %></p>
     </div>
   </div>
+
+  <section class="space-y-3">
+    <h2 class="flex items-center gap-2 text-lg font-bold"><%= material_icon "local_shipping" %> <%= t("cargo_dispatch.ui.forklift_queue") %></h2>
+    <% if @dispatch_trips.empty? %><p class="rounded-3xl bg-slate-50 p-5 text-slate-500"><%= t("cargo_dispatch.ui.no_dispatches") %></p><% end %>
+    <% @dispatch_trips.each do |trip| %>
+      <% pass = trip.passes.find(&:active?) %>
+      <article class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 class="font-semibold"><%= t("cargo_dispatch.ui.trip_number", number: trip.id) %> · <%= trip.carrier&.name || trip.transport_name %></h3>
+        <% if pass %><p class="text-sm text-slate-600"><%= pass.operator_name %> · <%= pass.plate %></p><% end %>
+        <% trip.allocations.select { |allocation| allocation.status == "reserved" }.each do |allocation| %>
+          <% item = allocation.cargo_item %>
+          <div class="space-y-2 rounded-2xl bg-slate-50 p-3">
+            <p><%= item.identifier_label %> · <%= item.description %> · <%= item.cargo_packaging.name %> · <%= item.location_label %></p>
+            <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.reserved_quantity", count: allocation.reserved_quantity) %> · <%= allocation.reported_at? ? t("cargo_dispatch.ui.reported_quantity", count: allocation.reported_quantity) : t("cargo_dispatch.ui.not_reported") %></p>
+            <%= form_with url: report_cargo_dispatch_path(trip), class: "flex flex-wrap gap-2" do %>
+              <%= hidden_field_tag :allocation_id, allocation.id %>
+              <%= label_tag "quantity_#{allocation.id}", t("cargo_dispatch.ui.quantity"), class: "sr-only" %>
+              <%= number_field_tag :quantity, allocation.reported_quantity, id: "quantity_#{allocation.id}", min: 0, max: allocation.reserved_quantity, required: true, class: "min-h-12 w-28 rounded-lg border border-slate-300 px-3" %>
+              <%= button_tag t("cargo_dispatch.ui.report"), class: "min-h-12 rounded-full bg-violet-700 px-5 text-white" %>
+            <% end %>
+          </div>
+        <% end %>
+        <div class="space-y-2" data-controller="qr-camera"
+             data-qr-camera-unsupported-value="<%= t("forklift.index.camera_unsupported") %>"
+             data-qr-camera-denied-value="<%= t("forklift.index.camera_denied") %>"
+             data-qr-camera-reading-value="<%= t("forklift.index.camera_reading") %>">
+          <button type="button" data-qr-camera-target="start" data-action="qr-camera#start" class="min-h-12 rounded-full px-5 text-violet-700"><%= material_icon "qr_code_scanner" %> <%= t("forklift.index.scan") %></button>
+          <button type="button" data-qr-camera-target="stop" data-action="qr-camera#stop" class="hidden min-h-12 rounded-full px-5"><%= t("forklift.index.stop") %></button>
+          <div data-qr-camera-target="preview" class="hidden overflow-hidden rounded-2xl bg-slate-950"><video data-qr-camera-target="video" class="max-h-64 w-full" autoplay playsinline muted></video></div>
+          <p data-qr-camera-target="status" role="status" class="hidden text-sm"></p>
+          <%= form_with url: report_cargo_dispatch_path(trip), data: { qr_camera_target: "form", turbo: false }, class: "flex flex-wrap gap-2" do %>
+            <%= label_tag "code_#{trip.id}", t("cargo_dispatch.ui.scan_item"), class: "sr-only" %>
+            <%= text_field_tag :code, nil, id: "code_#{trip.id}", required: true, placeholder: t("cargo_dispatch.ui.scan_item"), data: { qr_camera_target: "token" }, class: "min-h-12 flex-1 rounded-lg border border-slate-300 px-3" %>
+            <%= hidden_field_tag :quantity, 1 %>
+            <%= button_tag t("cargo_dispatch.ui.report"), class: "min-h-12 rounded-full border border-violet-700 px-5 text-violet-700" %>
+          <% end %>
+        </div>
+      </article>
+    <% end %>
+  </section>
 
   <% if @item %>
     <section class="space-y-4 rounded-3xl border-2 border-violet-600 bg-white p-6 shadow-sm" data-controller="qr-camera"
