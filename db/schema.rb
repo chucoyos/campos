@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_17_221500) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_195651) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -154,6 +154,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_17_221500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "transport_mode", default: "assigned", null: false
+    t.boolean "exit_evidence_enabled", default: true, null: false
     t.index ["cargo_dispatch_request_id"], name: "index_dispatch_trips_on_request"
     t.index ["carrier_id"], name: "index_cargo_dispatch_trips_on_carrier_id"
     t.index ["created_by_id"], name: "index_cargo_dispatch_trips_on_created_by_id"

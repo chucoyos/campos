@@ -7,6 +7,9 @@ class CargoItemsController < ApplicationController
   def show
     authorize @cargo_item
     raise ActiveRecord::RecordNotFound if params[:token].present? && !ActiveSupport::SecurityUtils.secure_compare(params[:token], @cargo_item.qr_token.to_s)
+
+    @delivered_quantity = @cargo_item.dispatch_allocations.delivered.sum(:loaded_quantity)
+    @delivery_history = @cargo_item.dispatch_allocations.with_delivery_details
   end
 
   def create

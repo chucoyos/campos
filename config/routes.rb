@@ -68,6 +68,10 @@ Rails.application.routes.draw do
       patch :confirm_loading
       patch :cancel
       post :issue_pass
+      get :tally
+      post :exit_photos, to: "cargo_dispatch_trip_photos#create"
+      get "exit_photos/:photo_id", to: "cargo_dispatch_trip_photos#show", as: :exit_photo
+      delete "exit_photos/:photo_id", to: "cargo_dispatch_trip_photos#destroy"
     end
   end
   resources :cargo_dispatch_passes, only: %i[show] do

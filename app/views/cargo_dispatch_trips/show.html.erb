@@ -1,9 +1,18 @@
 <div class="mx-auto max-w-5xl space-y-5">
-  <%= link_to t("shared.actions.back"), cargo_dispatch_trips_path, class: "text-indigo-700" %>
-  <header class="flex flex-wrap items-start justify-between gap-4">
+  <%= link_to cargo_dispatch_trips_path, class: "inline-flex min-h-12 items-center gap-2 text-indigo-700" do %>
+    <%= material_icon "arrow_back" %> <%= t("shared.actions.back") %>
+  <% end %>
+  <header class="flex flex-wrap items-start justify-between gap-4 rounded-3xl border border-sky-200 bg-sky-50 p-5 shadow-sm sm:p-6">
     <div>
-      <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.trip_number", number: @trip.id) %></h1>
-      <p class="mt-2 text-slate-600"><%= t("cargo_dispatch.ui.origins.#{@trip.origin_type}") %> · <%= t("cargo_dispatch.ui.trip_statuses.#{@trip.status}") %> · <%= @trip.carrier&.name || @trip.transport_name %></p>
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-slate-900">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-800 text-white"><%= material_icon "local_shipping" %></span>
+        <%= t("cargo_dispatch.ui.trip_number", number: @trip.id) %>
+      </h1>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <%= render "status", trip: @trip %>
+        <p class="inline-flex items-center gap-1.5 text-sm text-slate-700"><%= material_icon(@trip.origin_type == "mbl" ? "directions_boat" : "inventory_2", classes: "!text-base") %> <%= t("cargo_dispatch.ui.origins.#{@trip.origin_type}") %></p>
+        <p class="inline-flex items-center gap-1.5 text-sm text-slate-700"><%= material_icon "local_shipping", classes: "!text-base" %> <%= @trip.carrier&.name || @trip.transport_name || t("cargo_dispatch.ui.unspecified") %></p>
+      </div>
     </div>
     <%= render "guide" %>
   </header>
@@ -46,7 +55,7 @@
     <% end %>
   <% end %>
   <section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
-    <h2 class="text-xl font-semibold"><%= t("cargo_dispatch.ui.allocations") %></h2>
+    <h2 class="flex items-center gap-2 text-xl font-semibold"><%= material_icon "inventory_2", classes: "text-sky-800" %> <%= t("cargo_dispatch.ui.allocations") %></h2>
     <% @allocations.each do |allocation| %>
       <div class="rounded-xl bg-slate-50 p-3">
         <%= allocation.cargo_item.description %> · <%= allocation.cargo_item.cargo_packaging.name %> · <%= allocation.cargo_item.identifier_label %>
@@ -93,9 +102,54 @@
       <%= button_tag t("cargo_dispatch.ui.confirm_loading"), data: { turbo_confirm: t("cargo_dispatch.ui.confirm_loading_prompt") }, class: "min-h-12 cursor-pointer rounded-full bg-emerald-700 px-5 text-white" %>
     <% end %>
   <% end %>
+  <% if policy(@trip).tally? %>
+    <%= link_to tally_cargo_dispatch_trip_path(@trip, format: :pdf), target: "_blank", rel: "noopener",
+          class: "inline-flex min-h-12 items-center gap-2 rounded-full bg-sky-800 px-5 font-semibold text-white transition-all duration-200 ease-out hover:bg-sky-900" do %>
+      <%= material_icon "picture_as_pdf" %> <%= t("cargo_dispatch.tally.download") %>
+    <% end %>
+  <% end %>
+  <% if @exit_pass %>
+    <section class="space-y-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-5">
+      <h2 class="flex items-center gap-2 text-xl font-semibold text-emerald-950"><%= material_icon "task_alt" %> <%= t("cargo_dispatch.evidence.title") %></h2>
+      <p class="text-sm text-emerald-900"><%= t("cargo_dispatch.evidence.exit_time", time: l(@exit_pass.completed_at.in_time_zone, format: :long)) %></p>
+      <% @allocations.select { |allocation| allocation.confirmed? && allocation.loaded_quantity.positive? }.each do |allocation| %>
+        <% item = allocation.cargo_item %>
+        <% container = @trip.origin_type == "mbl" ? item.cargo_manifest.container : nil %>
+        <div class="rounded-2xl bg-white p-3 text-sm text-slate-700">
+          <p><%= t("cargo_dispatch.evidence.item", description: item.description, packaging: item.cargo_packaging.name, quantity: t("cargo_dispatch.delivery.complete", count: allocation.loaded_quantity), part: item.origin_identifier.presence || t("cargo_dispatch.tally.unavailable")) %></p>
+          <p><%= t("cargo_dispatch.evidence.origin", mbl: container&.master_bl&.number || t("cargo_dispatch.tally.unavailable"), container: container&.number || t("cargo_dispatch.tally.unavailable")) %></p>
+        </div>
+      <% end %>
+      <% if @exit_photos.any? %>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <% @exit_photos.each do |photo| %>
+            <div class="space-y-2 rounded-2xl bg-white p-2">
+              <%= link_to exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), target: "_blank", rel: "noopener" do %>
+                <%= image_tag exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), alt: photo.blob.filename.to_s, class: "h-40 w-full rounded-xl object-cover" %>
+              <% end %>
+              <% if policy(@trip).manage_exit_photos? %>
+                <%= button_to t("cargo_dispatch.evidence.remove"), exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), method: :delete,
+                      form: { data: { turbo_confirm: t("cargo_dispatch.evidence.confirm_remove") } }, class: "min-h-12 cursor-pointer rounded-full px-3 text-sm text-red-700 hover:bg-red-50" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-slate-600"><%= t("cargo_dispatch.evidence.empty") %></p>
+      <% end %>
+      <% if policy(@trip).manage_exit_photos? %>
+        <%= form_with url: exit_photos_cargo_dispatch_trip_path(@trip), multipart: true, class: "flex flex-wrap items-center gap-3" do |f| %>
+          <%= f.label :photos, t("cargo_dispatch.evidence.choose"), class: "sr-only" %>
+          <%= f.file_field :photos, multiple: true, accept: Container::PHOTO_CONTENT_TYPES.join(","), required: true,
+                class: "min-h-12 w-full text-sm file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-4 file:text-sky-800 sm:w-auto" %>
+          <%= f.button t("cargo_dispatch.evidence.upload"), class: "min-h-12 cursor-pointer rounded-full bg-sky-800 px-5 text-white hover:bg-sky-900" %>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
   <% if policy(@trip).issue_pass? && @trip.prepared? %>
     <section class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5">
-      <h2 class="text-xl font-semibold"><%= t("cargo_dispatch.ui.issue_pass") %></h2>
+      <h2 class="flex items-center gap-2 text-xl font-semibold"><%= material_icon "qr_code_2", classes: "text-sky-800" %> <%= t("cargo_dispatch.ui.issue_pass") %></h2>
       <%= form_with url: issue_pass_cargo_dispatch_trip_path(@trip), scope: :cargo_dispatch_pass, class: "grid gap-3 sm:grid-cols-2" do |f| %>
         <% %i[operator_name plate economic_number].each do |attribute| %>
           <%= f.label attribute, MovementPassVehicle.human_attribute_name(attribute) %>

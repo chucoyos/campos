@@ -378,6 +378,8 @@ RSpec.describe "Despacho de mercancía", type: :request do
     patch confirm_loading_cargo_dispatch_trip_path(trip)
     expect(trip.reload).to be_loaded
     expect(item.reload).to be_stored
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(pdf_text(response.body)).to include("Cantidad: 4", "Piezas cargadas: 4", "Salida pendiente")
 
     sign_in security
     get cargo_gate_pass_path(pass.token)
@@ -470,6 +472,8 @@ RSpec.describe "Despacho de mercancía", type: :request do
     sign_in admin
     patch confirm_loading_cargo_dispatch_trip_path(trip)
     expect(roll.reload).to be_dispatched
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(pdf_text(response.body)).to include(master_bl.number, container.number, "800,000 kg", "Salida pendiente")
   end
 
   it "does not allow another carrier to request or view a pass" do
@@ -482,5 +486,173 @@ RSpec.describe "Despacho de mercancía", type: :request do
       cargo_dispatch_pass: { operator_name: "Operador", plate: "ABC123", unit_type: "sencillo" }
     }
     expect(trip.passes).to be_empty
+  end
+
+  it "counts only completed exits, including historical trips, and shows new delivery details" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    old_trip, old_pass = loaded_trip(request_record, instruction, 3, historical: true)
+    new_trip, new_pass = loaded_trip(request_record, instruction, 4)
+    sign_in admin
+
+    finish_trip(old_pass)
+    get cargo_manifest_cargo_item_path(item.cargo_manifest, item)
+    expect(response.body).to include("Entrega parcial: 3 unidades entregadas")
+    expect(response.body).not_to include("Viaje ##{old_trip.id}:")
+    expect(CargoDispatchAllocation.delivered.where(cargo_item: item).sum(:loaded_quantity)).to eq(3)
+
+    finish_trip(new_pass)
+    CargoDispatchOperationService.exit!(pass: new_pass, user: security)
+    expect(new_trip.events.where(event: "exited").count).to eq(1)
+    get cargo_manifest_path(item.cargo_manifest)
+    expect(response.body).to include("Entrega parcial: 7 unidades entregadas", "Viaje ##{new_trip.id}:", "Propio")
+    expect(response.body).not_to include("Viaje ##{old_trip.id}:")
+    get cargo_dispatch_trip_path(new_trip)
+    expect(response.body).to include("Salida confirmada:", "Entregado: 4 unidades")
+
+    last_trip, last_pass = loaded_trip(request_record, instruction, 3)
+    finish_trip(last_pass)
+    get cargo_manifest_cargo_item_path(item.cargo_manifest, item)
+    expect(response.body).to include("Entregado: 10 unidades", "Viaje ##{last_trip.id}:", "No disponible")
+  end
+
+  it "generates the tally after loading and retains the confirmation time after exit" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    trip, pass = loaded_trip(request_record, instruction, 4, expired_pass: true)
+    sign_in client_user
+
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response.media_type).to eq("application/pdf")
+    confirmation = I18n.l(trip.events.find_by!(event: "loading_confirmed").created_at.in_time_zone, format: :long)
+    expect(pdf_text(response.body)).to include("Confirmación de carga: #{confirmation}", "Salida pendiente", "Cantidad: 4", "Peso conocido total: No disponible")
+
+    finish_trip(pass)
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(pdf_text(response.body)).to include("Confirmación de carga: #{confirmation}", "Salida confirmada:")
+    expect(pdf_text(response.body)).not_to include("Salida pendiente")
+
+    sign_in create(:user, :cliente, client: create(:client))
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "rejects photo uploads before exit or by non-admins and protects photo downloads" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    trip, pass = loaded_trip(request_record, instruction, 2)
+    photo = -> { fixture_file_upload(Rails.root.join("public/icon.png"), "image/png") }
+    sign_in admin
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ photo.call ] }
+    expect(trip.exit_photos).not_to be_attached
+
+    finish_trip(pass)
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ fixture_file_upload(Rails.root.join("spec/fixtures/files/mbl.pdf"), "image/png") ] }
+    expect(trip.exit_photos).not_to be_attached
+    expect(flash[:alert]).to be_present
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: Array.new(Container::MAX_PHOTOS_PER_UPLOAD + 1) { photo.call } }
+    expect(trip.exit_photos).not_to be_attached
+    expect(flash[:alert]).to be_present
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ photo.call ] }
+    expect(trip.exit_photos.reload.count).to eq(1)
+    attachment = trip.exit_photos_attachments.first
+
+    sign_in client_user
+    get exit_photo_cargo_dispatch_trip_path(trip, photo_id: attachment.id)
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("image/png")
+    delete exit_photo_cargo_dispatch_trip_path(trip, photo_id: attachment.id)
+    expect(trip.exit_photos.reload.count).to eq(1)
+
+    sign_in create(:user, :cliente, client: create(:client))
+    get exit_photo_cargo_dispatch_trip_path(trip, photo_id: attachment.id)
+    expect(response).not_to have_http_status(:ok)
+
+    sign_in admin
+    delete exit_photo_cargo_dispatch_trip_path(trip, photo_id: attachment.id)
+    expect(trip.exit_photos.reload.count).to eq(0)
+  end
+
+  it "shows the reason on a tally for a trip with no cargo, without recording a delivery" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 2)
+    trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: admin)
+    CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: item.id, instruction_id: instruction.id, quantity: 2 } ])
+    trip.prepare!
+    pass = trip.passes.create!(requested_by: admin, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+    CargoDispatchOperationService.enter!(pass: pass, user: security)
+    CargoDispatchOperationService.confirm!(trip: trip, user: admin, reason: "Sin mercancía")
+    finish_trip(pass)
+    sign_in admin
+
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(pdf_text(response.body)).to include("Sin carga. Motivo: Sin mercancía", "Confirmación de carga:", "Salida confirmada:")
+    expect(CargoDispatchAllocation.delivered.where(cargo_item: item)).to be_empty
+
+    trip.update!(exit_evidence_enabled: false)
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "renders MBL origins and long lists of confirmed cargo across multiple PDF pages" do
+    master_bl = create(:master_bl, client: client)
+    container = create(:container, :with_master_bl, master_bl: master_bl)
+    manifest = create(:cargo_manifest, client: client, container: container)
+    items = 22.times.map do |index|
+      create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: 1, weight_kg: nil,
+        description: "Mercancía número #{index}", origin_identifier: "PARTE-#{index}")
+    end
+    manifest.confirm_by!(admin)
+    slot = create(:warehouse_slot)
+    items.each { |line| line.store_at!(slot, "A", admin) }
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: items.size)
+    trip = request_record.trips.create!(origin_type: "mbl", carrier: create(:carrier), created_by: admin)
+    CargoDispatchReservationService.call(trip: trip, selections: items.map { |line| { cargo_item_id: line.id, instruction_id: instruction.id, quantity: 1 } })
+    trip.prepare!
+    pass = trip.passes.create!(requested_by: admin, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+    CargoDispatchOperationService.enter!(pass: pass, user: security)
+    trip.allocations.each { |allocation| CargoDispatchOperationService.report!(trip: trip, allocation: allocation, quantity: 1, user: operator) }
+    CargoDispatchOperationService.confirm!(trip: trip, user: admin)
+    sign_in admin
+
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response.body.scan(%r{/Type\s*/Page\b}).size).to be > 1
+    expect(pdf_text(response.body)).to include(master_bl.number, container.number, "PARTE-0", "PARTE-21", "Piezas cargadas: 22")
+    finish_trip(pass)
+    get cargo_dispatch_trip_path(trip)
+    expect(response.body).to include(master_bl.number, container.number, "PARTE-21")
+    sign_in create(:user, :transporte, carrier: trip.carrier)
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response).to have_http_status(:ok)
+    sign_in create(:user, :transporte, carrier: create(:carrier))
+    get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  def loaded_trip(request_record, instruction, quantity, historical: false, expired_pass: false)
+    trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio",
+      created_by: admin, exit_evidence_enabled: !historical)
+    CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: item.id, instruction_id: instruction.id, quantity: quantity } ])
+    trip.prepare!
+    if expired_pass
+      previous = trip.passes.create!(requested_by: admin, operator_name: "Anterior", plate: "XYZ123", unit_type: "sencillo")
+      previous.update!(expires_at: 1.minute.ago)
+      previous.expire!
+    end
+    pass = trip.passes.create!(requested_by: admin, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+    CargoDispatchOperationService.enter!(pass: pass, user: security)
+    CargoDispatchOperationService.report!(trip: trip, allocation: trip.allocations.first, quantity: quantity, user: operator)
+    CargoDispatchOperationService.confirm!(trip: trip, user: admin)
+    [ trip.reload, pass.reload ]
+  end
+
+  def finish_trip(pass)
+    pass.update!(exit_scanned_at: Time.current)
+    CargoDispatchOperationService.exit!(pass: pass, user: security)
+  end
+
+  def pdf_text(pdf)
+    pdf.scan(/<([0-9a-f]+)>/i).flatten.map { |hex| [ hex ].pack("H*").force_encoding("Windows-1252").encode("UTF-8") }.join
   end
 end

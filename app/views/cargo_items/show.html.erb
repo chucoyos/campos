@@ -3,7 +3,15 @@
   <p class="mt-2 text-slate-600"><%= @cargo_item.cargo_packaging.name %></p>
   <p class="text-slate-600"><%= t("cargo_manifests.show.quantity", count: @cargo_item.quantity) %></p>
   <% if @cargo_item.weight_kg.present? %><p class="text-slate-600"><%= t("cargo_manifests.show.weight", weight: number_with_precision(@cargo_item.weight_kg, strip_insignificant_zeros: true)) %></p><% end %>
+  <p class="text-slate-600"><%= t("cargo_manifests.show.origin_identifier", value: @cargo_item.origin_identifier.presence || t("cargo_dispatch.tally.unavailable")) %></p>
+  <p class="text-slate-600"><%= t("cargo_dispatch.evidence.origin", mbl: @cargo_manifest.container&.master_bl&.number || t("cargo_dispatch.tally.unavailable"), container: @cargo_manifest.container&.number || t("cargo_dispatch.tally.unavailable")) %></p>
   <% if @cargo_item.warehouse_slot %><p class="mt-2 flex items-center justify-center gap-1 font-medium text-sky-800"><%= material_icon "warehouse" %> <%= @cargo_item.location_label %></p><% end %>
-  <div class="mx-auto my-6 w-fit rounded-2xl bg-white p-3"><%= cargo_qr_svg(@cargo_item) %></div>
+  <% if @delivered_quantity.positive? %>
+    <p class="mt-4 font-semibold text-emerald-800"><%= t(@delivered_quantity >= @cargo_item.quantity ? "cargo_dispatch.delivery.complete" : "cargo_dispatch.delivery.partial", count: @delivered_quantity) %></p>
+    <% @delivery_history.each do |delivery| %>
+      <p class="mt-2 text-sm text-slate-600"><%= t("cargo_dispatch.delivery.history", number: delivery.cargo_dispatch_trip_id, count: delivery.loaded_quantity, time: l(delivery.exit_at.in_time_zone, format: :long), transport: delivery.exit_carrier_name || delivery.exit_transport_name) %></p>
+    <% end %>
+  <% end %>
+  <% if @cargo_item.qr_token.present? %><div class="mx-auto my-6 w-fit rounded-2xl bg-white p-3"><%= cargo_qr_svg(@cargo_item) %></div><% end %>
   <%= link_to t("cargo_manifests.show.back_to_manifest"), cargo_manifest_path(@cargo_manifest), class: "inline-flex min-h-12 items-center rounded-full bg-slate-100 px-5 font-medium text-slate-700" %>
 </div>

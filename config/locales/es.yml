@@ -1,5 +1,49 @@
 es:
   cargo_dispatch:
+    tally:
+      title: "Tarja de salida de almacén"
+      trip: "Folio: viaje #%{number}"
+      client: "Cliente: %{value}"
+      destination: "Destino: %{value}"
+      transport: "Transporte: %{value}"
+      operator: "Operador: %{value}"
+      vehicle: "Placa: %{plate} · Unidad: %{unit} · Económico: %{economic}"
+      confirmed_at: "Confirmación de carga: %{time}"
+      exited_at: "Salida confirmada: %{time}"
+      exit_pending: "Salida pendiente"
+      items: "Mercancía confirmada"
+      item: "%{number}. %{description} · %{packaging} · Cantidad: %{quantity}\nMBL: %{mbl} · Contenedor: %{container} · Número de parte: %{part}\nPeso conocido: %{weight}"
+      no_cargo: "Sin carga. Motivo: %{reason}"
+      total:
+        one: "Piezas cargadas: %{count}"
+        other: "Piezas cargadas: %{count}"
+      known_weight:
+        one: "Peso conocido total: %{weight}; %{count} unidad sin peso registrado"
+        other: "Peso conocido total: %{weight}; %{count} unidades sin peso registrado"
+      signatures: "___________________________                          ___________________________\nAdministración                                                    Operador"
+      unavailable: "No disponible"
+      download: "Ver tarja de salida"
+    evidence:
+      title: "Evidencia de salida"
+      exit_time: "Salida confirmada: %{time}"
+      item: "%{description} · %{packaging} · %{quantity} · Número de parte: %{part}"
+      origin: "MBL: %{mbl} · Contenedor: %{container}"
+      upload: "Adjuntar fotos de salida"
+      choose: "Seleccionar fotos de salida"
+      remove: "Eliminar foto"
+      empty: "No hay fotos de salida."
+      confirm_remove: "¿Eliminar esta fotografía de salida?"
+    delivery:
+      details: "Ver mercancía"
+      partial:
+        one: "Entrega parcial: %{count} unidad entregada"
+        other: "Entrega parcial: %{count} unidades entregadas"
+      complete:
+        one: "Entregado: %{count} unidad"
+        other: "Entregado: %{count} unidades"
+      history:
+        one: "Viaje #%{number}: %{count} unidad entregada · %{time} · %{transport}"
+        other: "Viaje #%{number}: %{count} unidades entregadas · %{time} · %{transport}"
     ui:
       requests: "Solicitudes de despacho"
       trips: "Viajes de despacho"
@@ -52,6 +96,7 @@ es:
         assigned_pass: "Cuando el viaje esté preparado, administración o el transportista asignado puede solicitar el pase QR con los datos del vehículo."
         customer_pass: "Cuando el viaje esté preparado, administración o el cliente titular puede solicitar el pase QR para su transporte propio con los datos del vehículo."
         loading: "Garita escanea el pase al ingresar; Montacargas reporta la carga y administración la confirma. Garita realiza un segundo escaneo para la salida. Lo no cargado se libera; una salida sin carga requiere motivo."
+        evidence: "La tarja está disponible desde la confirmación de carga. Tras confirmar la salida, administración puede agregar fotos opcionales y se muestra la entrega por partida."
         cancel: "Administración puede cancelar el viaje antes del ingreso y liberar sus reservas."
         availability: "Las acciones visibles dependen de tu rol y del estado del viaje. La disponibilidad puede cambiar antes de reservar."
       criterion: "Solicitar por"

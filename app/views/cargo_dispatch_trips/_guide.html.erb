@@ -11,6 +11,9 @@
     <% end %>
     <li><%= t("#{scope}.#{@trip.transport_mode}_pass") %></li>
     <li><%= t("#{scope}.loading") %></li>
+    <% if @trip.exit_evidence_enabled? %>
+      <li><%= t("#{scope}.evidence") %></li>
+    <% end %>
     <% if policy(@trip).cancel? %>
       <li><%= t("#{scope}.cancel") %></li>
     <% end %>

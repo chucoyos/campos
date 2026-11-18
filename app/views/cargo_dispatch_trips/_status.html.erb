@@ -1,0 +1,13 @@
+<% styles = {
+  "pending" => [ "schedule", "bg-amber-100 text-amber-900" ],
+  "prepared" => [ "assignment_turned_in", "bg-sky-100 text-sky-900" ],
+  "in_yard" => [ "local_shipping", "bg-blue-100 text-blue-900" ],
+  "loaded" => [ "inventory_2", "bg-indigo-100 text-indigo-900" ],
+  "completed" => [ "task_alt", "bg-emerald-100 text-emerald-900" ],
+  "cancelled" => [ "cancel", "bg-red-100 text-red-900" ]
+} %>
+<% icon, classes = styles.fetch(trip.status) %>
+<span class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold <%= classes %>">
+  <%= material_icon icon, classes: "!text-base" %>
+  <%= t("cargo_dispatch.ui.trip_statuses.#{trip.status}") %>
+</span>

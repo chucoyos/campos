@@ -23,6 +23,9 @@ class CargoDispatchTripPolicy < ApplicationPolicy
   def cancel? = user&.admin?
   def report? = user&.admin? || user&.montacargas?
   def issue_pass? = user&.admin? || (record.transport_mode == "customer" ? customer? : carrier?)
+  def tally? = show? && record.exit_evidence_enabled? && (record.loaded? || record.completed?)
+  def exit_photos? = show? && record.exit_evidence_enabled? && record.completed?
+  def manage_exit_photos? = user&.admin? && record.exit_evidence_enabled? && record.completed?
 
   class Scope < Scope
     def resolve

@@ -1,11 +1,21 @@
 <div class="mx-auto max-w-5xl space-y-5">
-  <h1 class="text-3xl font-bold"><%= t("cargo_dispatch.ui.trips") %></h1>
+  <h1 class="flex items-center gap-3 text-3xl font-bold text-slate-900">
+    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-800"><%= material_icon "local_shipping" %></span>
+    <%= t("cargo_dispatch.ui.trips") %>
+  </h1>
   <ul class="space-y-3">
     <% @trips.each do |trip| %>
-      <li class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
-        <%= link_to t("cargo_dispatch.ui.trip_number", number: trip.id), cargo_dispatch_trip_path(trip), class: "font-semibold text-indigo-700" %>
-        <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.trip_statuses.#{trip.status}") %> · <%= trip.carrier&.name || trip.transport_name %></p>
-        <% if current_user.admin? || current_user.client_member? %><p class="text-sm text-slate-600"><%= trip.cargo_dispatch_request.client.name %></p><% end %>
+      <li class="space-y-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <%= link_to cargo_dispatch_trip_path(trip), class: "inline-flex min-h-12 items-center gap-2 font-semibold text-indigo-700 transition-all duration-200 ease-out hover:text-indigo-900" do %>
+            <%= material_icon "local_shipping" %> <%= t("cargo_dispatch.ui.trip_number", number: trip.id) %>
+          <% end %>
+          <%= render "status", trip: trip %>
+        </div>
+        <p class="flex items-center gap-2 text-sm text-slate-600"><%= material_icon "local_shipping", classes: "!text-base" %> <%= trip.carrier&.name || trip.transport_name || t("cargo_dispatch.ui.unspecified") %></p>
+        <% if current_user.admin? || current_user.client_member? %>
+          <p class="flex items-center gap-2 text-sm text-slate-600"><%= material_icon "business", classes: "!text-base" %> <%= trip.cargo_dispatch_request.client.name %></p>
+        <% end %>
       </li>
     <% end %>
   </ul>

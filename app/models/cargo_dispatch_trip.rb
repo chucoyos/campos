@@ -10,6 +10,7 @@ class CargoDispatchTrip < ApplicationRecord
   has_many :allocations, class_name: "CargoDispatchAllocation", dependent: :restrict_with_error, inverse_of: :cargo_dispatch_trip
   has_many :passes, class_name: "CargoDispatchPass", dependent: :restrict_with_error, inverse_of: :cargo_dispatch_trip
   has_many :events, class_name: "CargoDispatchEvent", dependent: :restrict_with_error, inverse_of: :cargo_dispatch_trip
+  has_many_attached :exit_photos
   normalizes :transport_name, with: ->(value) { value.strip.presence }
 
   STREAM = "forklift_dispatches".freeze

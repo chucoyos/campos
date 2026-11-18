@@ -10,6 +10,14 @@ class CargoDispatchTripsController < ApplicationController
     load_trip
     authorize @trip
     @allocations = @trip.allocations.includes(cargo_item: :cargo_packaging).order(:id)
+    if @trip.exit_evidence_enabled? && @trip.completed?
+      @exit_pass = @trip.passes.find_by!(status: "completed")
+      @exit_photos = @trip.exit_photos_attachments.includes(:blob).order(:id)
+      if @trip.origin_type == "mbl"
+        ActiveRecord::Associations::Preloader.new(records: @allocations.map(&:cargo_item),
+          associations: { cargo_manifest: { container: :master_bl } }).call
+      end
+    end
     if policy(@trip).reserve? && @trip.pending?
       @carriers = Carrier.order(:name) if @trip.transport_mode == "assigned"
       instructions = @trip.cargo_dispatch_request.instructions
@@ -49,6 +57,13 @@ class CargoDispatchTripsController < ApplicationController
     else
       redirect_back_or_to cargo_dispatch_request_path(request_record), alert: @trip.errors.full_messages.to_sentence
     end
+  end
+
+  def tally
+    load_trip
+    authorize @trip
+    send_data CargoDispatchTallyPdf.new(@trip).render, filename: "tarja-viaje-#{@trip.id}.pdf",
+      type: "application/pdf", disposition: "inline"
   end
 
   def reserve
