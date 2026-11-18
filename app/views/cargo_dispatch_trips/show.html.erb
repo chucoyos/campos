@@ -50,10 +50,8 @@
       </div>
     <% end %>
     <% if @items %>
-      <% if @trip.origin_type == "mbl" %>
-        <%= link_to t("cargo_dispatch.ui.compare_mbl"), master_bls_path(availability: "available", sort: "available"), class: "inline-flex min-h-12 items-center gap-2 text-indigo-700" %>
-      <% end %>
-      <%= form_with url: reserve_cargo_dispatch_trip_path(@trip), class: "grid gap-3 border-t border-slate-200 pt-4" do %>
+      <%= form_with url: reserve_cargo_dispatch_trip_path(@trip), class: "grid gap-3 border-t border-slate-200 pt-4",
+            data: (@mbl_groups ? { controller: "dispatch-reservation", action: "submit->dispatch-reservation#validate" } : {}) do %>
         <%= label_tag :instruction_id, t("cargo_dispatch.ui.instruction") %>
         <%= select_tag :instruction_id, options_for_select(@instructions.map { |instruction|
           summary = if instruction.criterion == "quantity"
@@ -63,15 +61,19 @@
           else
             instruction.container&.number
           end
-          [ "#{t("cargo_dispatch.ui.criteria.#{instruction.criterion}")} · #{summary} · ##{instruction.id}", instruction.id ]
-        }), class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
-        <%= label_tag :cargo_item_id, t("cargo_dispatch.ui.item") %>
-        <%= select_tag :cargo_item_id, options_for_select(@items.map { |item|
-          container = item.cargo_manifest.container
-          origin = container ? "#{container.master_bl.number} · #{container.number} · #{l(container.master_bl.created_at, format: :short)}" : t("cargo_dispatch.ui.origins.general")
-          weight = item.weight_kg ? " · #{number_with_precision(item.weight_kg, precision: 3)} kg" : ""
-          [ "#{origin} · #{item.identifier_label} · #{item.description} · #{item.cargo_packaging.name}#{weight} · #{item.location_label} · #{t('cargo_dispatch.ui.available', count: item.quantity - @reserved.fetch(item.id, 0) - @loaded.fetch(item.id, 0))}", item.id ]
-        }), class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+          [ "#{t("cargo_dispatch.ui.criteria.#{instruction.criterion}")} · #{summary} · ##{instruction.id}", instruction.id,
+            { data: { criterion: instruction.criterion, packaging_id: instruction.cargo_packaging_id, container_id: instruction.container_id } } ]
+        }), class: "min-h-12 rounded-lg border border-slate-300 px-3",
+            data: (@mbl_groups ? { dispatch_reservation_target: "instruction", action: "change->dispatch-reservation#filter" } : {}) %>
+        <% if @mbl_groups %>
+          <%= render "mbl_inventory", groups: @mbl_groups %>
+        <% else %>
+          <%= label_tag :cargo_item_id, t("cargo_dispatch.ui.item") %>
+          <%= select_tag :cargo_item_id, options_for_select(@items.map { |item|
+            weight = item.weight_kg ? " · #{number_with_precision(item.weight_kg, precision: 3)} kg" : ""
+            [ "#{t('cargo_dispatch.ui.origins.general')} · #{item.identifier_label} · #{item.description} · #{item.cargo_packaging.name}#{weight} · #{item.location_label} · #{t('cargo_dispatch.ui.available', count: available_quantity(item))}", item.id ]
+          }), class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
+        <% end %>
         <%= label_tag :quantity, t("cargo_dispatch.ui.quantity") %>
         <%= number_field_tag :quantity, 1, min: 1, step: 1, required: true, class: "min-h-12 rounded-lg border border-slate-300 px-3" %>
         <%= button_tag t("cargo_dispatch.ui.reserve"), class: "min-h-12 cursor-pointer rounded-full bg-indigo-600 px-5 text-white hover:bg-indigo-700" %>

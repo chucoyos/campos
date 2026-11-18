@@ -1,0 +1,40 @@
+<fieldset class="space-y-3">
+  <legend class="text-lg font-semibold text-slate-900"><%= t("cargo_dispatch.ui.select_mbl_item") %></legend>
+  <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.mbl_priority_hint") %></p>
+  <p class="text-sm text-slate-600"><%= t("cargo_dispatch.ui.mbl_balance_hint") %></p>
+  <p hidden role="alert" tabindex="-1" data-dispatch-reservation-target="selectionError" class="rounded-lg bg-red-50 p-3 text-sm text-red-700"><%= t("cargo_dispatch.ui.choose_mbl_item") %></p>
+  <% if groups.empty? %>
+    <p class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-700"><%= t("cargo_dispatch.ui.no_mbl_available") %></p>
+  <% end %>
+  <% groups.each do |group| %>
+    <% master_bl = group[:master_bl] %>
+    <details class="group rounded-2xl border border-sky-200 bg-sky-50" data-mbl-id="<%= master_bl.id %>">
+      <summary class="flex min-h-12 cursor-pointer list-none flex-wrap items-center gap-3 rounded-2xl p-4 transition-all duration-200 ease-out hover:bg-sky-100 [&::-webkit-details-marker]:hidden">
+        <%= material_icon "directions_boat", classes: "text-sky-800" %>
+        <span class="min-w-0 flex-1">
+          <span class="block font-bold text-sky-950"><%= master_bl.number %> · <%= l(master_bl.created_at.to_date, format: :short) %></span>
+          <span class="block text-sm text-sky-900"><%= t("cargo_dispatch.ui.available", count: group[:available]) %></span>
+          <span class="block text-sm text-slate-700"><%= group[:packagings].sort_by { |packaging, _| packaging.name.downcase }.map { |packaging, count| packaging_quantity_label(packaging, count) }.join(" · ") %></span>
+        </span>
+        <%= material_icon "expand_more", classes: "text-sky-800 transition-transform duration-200 group-open:rotate-180" %>
+      </summary>
+      <div class="space-y-2 border-t border-sky-200 p-3">
+        <% group[:items].each do |item| %>
+          <label class="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-700 transition-all duration-200 ease-out hover:bg-sky-50 has-[:checked]:border-sky-700 has-[:checked]:bg-sky-50">
+            <%= radio_button_tag :cargo_item_id, item.id, false,
+                  class: "mt-1 h-5 w-5 shrink-0",
+                  data: { dispatch_reservation_target: "item", action: "change->dispatch-reservation#clearError", packaging_id: item.cargo_packaging_id,
+                    container_id: item.cargo_manifest.container_id, has_weight: item.weight_kg.present?,
+                    allocated_instruction_ids: @allocated_instructions_by_item.fetch(item.id, []).map(&:cargo_dispatch_instruction_id).join(",") } %>
+            <span class="min-w-0">
+              <span class="block font-semibold text-slate-900"><%= item.identifier_label %> · <%= item.description %> · <%= item.cargo_packaging.name %></span>
+              <span class="block"><%= item.cargo_manifest.container.number %> · <%= item.location_label %> · <%= t("cargo_dispatch.ui.available", count: available_quantity(item)) %>
+                <% if item.weight_kg %> · <%= number_with_precision(item.weight_kg, precision: 3) %> kg <% end %></span>
+              <span hidden data-dispatch-reservation-target="incompatible" class="font-medium text-amber-800"><%= t("cargo_dispatch.ui.incompatible_item") %></span>
+            </span>
+          </label>
+        <% end %>
+      </div>
+    </details>
+  <% end %>
+</fieldset>

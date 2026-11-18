@@ -121,6 +121,84 @@ RSpec.describe "Despacho de mercancía", type: :request do
     end
   end
 
+  it "groups available MBL cargo by registration day and total balance without restricting manual choices" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 30)
+    weight_instruction = dispatch_request.instructions.create!(criterion: "weight", weight_kg: 800)
+    trip = dispatch_request.trips.create!(origin_type: "mbl", created_by: admin)
+    other_trip = dispatch_request.trips.create!(origin_type: "mbl", created_by: admin)
+    slot = create(:warehouse_slot)
+    dates = [ "2026-10-10 23:30", "2026-10-11 08:00", "2026-10-11 17:00", "2026-10-11 14:00" ]
+    mbls = dates.map { |date| create(:master_bl, client: client, created_at: Time.zone.parse(date)) }
+    lines = mbls.zip([ 10, 8, 2, 2 ]).map do |master_bl, count|
+      container = create(:container, :with_master_bl, master_bl: master_bl)
+      manifest = create(:cargo_manifest, client: client, container: container)
+      line = create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: count, weight_kg: nil)
+      manifest.confirm_by!(admin)
+      line.store_at!(slot, "A", admin)
+      line
+    end
+    roll = create(:cargo_item, cargo_manifest: create(:cargo_manifest, client: client,
+      container: create(:container, :with_master_bl, master_bl: mbls[1])), weight_kg: 800)
+    roll.cargo_manifest.confirm_by!(admin)
+    roll.store_at!(slot, "A", admin)
+    CargoDispatchReservationService.call(trip: other_trip, selections: [ { instruction_id: instruction.id, cargo_item_id: lines[1].id, quantity: 3 } ])
+    loaded_trip = dispatch_request.trips.create!(origin_type: "mbl", carrier: create(:carrier), created_by: admin)
+    CargoDispatchReservationService.call(trip: loaded_trip, selections: [ { instruction_id: instruction.id, cargo_item_id: lines[1].id, quantity: 1 } ])
+    loaded_trip.prepare!
+    pass = loaded_trip.passes.create!(requested_by: admin, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+    CargoDispatchOperationService.enter!(pass: pass, user: security)
+    CargoDispatchOperationService.report!(trip: loaded_trip, allocation: loaded_trip.allocations.first, quantity: 1, user: operator)
+    CargoDispatchOperationService.confirm!(trip: loaded_trip, user: admin)
+    unlocated = create(:cargo_manifest, client: client, container: create(:container, :with_master_bl, master_bl: mbls[1]))
+    create(:cargo_item, cargo_manifest: unlocated, cargo_packaging: packaging, quantity: 9, weight_kg: nil)
+    unlocated.confirm_by!(admin)
+    other_mbl = create(:master_bl)
+    other_manifest = create(:cargo_manifest, client: other_mbl.client, container: create(:container, :with_master_bl, master_bl: other_mbl))
+    other_line = create(:cargo_item, cargo_manifest: other_manifest, cargo_packaging: packaging, quantity: 1, weight_kg: nil)
+    other_manifest.confirm_by!(admin)
+    other_line.store_at!(slot, "A", admin)
+    sign_in admin
+
+    get cargo_dispatch_trip_path(trip)
+    expect(response).to have_http_status(:ok)
+    document = Nokogiri::HTML(response.body)
+    quantity_option = document.at_css(%(select[name="instruction_id"] option[value="#{instruction.id}"]))
+    weight_option = document.at_css(%(select[name="instruction_id"] option[value="#{weight_instruction.id}"]))
+    expect(quantity_option["data-criterion"]).to eq("quantity")
+    expect(quantity_option["data-packaging-id"]).to eq(packaging.id.to_s)
+    expect(weight_option["data-criterion"]).to eq("weight")
+    groups = document.css("details[data-mbl-id]")
+    expect(groups.map { |group| group["data-mbl-id"].to_i }).to eq([ mbls[0].id, mbls[3].id, mbls[2].id, mbls[1].id ])
+    expect(groups.last.text).to include("5 unidades disponibles", "4 Cajas", "1 unidad")
+    expect(groups.last.at_css(%(input[value="#{lines[1].id}"]))["data-packaging-id"]).to eq(packaging.id.to_s)
+    expect(groups.last.at_css(%(input[value="#{roll.id}"]))["data-has-weight"]).to eq("true")
+    expect(response.body).not_to include(other_mbl.number)
+
+    post reserve_cargo_dispatch_trip_path(trip), params: { instruction_id: instruction.id, cargo_item_id: lines[2].id, quantity: 2 }
+    expect(trip.allocations.sole).to have_attributes(cargo_item: lines[2], reserved_quantity: 2)
+    get cargo_dispatch_trip_path(trip)
+    expect(Nokogiri::HTML(response.body).css("details[data-mbl-id]").map { |group| group["data-mbl-id"].to_i }).not_to include(mbls[2].id)
+  end
+
+  it "reports an empty MBL selection without reserving unrelated or unconfirmed merchandise" do
+    dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")
+    instruction = dispatch_request.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 2)
+    trip = dispatch_request.trips.create!(origin_type: "mbl", created_by: admin)
+    mbl = create(:master_bl, client: client)
+    container = create(:container, :with_master_bl, master_bl: mbl)
+    manifest = create(:cargo_manifest, client: client, container: container)
+    create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: 2, weight_kg: nil)
+    sign_in admin
+
+    get cargo_dispatch_trip_path(trip)
+    expect(response.body).to include("No hay mercancía disponible de MBL")
+    expect(response.body).not_to include(%(data-mbl-id="#{mbl.id}"))
+    post reserve_cargo_dispatch_trip_path(trip), params: { instruction_id: instruction.id, quantity: 1 }
+    expect(flash[:alert]).to eq(I18n.t("cargo_dispatch.errors.invalid_item"))
+    expect(trip.allocations).to be_empty
+  end
+
   it "lets the owner remove one unreserved instruction, including the last one, without deleting inventory" do
     own_item = item
     dispatch_request = CargoDispatchRequest.create!(client: client, requested_by: client_user, destination: "Destino")

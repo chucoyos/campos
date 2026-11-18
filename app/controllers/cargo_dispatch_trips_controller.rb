@@ -16,15 +16,20 @@ class CargoDispatchTripsController < ApplicationController
       @instructions = instructions.includes(:preferred_containers).order(:id)
       @instructions = @instructions.includes(:container) if instructions.where.not(container_id: nil).exists?
       @instructions = @instructions.includes(:cargo_packaging) if instructions.where(criterion: "quantity").exists?
-      @items = CargoItem.joins(:cargo_manifest).where(status: "stored",
+      items = CargoItem.joins(:cargo_manifest).where(status: "stored",
         cargo_manifests: { client_id: @trip.cargo_dispatch_request.client_id, status: "confirmed" })
-        .left_joins(cargo_manifest: { container: :master_bl })
-        .includes(:cargo_packaging, :warehouse_slot, cargo_manifest: { container: :master_bl })
-        .order(Arel.sql("master_bls.created_at ASC NULLS LAST"), :id)
-      @items = @items.select { |item| @trip.origin_type == (item.cargo_manifest.container_id ? "mbl" : "general") }
+      @items = if @trip.origin_type == "mbl"
+        items.where.not(cargo_manifests: { container_id: nil }).order(:id).to_a
+      else
+        items.where(cargo_manifests: { container_id: nil }).includes(:cargo_packaging, :warehouse_slot).order(:id).to_a
+      end
       totals = CargoDispatchAllocation.where(cargo_item_id: @items.map(&:id))
       @reserved = totals.where(status: "reserved").group(:cargo_item_id).sum(:reserved_quantity)
       @loaded = totals.where(status: "confirmed").group(:cargo_item_id).sum(:loaded_quantity)
+      if @trip.origin_type == "mbl"
+        @mbl_groups = available_mbl_groups
+        @allocated_instructions_by_item = @allocations.group_by(&:cargo_item_id)
+      end
     end
     if current_user.admin?
       @weight_instructions = @trip.cargo_dispatch_request.instructions.where(criterion: "weight")
@@ -125,6 +130,26 @@ class CargoDispatchTripsController < ApplicationController
   end
 
   private
+
+  def available_mbl_groups
+    available_items = @items.select { |item| available_quantity(item).positive? }
+    ActiveRecord::Associations::Preloader.new(
+      records: available_items, associations: [ :cargo_packaging, :warehouse_slot, { cargo_manifest: { container: :master_bl } } ]
+    ).call
+    available_items.group_by { |item| item.cargo_manifest.container.master_bl }.map do |master_bl, items|
+      {
+        master_bl: master_bl,
+        items: items,
+        available: items.sum { |item| available_quantity(item) },
+        packagings: items.group_by(&:cargo_packaging).transform_values { |lines| lines.sum { |item| available_quantity(item) } }
+      }
+    end.sort_by { |group| [ group[:master_bl].created_at.in_time_zone.to_date, group[:available], group[:master_bl].created_at, group[:master_bl].id ] }
+  end
+
+  def available_quantity(item)
+    item.quantity - @reserved.fetch(item.id, 0) - @loaded.fetch(item.id, 0)
+  end
+  helper_method :available_quantity
 
   def load_trip
     @trip = policy_scope(CargoDispatchTrip).find(params[:id])
