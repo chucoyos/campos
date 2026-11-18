@@ -173,8 +173,8 @@ es:
         one: "%{count} unidad reservada"
         other: "%{count} unidades reservadas"
       reported_quantity:
-        one: "%{count} unidad reportada"
-        other: "%{count} unidades reportadas"
+        one: "%{count} unidad reportada como cargada"
+        other: "%{count} unidades reportadas como cargadas"
       not_reported: "Sin reporte de carga"
       reserve: "Reservar mercancía"
       prepare: "Preparar viaje"
