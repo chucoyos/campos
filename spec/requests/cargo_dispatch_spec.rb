@@ -357,6 +357,9 @@ RSpec.describe "Despacho de mercancía", type: :request do
     expect(response).to have_http_status(:ok)
     get cargo_dispatch_pass_path(pass, format: :pdf)
     expect(response.media_type).to eq("application/pdf")
+    expect(response.body).to match(%r{/Subtype\s*/Image\b})
+    expect(response.body.scan(%r{/Type\s*/Page\b}).size).to eq(1)
+    expect(pdf_text(response.body)).to include(pass.token)
 
     sign_in security
     post scan_gate_pass_path, params: { token: pass.token }
@@ -379,6 +382,7 @@ RSpec.describe "Despacho de mercancía", type: :request do
     expect(trip.reload).to be_loaded
     expect(item.reload).to be_stored
     get tally_cargo_dispatch_trip_path(trip, format: :pdf)
+    expect(response.body).to match(%r{/Subtype\s*/Image\b})
     expect(pdf_text(response.body)).to include("Cantidad: 4", "Piezas cargadas: 4", "Salida pendiente")
 
     sign_in security
@@ -398,6 +402,18 @@ RSpec.describe "Despacho de mercancía", type: :request do
         cargo_dispatch_trip: { origin_type: "general", transport_mode: "customer", transport_name: "Otro" }
       }
     }.not_to change(CargoDispatchTrip, :count)
+  end
+
+  it "keeps the dispatch pass QR on a page when vehicle details are long" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: admin)
+    pass = trip.passes.create!(requested_by: admin, operator_name: "Operador " * 200, plate: "ABC123", unit_type: "sencillo")
+    sign_in admin
+
+    get cargo_dispatch_pass_path(pass, format: :pdf)
+    expect(response.media_type).to eq("application/pdf")
+    expect(response.body.scan(%r{/Type\s*/Page\b}).size).to be > 1
+    expect(pdf_text(response.body)).to include(pass.token)
   end
 
   it "lets a client request an assigned carrier for general cargo" do

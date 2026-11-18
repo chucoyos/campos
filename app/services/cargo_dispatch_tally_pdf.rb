@@ -15,6 +15,8 @@ class CargoDispatchTallyPdf
     end
 
     pdf = Prawn::Document.new(page_size: "LETTER", margin: 40)
+    pdf.image Rails.root.join("app/assets/images/logo_full.png").to_s, width: 170, position: :left
+    pdf.move_down 14
     pdf.text safe(t("title")), size: 18, style: :bold
     pdf.text safe(t("trip", number: @trip.id)), size: 12
     pdf.move_down 12
