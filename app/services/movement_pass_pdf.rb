@@ -5,7 +5,9 @@ Prawn::Fonts::AFM.hide_m17n_warning = true
 
 # PDF imprimible del pase: datos del movimiento, vehículos y un QR directo a Garita.
 class MovementPassPdf
-  QR_SIZE = 220
+  include PdfDocumentStyle
+
+  QR_SIZE = 180
 
   def initialize(pass, gate_url:)
     @pass = pass
@@ -32,14 +34,7 @@ class MovementPassPdf
   def time(value) = I18n.l(value.in_time_zone, format: :long)
 
   def header(pdf)
-    logo_path = Rails.root.join("app/assets/images/logo_full.png")
-    pdf.image logo_path.to_s, width: 170, position: :left
-    pdf.move_down 14
-    pdf.fill_color "0B3C5D"
-    pdf.text safe(t(:title)), size: 24, style: :bold
-    pdf.fill_color "000000"
-    pdf.text safe(I18n.t("movement_passes.types.#{@pass.movement_type}").upcase), size: 40, style: :bold
-    pdf.move_down 12
+    draw_pdf_header(pdf, title: t(:title), subtitle: I18n.t("movement_passes.types.#{@pass.movement_type}").upcase)
   end
 
   def summary(pdf)
@@ -53,26 +48,21 @@ class MovementPassPdf
     rows << [ MovementPass.human_attribute_name(:load_status), I18n.t("movement_passes.load_statuses.#{@pass.load_status}") ] if @pass.load_status
     rows << [ t(:issued_at), time(@pass.issued_at) ]
     rows << [ t(:expires_at), time(@pass.expires_at) ]
-    definition_list(pdf, rows)
+    draw_pdf_section(pdf, t(:details))
+    draw_pdf_table(pdf, rows, widths: [ 0.32, 0.68 ], font_size: 10)
   end
 
   def vehicles(pdf)
     @pass.vehicles.sort_by(&:role).each do |vehicle|
-      pdf.move_down 10
-      pdf.text safe(t("vehicle_#{vehicle.role}")), size: 14, style: :bold
-      definition_list(pdf, [
+      draw_pdf_section(pdf, t("vehicle_#{vehicle.role}"))
+      rows = [
         [ MovementPassVehicle.human_attribute_name(:carrier_id), vehicle.carrier_name ],
         [ MovementPassVehicle.human_attribute_name(:economic_number), vehicle.economic_number.presence || "-" ],
         [ MovementPassVehicle.human_attribute_name(:operator_name), vehicle.operator_name ],
         [ MovementPassVehicle.human_attribute_name(:plate), vehicle.plate ],
         [ MovementPassVehicle.human_attribute_name(:unit_type), I18n.t("movement_passes.unit_types.#{vehicle.unit_type}") ]
-      ])
-    end
-  end
-
-  def definition_list(pdf, rows)
-    rows.each do |label, value|
-      pdf.formatted_text [ { text: "#{safe(label)}: ", styles: [ :bold ], size: 12 }, { text: safe(value), size: 12 } ]
+      ]
+      draw_pdf_table(pdf, rows, widths: [ 0.32, 0.68 ], font_size: 10)
     end
   end
 
@@ -81,11 +71,14 @@ class MovementPassPdf
     quiet = 4
     cell = QR_SIZE.to_f / (modules.size + (quiet * 2))
     pdf.move_down 16
+    pdf.start_new_page if pdf.cursor < QR_SIZE + 45
     left = (pdf.bounds.width - QR_SIZE) / 2
     top = pdf.cursor
 
     pdf.fill_color "FFFFFF"
     pdf.fill_rectangle [ left, top ], QR_SIZE, QR_SIZE
+    pdf.stroke_color GRID
+    pdf.stroke_rectangle [ left, top ], QR_SIZE, QR_SIZE
     pdf.fill_color "000000"
     modules.each_with_index do |row, y|
       row.each_with_index do |dark, x|
@@ -98,6 +91,6 @@ class MovementPassPdf
 
   def footer(pdf)
     pdf.move_down 10
-    pdf.text safe(t(:single_use, hours: MovementPass::VALIDITY.in_hours.to_i)), size: 10, align: :center, color: "555555"
+    pdf.text safe(t(:single_use, hours: MovementPass::VALIDITY.in_hours.to_i)), size: 9, align: :center, color: MUTED
   end
 end

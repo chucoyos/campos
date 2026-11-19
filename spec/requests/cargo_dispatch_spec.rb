@@ -359,7 +359,7 @@ RSpec.describe "Despacho de mercancía", type: :request do
     expect(response.media_type).to eq("application/pdf")
     expect(response.body).to match(%r{/Subtype\s*/Image\b})
     expect(response.body.scan(%r{/Type\s*/Page\b}).size).to eq(1)
-    expect(pdf_text(response.body)).to include(pass.token)
+    expect(pdf_text(response.body)).to include(pass.token, "Datos del pase", "Transportista", "Operador", "Placas")
 
     sign_in security
     post scan_gate_pass_path, params: { token: pass.token }
@@ -383,7 +383,7 @@ RSpec.describe "Despacho de mercancía", type: :request do
     expect(item.reload).to be_stored
     get tally_cargo_dispatch_trip_path(trip, format: :pdf)
     expect(response.body).to match(%r{/Subtype\s*/Image\b})
-    expect(pdf_text(response.body)).to include("Cantidad: 4", "Piezas cargadas: 4", "Salida pendiente")
+    expect(pdf_text(response.body)).to include("Cantidad", "4", "Piezas cargadas: 4", "Salida pendiente")
 
     sign_in security
     get cargo_gate_pass_path(pass.token)
@@ -541,11 +541,18 @@ RSpec.describe "Despacho de mercancía", type: :request do
     get tally_cargo_dispatch_trip_path(trip, format: :pdf)
     expect(response.media_type).to eq("application/pdf")
     confirmation = I18n.l(trip.events.find_by!(event: "loading_confirmed").created_at.in_time_zone, format: :long)
-    expect(pdf_text(response.body)).to include("Confirmación de carga: #{confirmation}", "Salida pendiente", "Cantidad: 4", "Peso conocido total: No disponible")
+    tally_text = pdf_text(response.body)
+    expect(tally_text).to include("Confirmación de carga", confirmation, "Salida pendiente", "Mercancía / embalaje", "4", "Peso conocido total: No disponible")
+    expect(tally_text).to include(
+      "LA PRESENTE MERCANCÍA ES RECIBIDA",
+      "ASIMISMO ESTÁ AMPARADA",
+      "TRÁNSITO A DESTINO HASTA SU DOMICILIO",
+      "DESASTRES NATURALES."
+    )
 
     finish_trip(pass)
     get tally_cargo_dispatch_trip_path(trip, format: :pdf)
-    expect(pdf_text(response.body)).to include("Confirmación de carga: #{confirmation}", "Salida confirmada:")
+    expect(pdf_text(response.body)).to include("Confirmación de carga", confirmation, "Salida confirmada:")
     expect(pdf_text(response.body)).not_to include("Salida pendiente")
 
     sign_in create(:user, :cliente, client: create(:client))
@@ -602,7 +609,7 @@ RSpec.describe "Despacho de mercancía", type: :request do
     sign_in admin
 
     get tally_cargo_dispatch_trip_path(trip, format: :pdf)
-    expect(pdf_text(response.body)).to include("Sin carga. Motivo: Sin mercancía", "Confirmación de carga:", "Salida confirmada:")
+    expect(pdf_text(response.body)).to include("Sin carga. Motivo: Sin mercancía", "Confirmación de carga", "Salida confirmada:")
     expect(CargoDispatchAllocation.delivered.where(cargo_item: item)).to be_empty
 
     trip.update!(exit_evidence_enabled: false)
@@ -669,6 +676,13 @@ RSpec.describe "Despacho de mercancía", type: :request do
   end
 
   def pdf_text(pdf)
-    pdf.scan(/<([0-9a-f]+)>/i).flatten.map { |hex| [ hex ].pack("H*").force_encoding("Windows-1252").encode("UTF-8") }.join
+    pdf.scan(/<([0-9a-f]+)>/i).flatten.map do |hex|
+      bytes = [ hex ].pack("H*")
+      if bytes.start_with?("\xFE\xFF".b)
+        bytes.byteslice(2..).force_encoding("UTF-16BE").encode("UTF-8")
+      else
+        bytes.force_encoding("Windows-1252").encode("UTF-8")
+      end
+    end.join
   end
 end

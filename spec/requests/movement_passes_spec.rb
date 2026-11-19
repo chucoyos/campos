@@ -58,6 +58,7 @@ RSpec.describe "Pases de movimiento", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.media_type).to eq("application/pdf")
       expect(response.body).to start_with("%PDF")
+      expect(pdf_text(response.body)).to include("Datos del movimiento", "Vehículo", "Operador")
     end
 
     it "no descarga un PDF vencido" do
@@ -121,6 +122,19 @@ RSpec.describe "Pases de movimiento", type: :request do
       pass = create(:movement_pass, container_assignment: assignment)
       get movement_passes_path(movement_type: "salida")
       expect(response.body).not_to include(pass.container.number)
+    end
+
+    private
+
+    def pdf_text(pdf)
+      pdf.scan(/<([0-9a-f]+)>/i).flatten.map do |hex|
+        bytes = [ hex ].pack("H*")
+        if bytes.start_with?("\xFE\xFF".b)
+          bytes.byteslice(2..).force_encoding("UTF-16BE").encode("UTF-8")
+        else
+          bytes.force_encoding("Windows-1252").encode("UTF-8")
+        end
+      end.join
     end
   end
 

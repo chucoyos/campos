@@ -3,6 +3,15 @@ es:
     tally:
       title: "Tarja de salida de almacén"
       trip: "Folio: viaje #%{number}"
+      trip_details: "Datos del viaje"
+      client_label: "Cliente"
+      destination_label: "Destino"
+      transport_label: "Transporte"
+      operator_label: "Operador"
+      vehicle_label: "Vehículo"
+      confirmed_at_label: "Confirmación de carga"
+      exit_label: "Estado de salida"
+      exited_at_label: "Salida confirmada:"
       client: "Cliente: %{value}"
       destination: "Destino: %{value}"
       transport: "Transporte: %{value}"
@@ -12,7 +21,12 @@ es:
       exited_at: "Salida confirmada: %{time}"
       exit_pending: "Salida pendiente"
       items: "Mercancía confirmada"
-      item: "%{number}. %{description} · %{packaging} · Cantidad: %{quantity}\nMBL: %{mbl} · Contenedor: %{container} · Número de parte: %{part}\nPeso conocido: %{weight}"
+      description: "Mercancía / embalaje"
+      part: "No. de parte"
+      mbl: "MBL"
+      container: "Contenedor"
+      quantity: "Cantidad"
+      weight: "Peso"
       no_cargo: "Sin carga. Motivo: %{reason}"
       total:
         one: "Piezas cargadas: %{count}"
@@ -23,6 +37,17 @@ es:
       signatures: "___________________________                          ___________________________\nAdministración                                                    Operador"
       unavailable: "No disponible"
       download: "Ver tarja de salida"
+      footer_disclaimer: >-
+        LA PRESENTE MERCANCÍA ES RECIBIDA Y ENTREGADA BAJO CONDICIONES NORMALES DE MANEJO, EN ENTERA CONFORMIDAD DE QUIEN LAS ENVÍA Y RECIBE. ASIMISMO ESTÁ AMPARADA EN TÉRMINOS COMERCIALES BAJO CONDICIONES DE PÓLIZA DE ASEGURAMIENTO POR PARTE DEL DUEÑO DE LAS MERCANCÍAS, PARA SU TRASLADO LOCAL, RECEPCIÓN EN BODEGA, RESGUARDO POR EL TIEMPO QUE PERMANEZCAN, ENTREGA AL MOMENTO DE SOLICITARLAS Y TRÁNSITO A DESTINO HASTA SU DOMICILIO. SOLUCIONES ESTRATÉGICAS PORTUARIAS CAMPOS, NO SE HACE RESPONSABLE POR LOS DAÑOS, PÉRDIDAS DE CONTENEDORES O MERCANCÍAS EN CASOS DE ROBO CON VIOLENCIA Y/O DESASTRES NATURALES.
+    pdf:
+      details: "Datos del pase"
+      transport: "Transportista"
+      operator: "Operador"
+      plate: "Placas"
+      economic_number: "Número económico"
+      unit: "Tipo de unidad"
+      expires_at: "Vigencia hasta"
+      unavailable: "No disponible"
     evidence:
       title: "Evidencia de salida"
       exit_time: "Salida confirmada: %{time}"
@@ -1201,6 +1226,7 @@ es:
       exit_scanned_at: "Escaneo de salida"
     pdf:
       title: "Pase de movimiento"
+      details: "Datos del movimiento"
       issued_at: "Emitido"
       expires_at: "Vence"
       vehicle_principal: "Vehículo"
