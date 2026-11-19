@@ -15,6 +15,19 @@ class CargoDispatchTrip < ApplicationRecord
 
   STREAM = "forklift_dispatches".freeze
 
+  def exit_photos_zip_name(photos)
+    digest = Digest::SHA256.hexdigest(photos.map(&:id).sort.join(","))
+    "viaje-#{id}-salida-#{digest}.zip"
+  end
+
+  def ready_exit_photos_zip
+    photos = exit_photos_attachments.order(:id).to_a
+    return if photos.empty?
+
+    ActiveStorage::Blob.where(filename: exit_photos_zip_name(photos), content_type: "application/zip")
+      .where(created_at: ContainerPhotosZipJob::LINK_TTL.ago..).order(created_at: :desc).first
+  end
+
   validates :origin_type, inclusion: { in: ORIGIN_TYPES }
   validates :transport_mode, inclusion: { in: TRANSPORT_MODES }
   validate :transport_matches_origin

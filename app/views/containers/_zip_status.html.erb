@@ -3,7 +3,12 @@
 <% done = local_assigns[:done].to_i %>
 <% total = local_assigns[:total].to_i %>
 <% percent = total.positive? ? [ (done * 100.0 / total).round, 4 ].max : 4 %>
-<div id="<%= dom_id(container, "zip_#{section}") %>" class="rounded-2xl">
+<% container = local_assigns[:container] %>
+<% section = local_assigns[:section] %>
+<% record = local_assigns[:record] || container %>
+<% zip_path = local_assigns[:zip_path] || zip_photos_container_path(container, section: section) %>
+<% target = local_assigns[:target] || dom_id(record, "zip_#{section}") %>
+<div id="<%= target %>" class="rounded-2xl">
   <% case state %>
   <% when :working %>
     <div class="space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50 p-4" role="status" aria-live="polite"
@@ -42,13 +47,13 @@
     <div class="flex flex-wrap items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4" role="alert">
       <%= material_icon "error", classes: "text-red-600" %>
       <p class="flex-1 text-sm font-medium text-red-800"><%= t("containers.photos.zip.failed") %></p>
-      <%= button_to zip_photos_container_path(container, section: section), method: :post,
+      <%= button_to zip_path, method: :post,
             class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-red-100 px-4 font-medium text-red-800 transition-all duration-200 ease-out hover:bg-red-200 active:scale-95" do %>
         <%= material_icon "refresh" %> <%= t("containers.photos.zip.retry") %>
       <% end %>
     </div>
   <% else %>
-    <%= button_to zip_photos_container_path(container, section: section), method: :post,
+    <%= button_to zip_path, method: :post,
           class: "flex min-h-12 cursor-pointer items-center gap-2 rounded-2xl bg-indigo-50 px-4 font-medium text-indigo-700 transition-all duration-200 ease-out hover:bg-indigo-100 active:scale-95" do %>
       <%= material_icon "folder_zip" %> <%= t("containers.photos.zip.prepare") %>
     <% end %>

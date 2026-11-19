@@ -120,31 +120,7 @@
           <p><%= t("cargo_dispatch.evidence.origin", mbl: container&.master_bl&.number || t("cargo_dispatch.tally.unavailable"), container: container&.number || t("cargo_dispatch.tally.unavailable")) %></p>
         </div>
       <% end %>
-      <% if @exit_photos.any? %>
-        <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <% @exit_photos.each do |photo| %>
-            <div class="space-y-2 rounded-2xl bg-white p-2">
-              <%= link_to exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), target: "_blank", rel: "noopener" do %>
-                <%= image_tag exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), alt: photo.blob.filename.to_s, class: "h-40 w-full rounded-xl object-cover" %>
-              <% end %>
-              <% if policy(@trip).manage_exit_photos? %>
-                <%= button_to t("cargo_dispatch.evidence.remove"), exit_photo_cargo_dispatch_trip_path(@trip, photo_id: photo.id), method: :delete,
-                      form: { data: { turbo_confirm: t("cargo_dispatch.evidence.confirm_remove") } }, class: "min-h-12 cursor-pointer rounded-full px-3 text-sm text-red-700 hover:bg-red-50" %>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <p class="text-sm text-slate-600"><%= t("cargo_dispatch.evidence.empty") %></p>
-      <% end %>
-      <% if policy(@trip).manage_exit_photos? %>
-        <%= form_with url: exit_photos_cargo_dispatch_trip_path(@trip), multipart: true, class: "flex flex-wrap items-center gap-3" do |f| %>
-          <%= f.label :photos, t("cargo_dispatch.evidence.choose"), class: "sr-only" %>
-          <%= f.file_field :photos, multiple: true, accept: Container::PHOTO_CONTENT_TYPES.join(","), required: true,
-                class: "min-h-12 w-full text-sm file:mr-3 file:min-h-12 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-4 file:text-sky-800 sm:w-auto" %>
-          <%= f.button t("cargo_dispatch.evidence.upload"), class: "min-h-12 cursor-pointer rounded-full bg-sky-800 px-5 text-white hover:bg-sky-900" %>
-        <% end %>
-      <% end %>
+      <%= render "cargo_dispatch_trip_photos/section", trip: @trip, count: @exit_photo_count %>
     </section>
   <% end %>
   <% if policy(@trip).issue_pass? && @trip.prepared? %>

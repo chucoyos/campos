@@ -1,4 +1,6 @@
 class CargoDispatchTripsController < ApplicationController
+  include ActiveStorage::SetCurrent
+
   def index
     authorize CargoDispatchTrip
     scope = policy_scope(CargoDispatchTrip).includes(:carrier).order(created_at: :desc)
@@ -12,7 +14,7 @@ class CargoDispatchTripsController < ApplicationController
     @allocations = @trip.allocations.includes(cargo_item: :cargo_packaging).order(:id)
     if @trip.exit_evidence_enabled? && @trip.completed?
       @exit_pass = @trip.passes.find_by!(status: "completed")
-      @exit_photos = @trip.exit_photos_attachments.includes(:blob).order(:id)
+      @exit_photo_count = @trip.exit_photos_attachments.count
       if @trip.origin_type == "mbl"
         ActiveRecord::Associations::Preloader.new(records: @allocations.map(&:cargo_item),
           associations: { cargo_manifest: { container: :master_bl } }).call

@@ -46,11 +46,15 @@ class ContainerPhotosZipJob < ApplicationJob
       end
     end
 
-    name = @container.photos_zip_name(@section)
+    name = zip_filename(photos)
     zip.rewind
     ActiveStorage::Blob.create_and_upload!(io: zip, filename: name, content_type: "application/zip")
   ensure
     zip&.close!
+  end
+
+  def zip_filename(photos)
+    @container.photos_zip_name(@section)
   end
 
   def broadcast(state, **locals)

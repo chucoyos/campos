@@ -596,6 +596,96 @@ RSpec.describe "Despacho de mercancía", type: :request do
     expect(trip.exit_photos.reload.count).to eq(0)
   end
 
+  it "shows one collapsed photo section with direct uploads and an authorized lazy gallery" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    trip, pass = loaded_trip(request_record, instruction, 2)
+    finish_trip(pass)
+    blob = ActiveStorage::Blob.create_and_upload!(
+      io: File.open(Rails.root.join("public/icon.png")), filename: "evidencia.png", content_type: "image/png"
+    )
+    sign_in admin
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ blob.signed_id ] }
+    expect(trip.exit_photos.reload.count).to eq(1)
+
+    get cargo_dispatch_trip_path(trip)
+    document = Nokogiri::HTML(response.body)
+    sections = document.css("details").select { |node| node.at_css("summary")&.text&.include?("Fotografías de salida") }
+    expect(sections.size).to eq(1)
+    expect(sections.first["open"]).to be_nil
+    expect(sections.first.text).to include("1 foto")
+    expect(sections.first.at_css('turbo-frame[loading="lazy"]')["src"]).to eq(exit_photos_cargo_dispatch_trip_path(trip))
+    expect(sections.first.at_css('input[data-direct-upload-url]')).to be_present
+    expect(sections.first.at_css('button[data-photo-upload-target="submit"]')["disabled"]).to be_present
+    expect(response.body).not_to include("evidencia.png")
+
+    get exit_photos_cargo_dispatch_trip_path(trip), headers: { "Turbo-Frame" => "trip_exit_photos_#{trip.id}" }
+    gallery = Nokogiri::HTML(response.body)
+    expect(gallery.at_css("turbo-frame#trip_exit_photos_#{trip.id} img[loading='lazy']")["alt"]).to eq("evidencia.png")
+    expect(gallery.at_css("form[action='#{exit_photos_cargo_dispatch_trip_path(trip)}']")).to be_present
+
+    sign_in client_user
+    get exit_photos_cargo_dispatch_trip_path(trip)
+    expect(response).to have_http_status(:ok)
+    expect(response.body).not_to include("delete_sweep")
+    delete exit_photos_cargo_dispatch_trip_path(trip)
+    expect(trip.exit_photos.reload.count).to eq(1)
+    sign_in create(:user, :cliente, client: create(:client))
+    get exit_photos_cargo_dispatch_trip_path(trip)
+    expect(response).not_to have_http_status(:ok)
+  end
+
+  it "validates signed uploads and removes all trip photos with an audit event per photo" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    trip, pass = loaded_trip(request_record, instruction, 2)
+    finish_trip(pass)
+    sign_in admin
+    fake = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("%PDF-1.4"), filename: "fake.png", content_type: "image/png", identify: false)
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ fake.signed_id ] }
+    expect(trip.exit_photos).not_to be_attached
+    expect(flash[:alert]).to be_present
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ "firma-invalida" ] }
+    expect(flash[:alert]).to be_present
+    2.times do
+      post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ fixture_file_upload(Rails.root.join("public/icon.png"), "image/png") ] }
+    end
+    ids = trip.exit_photos_attachments.pluck(:id).map(&:to_s)
+    delete exit_photos_cargo_dispatch_trip_path(trip)
+    expect(trip.exit_photos.reload).to be_empty
+    expect(trip.events.where(event: "exit_photo_removed").pluck(:details)).to match_array(ids)
+  end
+
+  it "prepares a trip photo ZIP and invalidates it when the photo set changes" do
+    request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
+    instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+    trip, pass = loaded_trip(request_record, instruction, 2)
+    finish_trip(pass)
+    sign_in admin
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ fixture_file_upload(Rails.root.join("public/icon.png"), "image/png") ] }
+
+    expect { post zip_exit_photos_cargo_dispatch_trip_path(trip), as: :turbo_stream }
+      .to have_enqueued_job(CargoDispatchTripPhotosZipJob).with(trip.id, admin.id, hash_including(host: "www.example.com"))
+    expect(response.body).to include("zip_exit_photos")
+    CargoDispatchTripPhotosZipJob.perform_now(trip.id, admin.id)
+    zip = trip.ready_exit_photos_zip
+    expect(zip).to be_present
+    Zip::File.open_buffer(zip.download) do |archive|
+      expect(archive.entries.size).to eq(1)
+      expect(archive.entries.first.get_input_stream.read).to eq(File.binread(Rails.root.join("public/icon.png")))
+    end
+    get cargo_dispatch_trip_path(trip)
+    expect(response.body).to include(I18n.t("containers.photos.zip.ready"))
+
+    post exit_photos_cargo_dispatch_trip_path(trip), params: { photos: [ fixture_file_upload(Rails.root.join("public/icon.png"), "image/png") ] }
+    expect(trip.ready_exit_photos_zip).to be_nil
+    delete exit_photos_cargo_dispatch_trip_path(trip)
+    expect(trip.ready_exit_photos_zip).to be_nil
+    sign_in create(:user, :cliente, client: create(:client))
+    post zip_exit_photos_cargo_dispatch_trip_path(trip), as: :turbo_stream
+    expect(response).not_to have_http_status(:ok)
+  end
+
   it "shows the reason on a tally for a trip with no cargo, without recording a delivery" do
     request_record = CargoDispatchRequest.create!(client: client, requested_by: admin, destination: "Destino")
     instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 2)

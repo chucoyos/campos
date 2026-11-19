@@ -50,6 +50,7 @@ es:
       unavailable: "No disponible"
     evidence:
       title: "Evidencia de salida"
+      photos_title: "Fotografías de salida"
       exit_time: "Salida confirmada: %{time}"
       item: "%{description} · %{packaging} · %{quantity} · Número de parte: %{part}"
       origin: "MBL: %{mbl} · Contenedor: %{container}"

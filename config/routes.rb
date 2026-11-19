@@ -69,7 +69,10 @@ Rails.application.routes.draw do
       patch :cancel
       post :issue_pass
       get :tally
+      get :exit_photos, to: "cargo_dispatch_trip_photos#index"
       post :exit_photos, to: "cargo_dispatch_trip_photos#create"
+      delete :exit_photos, to: "cargo_dispatch_trip_photos#destroy_all"
+      post :zip_exit_photos, to: "cargo_dispatch_trip_photos#zip"
       get "exit_photos/:photo_id", to: "cargo_dispatch_trip_photos#show", as: :exit_photo
       delete "exit_photos/:photo_id", to: "cargo_dispatch_trip_photos#destroy"
     end
