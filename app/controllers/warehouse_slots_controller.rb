@@ -26,7 +26,7 @@ class WarehouseSlotsController < ApplicationController
   end
 
   def load_slot_data
-    @items_by_section = @slot.cargo_items.includes(:cargo_packaging, cargo_manifest: :container).group_by(&:slot_section)
+    @items_by_section = @slot.cargo_items.physically_stored.includes(:cargo_packaging, cargo_manifest: :container).group_by(&:slot_section)
     @movable_items = movable_items.includes(:cargo_packaging, :warehouse_slot, cargo_manifest: %i[client container]).order(:status, :id).limit(200)
   end
 

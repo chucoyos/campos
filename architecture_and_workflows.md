@@ -108,6 +108,8 @@ La bodega tiene 4 naves con ubicaciones de piso numeradas del 1 al 16 (la nave 1
 
 Solo las líneas de una captura confirmada se pueden ubicar (`captured → stored`, AASM), por administrador o montacargas, también para reubicar. Cada ubicación o reubicación se registra de forma inmutable en `cargo_item_movements` (origen, destino, usuario y fecha). Una línea de cajas agrupadas se ubica completa en una sola ubicación. El catálogo se carga con `bin/rails db:seed:warehouse` y el mapa 3D está en `/warehouse`.
 
+En las ubicaciones, la cantidad mostrada de una partida agrupada corresponde al saldo físico en bodega: cantidad original menos cargas confirmadas por administración en todos los viajes. Las reservas o reportes aún no confirmados no lo reducen. Si el saldo llega a cero, la partida deja de ocupar la ubicación; su cantidad original y el historial de despacho se conservan. El mapa cuenta partidas ubicadas, no suma unidades de embalajes diferentes; una partida parcial sigue ocupando su subdivisión.
+
 ---
 
 ### 4. Flujo Diferenciado: Patio de Maniobras (Resguardo y Traspaleo)

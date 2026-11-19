@@ -20,6 +20,7 @@
               <li class="rounded-2xl bg-slate-50 p-3 text-sm">
                 <p class="font-medium text-slate-900"><%= item.description %></p>
                 <p class="text-slate-600"><%= item.cargo_packaging.name %> · <%= item.cargo_manifest.container&.number || t("cargo_manifests.show.general_cargo") %></p>
+                <p class="text-slate-600"><%= t(".physical_quantity", count: item.physical_quantity) %></p>
               </li>
             <% end %>
           </ul>

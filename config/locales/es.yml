@@ -543,6 +543,9 @@ es:
       subtitle: "Nave %{bay} · ubicación %{number}"
       section: "Subdivisión %{section}"
       empty_section: "Sin mercancía."
+      physical_quantity:
+        one: "%{count} unidad en bodega"
+        other: "%{count} unidades en bodega"
       store_title: "Ubicar mercancía aquí"
       nothing_to_store: "No hay mercancía confirmada disponible para ubicar."
       item: "Mercancía"

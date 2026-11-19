@@ -38,6 +38,63 @@ RSpec.describe "Warehouse", type: :request do
       expect(response.body).to include(here.description, item.location_label, second.location_label)
     end
 
+    it "shows only the remaining physical quantity and frees the slot when a line is fully loaded" do
+      admin = create(:user, :admin)
+      security = create(:user, :seguridad)
+      operator = create(:user, :montacargas)
+      packaging = create(:cargo_packaging, :box)
+      client = create(:client, container_color: "#16a34a")
+      manifest = create(:cargo_manifest, client: client)
+      line = create(:cargo_item, cargo_manifest: manifest, cargo_packaging: packaging, quantity: 10, weight_kg: nil,
+        description: "Cajas para despacho")
+      manifest.confirm_by!(admin)
+      line.store_at!(slot, "A", admin)
+      request_record = CargoDispatchRequest.create!(client: manifest.client, requested_by: admin, destination: "Destino")
+      instruction = request_record.instructions.create!(criterion: "quantity", cargo_packaging: packaging, quantity: 10)
+      trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer", transport_name: "Propio", created_by: admin)
+      CargoDispatchReservationService.call(trip: trip, selections: [ { cargo_item_id: line.id, instruction_id: instruction.id, quantity: 4 } ])
+
+      sign_in admin
+      get warehouse_slot_path(slot)
+      expect(response.body).to include("10 unidades en bodega")
+
+      [ [ trip, 4 ], [ nil, 6 ] ].each do |dispatch_trip, quantity|
+        unless dispatch_trip
+          dispatch_trip = request_record.trips.create!(origin_type: "general", transport_mode: "customer",
+            transport_name: "Propio", created_by: admin)
+          CargoDispatchReservationService.call(trip: dispatch_trip, selections: [
+            { cargo_item_id: line.id, instruction_id: instruction.id, quantity: quantity }
+          ])
+        end
+        dispatch_trip.prepare!
+        pass = dispatch_trip.passes.create!(requested_by: admin, operator_name: "Operador", plate: "ABC123", unit_type: "sencillo")
+        CargoDispatchOperationService.enter!(pass: pass, user: security)
+        CargoDispatchOperationService.report!(trip: dispatch_trip, allocation: dispatch_trip.allocations.last, quantity: quantity, user: operator)
+        CargoDispatchOperationService.confirm!(trip: dispatch_trip, user: admin)
+
+        get warehouse_slot_path(slot)
+        if dispatch_trip == trip
+          expect(response.body).to include("6 unidades en bodega")
+          expect(response.body).not_to include("10 unidades en bodega")
+          map_slot = warehouse_map_slot
+          expect(map_slot.dig("sections", "A")).to eq(1)
+          expect(map_slot["items"]).to eq(1)
+          expect(map_slot["color"]).to eq("#16a34a")
+          expect(map_slot["clients"]).to eq([ client.name ])
+        else
+          expect(response.body).not_to include(line.description)
+          expect(response.body).to include("Sin mercancía.")
+          map_slot = warehouse_map_slot
+          expect(map_slot.dig("sections", "A")).to eq(0)
+          expect(map_slot["items"]).to eq(0)
+          expect(map_slot["color"]).to be_nil
+          expect(map_slot["clients"]).to be_empty
+        end
+      end
+
+      expect(line.reload).to have_attributes(quantity: 10, status: "dispatched", warehouse_slot_id: nil)
+    end
+
     it "stores a line in a section of the slot" do
       patch store_warehouse_slot_path(slot), params: { cargo_item_id: item.id, section: "B" }
 
@@ -59,6 +116,13 @@ RSpec.describe "Warehouse", type: :request do
 
       expect(response).to have_http_status(:unprocessable_content)
       expect(item.reload).to be_captured
+    end
+
+    def warehouse_map_slot
+      get warehouse_path
+      document = Nokogiri::HTML(response.body)
+      bays = JSON.parse(document.at_css("[data-warehouse-map-bays-value]")["data-warehouse-map-bays-value"])
+      bays.flat_map { |bay| bay.fetch("slots") }.find { |map_slot| map_slot.fetch("code") == slot.code }
     end
   end
 

@@ -12,6 +12,17 @@ class CargoItem < ApplicationRecord
   has_many :movements, class_name: "CargoItemMovement", dependent: :delete_all
   has_many :dispatch_allocations, class_name: "CargoDispatchAllocation", dependent: :restrict_with_error
 
+  scope :with_physical_quantity, -> {
+    confirmed_loads = CargoDispatchAllocation.where(status: "confirmed").group(:cargo_item_id)
+      .select(:cargo_item_id, "SUM(cargo_dispatch_allocations.loaded_quantity) AS loaded_quantity")
+    joins("LEFT JOIN (#{confirmed_loads.to_sql}) cargo_dispatch_loads ON cargo_dispatch_loads.cargo_item_id = cargo_items.id")
+      .select("cargo_items.*, (cargo_items.quantity - COALESCE(cargo_dispatch_loads.loaded_quantity, 0))::integer AS physical_quantity")
+  }
+  scope :physically_stored, -> {
+    with_physical_quantity.where(status: "stored")
+      .where("cargo_items.warehouse_slot_id IS NOT NULL AND cargo_items.quantity > COALESCE(cargo_dispatch_loads.loaded_quantity, 0)")
+  }
+
   aasm column: :status, whiny_persistence: true do
     state :captured, initial: true
     state :stored
